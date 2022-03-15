@@ -1,0 +1,77 @@
+"""functions for interacting with sqlalchemy tables"""
+
+import sqlalchemy
+import toolcache
+
+from . import column_utils
+from . import metadata_utils
+
+
+def get_table_primary_key(table):
+    primary_keys = list(table.primary_key.columns)
+    if len(primary_keys) != 1:
+        raise Exception('multi column primary key')
+    primary_key = primary_keys[0]
+    return primary_key.name
+
+
+def create_table_object_from_schema(table_name, table_schema, metadata):
+    """create sqlalchemy table object from schema specification"""
+
+    # create columns
+    column_specs = table_schema['columns']
+    table_items = []
+    for column_name, column_spec in column_specs.items():
+        if column_spec.get('virtual'):
+            continue
+        column = column_utils.create_column_object_from_schema(
+            column_name=column_name, column_schema=column_spec,
+        )
+        table_items.append(column)
+
+    # create constraints
+    constraint_specs = table_schema.get('constraints')
+    if constraint_specs is not None:
+        for constraint_spec in constraint_specs:
+            constrainttype = constraint_spec['constrainttype']
+            if constrainttype == 'unique':
+                columns = constraint_spec['columns']
+                constraint = sqlalchemy.UniqueConstraint(*columns)
+            else:
+                raise Exception(
+                    'unknown constraint type: ' + str(constrainttype)
+                )
+            table_items.append(constraint)
+
+    # create indices
+    index_specs = table_schema.get('indices')
+    if index_specs is not None:
+        raise NotImplementedError('not tested')
+        for index_spec in index_specs:
+            name = index_spec['name']
+            args = index_spec['columns']
+            kwargs = {}
+            if index_spec.get('unique'):
+                kwargs['unique'] = True
+            index = sqlalchemy.Index(name, *args, **kwargs)
+            table_items.append(index)
+
+    table = sqlalchemy.Table(table_name, metadata, *table_items)
+
+    return table
+
+
+@toolcache.cache(cache_type='memory')
+def create_table_object_from_db(
+    *, table_name, metadata=None, engine=None, conn=None, db_config=None,
+):
+    """create sqlalchemy table object reflecting current database"""
+    if metadata is None:
+        if engine is None and conn is None:
+            raise Exception('must specify metadata, engine, or conn')
+        metadata = metadata_utils.create_metadata_object_from_db(
+            engine=engine, conn=conn, db_config=db_config,
+        )
+    table = metadata.tables[table_name]
+    return table
+
