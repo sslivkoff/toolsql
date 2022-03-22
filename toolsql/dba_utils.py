@@ -1,9 +1,15 @@
+from __future__ import annotations
+
+from . import spec
 from . import sqlalchemy_utils
 
 
 def create_tables(
-    spec_metadata=None, db_schema=None, engine=None, db_config=None
-):
+    spec_metadata: typing.Optional[spec.SAMetadata] = None,
+    db_schema: typing.Optional[spec.DBSchema] = None,
+    engine: typing.Optional[spec.SAEngine] = None,
+    db_config: typing.Optional[spec.DBConfig] = None,
+) -> None:
     if spec_metadata is None:
         if db_schema is None:
             raise Exception('must specify spec_metadata or db_schema')
@@ -19,7 +25,7 @@ def create_tables(
     print('...all tables created')
 
 
-def drop_tables(metadata, force=False):
+def drop_tables(metadata: spec.SAMetadata, force: bool = False) -> None:
     if not force:
         raise Exception('use force=True')
     print('dropping tables...')
@@ -27,7 +33,12 @@ def drop_tables(metadata, force=False):
     print('...all tables dropped')
 
 
-def drop_all_rows(metadata, conn=None, force=False, engine=None):
+def drop_all_rows(
+    metadata: spec.SAMetadata,
+    conn: typing.Optional[spec.SAConnection] = None,
+    force: bool = False,
+    engine: typing.Optional[spec.SAEngine] = None,
+) -> None:
     if conn is None:
         if engine is None:
             raise Exception('specify conn or engine')
