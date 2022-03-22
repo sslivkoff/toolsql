@@ -67,21 +67,21 @@ def _setup_env_py(migrate_config, db_config_call, db_schema_call):
             # metadata loading
             'before': 'target_metadata = None',
             'after': """
-                import toolcli
+                import toolsql
                 import {db_schema_module}
                 db_schema = {db_schema_module}.{db_schema_function}()
-                target_metadata = toolcli.create_metadata_object_from_schema(db_schema=db_schema)
+                target_metadata = toolsql.create_metadata_object_from_schema(db_schema=db_schema)
             """,
         },
         {
             # uri loading
             'before': 'fileConfig(config.config_file_name)',
             'after': """
-                import toolcli
+                import toolsql
                 import {db_config_module}
                 fileConfig(config.config_file_name)
                 db_config = {db_config_module}.{db_config_function}()
-                db_uri = toolcli.get_db_uri(db_config=db_config)
+                db_uri = toolsql.get_db_uri(db_config=db_config)
                 config.set_main_option("sqlalchemy.url", db_uri)
             """,
         },

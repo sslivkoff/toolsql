@@ -1,9 +1,16 @@
+from __future__ import annotations
+
 import copy
+import typing
+
+from . import spec
 
 
 def compile_shorthand_db_schema(
-    db_schema=None, tables_columns=None, add_to_all_tables=None,
-):
+    db_schema: typing.Optional[spec.DBSchema] = None,
+    tables_columns: typing.Optional[dict[str, spec.ColumnSpec]] = None,
+    add_to_all_tables=None,
+) -> spec.DBSchema:
     if db_schema is None:
         db_schema = {
             'tables': {
@@ -66,14 +73,14 @@ def compile_shorthand_db_schema(
     return db_schema
 
 
-def _get_primary_column(table_spec):
+def _get_primary_column(table_spec: spec.TableSpec) -> typing.Optional[str]:
     for column_name, column_spec in table_spec['columns'].items():
         if column_spec.get('primary'):
             return column_name
     return None
 
 
-def verify_db_schema(db_schema):
+def verify_db_schema(db_schema: spec.DBSchema) -> None:
 
     for table_name, table_spec in db_schema['tables'].items():
         # has primary key

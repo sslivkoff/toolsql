@@ -1,18 +1,23 @@
+from __future__ import annotations
+
 import subprocess
+import typing
 
 import sqlalchemy
 
 from . import sqlalchemy_utils
+from . import spec
 
 
 def print_schema(
-    db_config=None,
-    db_metadata=None,
-    spec_metadata=None,
-    engine=None,
-    db_schema=None,
-    full=False,
-):
+    *,
+    db_config: typing.Optinal[spec.DBConfig] = None,
+    db_metadata: typing.Optional[spec.SAMetadata] = None,
+    spec_metadata: typing.Optional[spec.SAMetadata] = None,
+    engine: typing.Optional[spec.SAEngine] = None,
+    db_schema: typing.Optional[spec.DBSchema] = None,
+    full: bool = False,
+) -> None:
 
     # obtain metadata
     if db_metadata is None:
@@ -58,12 +63,13 @@ def print_schema(
 
 
 def print_usage(
-    db_config=None,
-    db_metadata=None,
-    spec_metadata=None,
-    engine=None,
-    db_schema=None,
-):
+    *,
+    db_config: typing.Optinal[spec.DBConfig] = None,
+    db_metadata: typing.Optional[spec.SAMetadata] = None,
+    spec_metadata: typing.Optional[spec.SAMetadata] = None,
+    engine: typing.Optional[spec.SAEngine] = None,
+    db_schema: typing.Optional[spec.DBSchema] = None,
+) -> None:
     if db_metadata is None:
         if engine is None and db_config is None:
             raise Exception('must specify db_metadata, engine, or db_config')
@@ -99,7 +105,10 @@ def print_usage(
             print('- missing', name, 'table')
 
 
-def get_bytes_usage_per_table(db_config, include_indices=True):
+def get_bytes_usage_per_table(
+    db_config: spec.DBConfig,
+    include_indices: bool = True,
+) -> dict[str, int]:
     if db_config['dbms'] != 'postgres':
         raise NotImplementedError()
 
@@ -126,12 +135,12 @@ def get_bytes_usage_per_table(db_config, include_indices=True):
     for l in range(0, len(lines), 2):
         entity = lines[l]
         size = lines[l + 1]
-        bytes_usage[entity] = size
+        bytes_usage[entity] = int(size)
 
     return bytes_usage
 
 
-def get_bytes_usage_for_database(db_config):
+def get_bytes_usage_for_database(db_config: spec.DBConfig) -> int:
     cmd = """psql --dbname {database} --user {username} -c "\l+" | grep {database} | awk -F "|" '{print $1} {print $7}'"""
     output = subprocess.check_output(cmd, shell=True, universal_newlines=True)
     output = output.strip()
@@ -143,5 +152,5 @@ def get_bytes_usage_for_database(db_config):
     bytes_usage = lines[1]
     if database != db_config['database']:
         raise Exception('could not parse output')
-    return bytes_usage
+    return int(bytes_usage)
 
