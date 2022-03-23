@@ -1,15 +1,20 @@
+from __future__ import annotations
+
 import subprocess
 
+import toolcli
+import toolsql
 
-def get_command_spec():
+
+def get_command_spec() -> toolcli.CommandSpec:
     return{
         'f': login_command,
-        'help': '',
-        'inject': ['db_config'],
+        'help': 'log in to database',
+        'special': {'inject': ['db_config']},
     }
 
 
-def login_command(db_config, **kwargs):
+def login_command(db_config: toolsql.DBConfig) -> None:
 
     if db_config['dbms'] == 'postgres':
         cmd = 'psql --dbname {database} --user {username}'

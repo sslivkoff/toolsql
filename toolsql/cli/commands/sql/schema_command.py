@@ -1,11 +1,14 @@
+from __future__ import annotations
+
 import toolsql
+import toolcli
 
 
-def get_command_spec():
+def get_command_spec() -> toolcli.CommandSpec:
     return {
         'f': schema_command,
-        'help': None,
-        'options': [
+        'help': 'print schema of database',
+        'args': [
             {'name': '--full', 'kwargs': {'action': 'store_true'}},
             {'name': '--json', 'kwargs': {'action': 'store_true'}},
         ],
@@ -13,11 +16,18 @@ def get_command_spec():
     }
 
 
-def schema_command(db_config, db_schema, full, json, **kwargs):
+def schema_command(
+    db_config: toolsql.DBConfig,
+    db_schema: toolsql.DBSchema,
+    full: bool,
+    json: bool,
+):
     if json:
         import json as json_module
 
         print(json_module.dumps(db_schema, indent=4))
     else:
-        toolsql.print_schema(db_config=db_config, db_schema=db_schema, full=full)
+        toolsql.print_schema(
+            db_config=db_config, db_schema=db_schema, full=full
+        )
 

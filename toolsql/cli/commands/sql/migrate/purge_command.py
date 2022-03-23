@@ -1,7 +1,10 @@
+from __future__ import annotations
+
+import toolcli
 import toolsql
 
 
-def get_command_spec():
+def get_command_spec() -> toolcli.CommandSpec:
     return {
         'f': migrate_purge_command,
         'help': None,
@@ -13,14 +16,20 @@ def get_command_spec():
     }
 
 
-def migrate_purge_command(target, confirm, migrate_config, **kwargs):
+def migrate_purge_command(
+    target: str,
+    confirm: bool,
+    migrate_config: toolcli.MigrateConfig,
+) -> None:
     if target == 'pending':
         toolsql.purge_pending_migrations(
-            migrate_config=migrate_config, confirm=confirm,
+            migrate_config=migrate_config,
+            confirm=confirm,
         )
     elif target == 'all':
         toolsql.purge_all_migrations(
-            migrate_config=migrate_config, confirm=confirm,
+            migrate_config=migrate_config,
+            confirm=confirm,
         )
     else:
         raise Exception('purge target should be "pending" or "all"')

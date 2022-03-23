@@ -1,16 +1,21 @@
+from __future__ import annotations
+
+import toolcli
 import toolsql
 
 
-def get_command_spec():
+def get_command_spec() -> toolcli.CommandSpec:
     return {
         'f': migrate_setup_command,
         'help': None,
-        'options': [{'name': '--confirm', 'kwargs': {'action': 'store_true'}}],
-        'inject': ['migrate_config', 'inject_calls'],
+        'args': [{'name': '--confirm', 'action': 'store_true'}],
+        'special': {'inject': ['migrate_config', 'inject_calls']},
     }
 
 
-def migrate_setup_command(migrate_config, inject_calls, confirm, **kwargs):
+def migrate_setup_command(
+    migrate_config: toolsql.MigrateConfig, inject_calls, confirm: bool
+) -> None:
     if 'db_schema' not in inject_calls:
         raise Exception('db_schema must be defined as a cli call injection')
     if 'db_config' not in inject_calls:
