@@ -1,25 +1,29 @@
 """functions for managing sqlalchemy engines and connections"""
 
-import logging
+from __future__ import annotations
 
-import sqlalchemy
-import sqlalchemy.dialects.sqlite
-import sqlite3
+import logging
+import typing
+
+import sqlalchemy  # type: ignore
+import sqlalchemy.dialects.sqlite  # type: ignore
+import sqlite3  # type: ignore
 
 from .. import exceptions
+from .. import spec
 
 
 def create_engine(
     *,
-    dbms=None,
-    database=None,
-    username=None,
-    password=None,
-    path=None,
-    log_level=None,
-    db_config=None,
-    engine_kwargs=None,
-):
+    dbms: spec.DatabaseSystem | None = None,
+    database: str | None = None,
+    username: str | None = None,
+    password: str | None = None,
+    path: str | None = None,
+    log_level: str | None = None,
+    db_config: spec.DBConfig | None = None,
+    engine_kwargs: typing.Mapping[str, typing.Any] | None = None,
+) -> spec.SAEngine:
     """create sqlalchemy engine object"""
 
     # set logger
@@ -50,14 +54,14 @@ def create_engine(
 
 def get_db_uri(
     *,
-    dbms=None,
-    server=None,
-    database=None,
-    username=None,
-    password=None,
-    path=None,
-    db_config=None,
-):
+    dbms: spec.DatabaseSystem | None = None,
+    server: str | None = None,
+    database: str | None = None,
+    username: str | None = None,
+    password: str | None = None,
+    path: str | None = None,
+    db_config: spec.DBConfig | None = None,
+) -> str:
     """create database uri for use with a sqlalchemy engine object"""
 
     # ensure dbms is specified
@@ -99,7 +103,11 @@ def get_db_uri(
     return uri
 
 
-def _process_engine_kwargs(engine_kwargs, uri, db_config):
+def _process_engine_kwargs(
+    engine_kwargs: typing.Mapping[str, typing.Any] | None,
+    uri: str,
+    db_config: spec.DBConfig | None,
+) -> typing.Mapping[str, typing.Any]:
     if engine_kwargs is None:
         engine_kwargs = {}
     else:
@@ -113,14 +121,18 @@ def _process_engine_kwargs(engine_kwargs, uri, db_config):
     return engine_kwargs
 
 
-def _add_exception_handler(engine):
+def _add_exception_handler(engine: spec.SAEngine) -> None:
     """add custom event handler to sqlalchemy engine"""
 
     @sqlalchemy.event.listens_for(engine, 'handle_error', retval=True)
     def handle_error(context):
         exception = context.original_exception
         if isinstance(
-            exception, (sqlite3.InterfaceError, sqlite3.IntegrityError,),
+            exception,
+            (
+                sqlite3.InterfaceError,
+                sqlite3.IntegrityError,
+            ),
         ):
             return exceptions.InvalidOperationException(exception.args)
 

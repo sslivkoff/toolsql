@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import subprocess
-import typing
 
-import sqlalchemy
+import sqlalchemy  # type: ignore
 
 from . import sqlalchemy_utils
 from . import spec
@@ -11,11 +10,11 @@ from . import spec
 
 def print_schema(
     *,
-    db_config: typing.Optinal[spec.DBConfig] = None,
-    db_metadata: typing.Optional[spec.SAMetadata] = None,
-    spec_metadata: typing.Optional[spec.SAMetadata] = None,
-    engine: typing.Optional[spec.SAEngine] = None,
-    db_schema: typing.Optional[spec.DBSchema] = None,
+    db_config: spec.DBConfig | None = None,
+    db_metadata: spec.SAMetadata | None = None,
+    spec_metadata: spec.SAMetadata | None = None,
+    engine: spec.SAEngine | None = None,
+    db_schema: spec.DBSchema | None = None,
     full: bool = False,
 ) -> None:
 
@@ -64,11 +63,11 @@ def print_schema(
 
 def print_usage(
     *,
-    db_config: typing.Optinal[spec.DBConfig] = None,
-    db_metadata: typing.Optional[spec.SAMetadata] = None,
-    spec_metadata: typing.Optional[spec.SAMetadata] = None,
-    engine: typing.Optional[spec.SAEngine] = None,
-    db_schema: typing.Optional[spec.DBSchema] = None,
+    db_config: spec.DBConfig | None = None,
+    db_metadata: spec.SAMetadata | None = None,
+    spec_metadata: spec.SAMetadata | None = None,
+    engine: spec.SAEngine | None = None,
+    db_schema: spec.DBSchema | None = None,
 ) -> None:
     if db_metadata is None:
         if engine is None and db_config is None:
@@ -120,7 +119,7 @@ def get_bytes_usage_per_table(
     for key, value in db_config.items():
         format_key = '{' + key + '}'
         if format_key in cmd:
-            cmd = cmd.replace(format_key, value)
+            cmd = cmd.replace(format_key, str(value))
 
     output = subprocess.check_output(cmd, shell=True, universal_newlines=True)
     output = output.strip()

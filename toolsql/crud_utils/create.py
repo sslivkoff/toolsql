@@ -1,39 +1,62 @@
+from __future__ import annotations
+
+import typing
+from typing_extensions import Literal
+
+from .. import spec
 from .. import sqlalchemy_utils
 
 
+NewRow = typing.Mapping[str, typing.Any]
+MissingKeysOption = Literal['fill_in_copy', 'fill_in_inplace', 'chunk']
+
+
 def insert(
-    table,
-    conn,
-    row=None,
-    rows=None,
-    return_ids=None,
-    upsert=None,
-    missing_keys=None,
-    **kwargs
-):
+    table: spec.TableRef,
+    conn: spec.SAConnection,
+    row: NewRow | None = None,
+    rows: typing.Sequence[NewRow] | None = None,
+    return_ids: bool | None = None,
+    upsert: spec.ConflictOption | None = None,
+    missing_keys: MissingKeysOption | None = None,
+) -> typing.Any | None:
 
     if (row is None and rows is None) or (row is not None and rows is not None):
         raise Exception('specify either row or rows')
 
-    common_kwargs = dict(kwargs, table=table, conn=conn, upsert=upsert)
     if row is not None:
-        return insert_row(row=row, **common_kwargs)
+        return insert_row(
+            row=row,
+            table=table,
+            conn=conn,
+            upsert=upsert,
+        )
     elif rows is not None:
         return insert_rows(
             rows=rows,
+            table=table,
+            conn=conn,
             return_ids=return_ids,
+            upsert=upsert,
             missing_keys=missing_keys,
-            **common_kwargs
         )
     else:
         raise Exception('specify either row or rows')
 
 
-def insert_row(row, table, conn, upsert=None):
+def insert_row(
+    row: NewRow,
+    table: spec.TableRef,
+    conn: spec.SAConnection,
+    upsert: typing.Optional[spec.ConflictOption] = None,
+) -> typing.Optional[typing.Any]:
 
     # create statement
     statement = create_insert_statement(
-        table=table, conn=conn, row=row, upsert=upsert,
+        table=table,
+        conn=conn,
+        row=row,
+        upsert=upsert,
     )
 
     # execute statement
@@ -50,8 +73,13 @@ def insert_row(row, table, conn, upsert=None):
 
 
 def insert_rows(
-    rows, table, conn, return_ids=None, upsert=None, missing_keys=None
-):
+    rows: typing.Sequence[NewRow],
+    table: spec.TableRef,
+    conn: spec.SAConnection,
+    return_ids: typing.Optional[bool] = None,
+    upsert: typing.Optional[spec.ConflictOption] = None,
+    missing_keys: typing.Optional[MissingKeysOption] = None,
+) -> typing.Optional[typing.Sequence[typing.Any]]:
 
     if return_ids is None:
         return_ids = False
@@ -93,7 +121,10 @@ def insert_rows(
         return None
 
 
-def process_missing_keys(rows, missing_keys):
+def process_missing_keys(
+    rows: typing.Sequence[NewRow],
+    missing_keys: MissingKeysOption,
+) -> typing.Sequence[typing.Sequence[NewRow]]:
 
     if missing_keys == 'fill_in_inplace':
 
@@ -103,7 +134,7 @@ def process_missing_keys(rows, missing_keys):
         for row in rows:
             for key in all_keys:
                 if key not in row:
-                    row[key] = None
+                    row = dict(row, **{key: None})
         row_chunks = [rows]
 
     elif missing_keys == 'fill_in_copy':
@@ -122,7 +153,7 @@ def process_missing_keys(rows, missing_keys):
         row_chunks = [rows]
 
     elif missing_keys == 'chunk':
-        key_sets = {}
+        key_sets: dict[tuple[str, ...], list[NewRow]] = {}
         for row in rows:
             key_set = tuple(sorted(row.keys()))
             key_sets.setdefault(key_set, [])
@@ -135,7 +166,13 @@ def process_missing_keys(rows, missing_keys):
     return row_chunks
 
 
-def create_insert_statement(table, conn, row=None, statement=None, upsert=None):
+def create_insert_statement(
+    table: spec.TableRef,
+    conn: spec.SAConnection,
+    row: typing.Mapping[str, typing.Any] | None = None,
+    statement: spec.SAInsertStatement = None,
+    upsert: spec.ConflictOption | None = None,
+) -> spec.SAInsertStatement:
 
     # get table object
     if isinstance(table, str):
@@ -145,7 +182,7 @@ def create_insert_statement(table, conn, row=None, statement=None, upsert=None):
 
     # create statement
     if statement is None:
-        statement = sqlalchemy_utils.create_insert_statement(table)
+        statement = sqlalchemy_utils.create_blank_insert_statement(table)
         # statement = table.insert()
 
     # add row

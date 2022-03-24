@@ -41,8 +41,11 @@ def create_migration(migrate_config, message, autogenerate=True):
     return scripts
 
 
-def edit_migrations(migrate_config):
+def edit_migrations(migrate_config, revision=None):
     """edit pending migrations"""
+    if revision is not None:
+        raise NotImplementedError()
+
     pending_revisions = migrate_revisions.get_pending_revisions(migrate_config)
     paths = [revision.path for revision in pending_revisions]
     if len(paths) == 0:

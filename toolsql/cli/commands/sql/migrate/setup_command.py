@@ -7,7 +7,7 @@ import toolsql
 def get_command_spec() -> toolcli.CommandSpec:
     return {
         'f': migrate_setup_command,
-        'help': None,
+        'help': 'setup migration root dir',
         'args': [{'name': '--confirm', 'action': 'store_true'}],
         'special': {'inject': ['migrate_config', 'inject_calls']},
     }

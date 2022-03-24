@@ -21,6 +21,5 @@ def login_command(db_config: toolsql.DBConfig) -> None:
     else:
         raise NotImplementedError()
     cmd = cmd.format(**db_config)
-    cmd = cmd.split(' ')
-    subprocess.call(cmd)
+    subprocess.call(cmd.split(' '))
 

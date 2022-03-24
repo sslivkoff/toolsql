@@ -9,10 +9,12 @@ def get_command_spec() -> toolcli.CommandSpec:
         'f': schema_command,
         'help': 'print schema of database',
         'args': [
-            {'name': '--full', 'kwargs': {'action': 'store_true'}},
-            {'name': '--json', 'kwargs': {'action': 'store_true'}},
+            {'name': '--full', 'action': 'store_true'},
+            {'name': '--json', 'action': 'store_true'},
         ],
-        'inject': ['db_config', 'db_schema'],
+        'special': {
+            'inject': ['db_config', 'db_schema'],
+        },
     }
 
 

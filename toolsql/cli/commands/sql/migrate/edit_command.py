@@ -7,7 +7,7 @@ import toolsql
 def get_command_spec() -> toolcli.CommandSpec:
     return {
         'f': migrate_edit_command,
-        'help': None,
+        'help': 'edit migrations',
         'args': [
             {'name': '--revision'},
         ],

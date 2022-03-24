@@ -7,7 +7,7 @@ import toolcli
 def get_command_spec() -> toolcli.CommandSpec:
     return {
         'f': usage_command,
-        'help': None,
+        'help': 'print db usage information',
         'args': [{'name': '--full', 'action': 'store_true'}],
         'special': {
             'inject': ['db_config', 'db_schema'],

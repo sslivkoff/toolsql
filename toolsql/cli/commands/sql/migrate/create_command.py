@@ -7,11 +7,11 @@ import toolsql
 def get_command_spec() -> toolcli.CommandSpec:
     return {
         'f': migrate_upgrade_command,
-        'help': None,
-        'options': [
+        'help': 'create migrations',
+        'args': [
             {'name': '--message'},
-            {'name': '--noedit', 'kwargs': {'action': 'store_true'}},
-            {'name': '--noautogenerate', 'kwargs': {'action': 'store_true'}},
+            {'name': '--noedit', 'action': 'store_true'},
+            {'name': '--noautogenerate', 'action': 'store_true'},
         ],
         'special': {
             'inject': ['migrate_config'],

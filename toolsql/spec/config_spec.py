@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import typing
-from typing_extensions import TypedDict
+from typing_extensions import TypedDict, Literal
 
 
-DatabaseSystem = typing.Literal['sqlite', 'postgres']
+DatabaseSystem = Literal['sqlite', 'postgres']
 
 
-class SQLConfig(TypedDict):
+class DBConfig(TypedDict):
     dbms: DatabaseSystem
     path: str
     engine: str
@@ -22,7 +22,7 @@ class SQLConfig(TypedDict):
     pool_timeout: typing.Union[int, float]
 
 
-class SQLMigrateConfig(TypedDict):
+class MigrateConfig(TypedDict):
     migrate_root: str
-    db_config: SQLConfig
+    db_config: DBConfig
 

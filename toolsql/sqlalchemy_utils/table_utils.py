@@ -1,13 +1,18 @@
 """functions for interacting with sqlalchemy tables"""
 
-import sqlalchemy
+from __future__ import annotations
+
+import typing
+
+import sqlalchemy  # type: ignore
 import toolcache
 
+from .. import spec
 from . import column_utils
 from . import metadata_utils
 
 
-def get_table_primary_key(table):
+def get_table_primary_key(table: spec.SATable) -> str:
     primary_keys = list(table.primary_key.columns)
     if len(primary_keys) != 1:
         raise Exception('multi column primary key')
@@ -15,7 +20,11 @@ def get_table_primary_key(table):
     return primary_key.name
 
 
-def create_table_object_from_schema(table_name, table_schema, metadata):
+def create_table_object_from_schema(
+    table_name: str,
+    table_schema: spec.TableSpec,
+    metadata: spec.SAMetadata,
+) -> spec.SATable:
     """create sqlalchemy table object from schema specification"""
 
     # create columns
@@ -25,7 +34,8 @@ def create_table_object_from_schema(table_name, table_schema, metadata):
         if column_spec.get('virtual'):
             continue
         column = column_utils.create_column_object_from_schema(
-            column_name=column_name, column_schema=column_spec,
+            column_name=column_name,
+            column_schema=column_spec,
         )
         table_items.append(column)
 
@@ -61,16 +71,23 @@ def create_table_object_from_schema(table_name, table_schema, metadata):
     return table
 
 
-@toolcache.cache(cache_type='memory')
+@toolcache.cache(cachetype='memory')
 def create_table_object_from_db(
-    *, table_name, metadata=None, engine=None, conn=None, db_config=None,
-):
+    *,
+    table_name: str,
+    metadata: spec.SAMetadata | None = None,
+    engine: spec.SAEngine | None = None,
+    conn: spec.SAConnection | None = None,
+    db_config: spec.DBConfig | None = None,
+) -> spec.SATable:
     """create sqlalchemy table object reflecting current database"""
     if metadata is None:
         if engine is None and conn is None:
             raise Exception('must specify metadata, engine, or conn')
         metadata = metadata_utils.create_metadata_object_from_db(
-            engine=engine, conn=conn, db_config=db_config,
+            engine=engine,
+            conn=conn,
+            db_config=db_config,
         )
     table = metadata.tables[table_name]
     return table

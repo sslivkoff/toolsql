@@ -22,14 +22,14 @@ class DBSchema(TypedDict):
     tables: typing.Mapping[str, 'TableSpec']
 
 
-class TableSpec(TypedDict):
+class TableSpec(TypedDict, total=False):
     columns: typing.Mapping[str, 'ColumnSpec']
     constraints: typing.Sequence['TableConstraint']
-    indices: typing.Seqeunce['TableIndex']
+    indices: typing.Sequence['TableIndex']
     column_order: typing.Sequence[str]
 
 
-class ColumnSpec(TypedDict):
+class ColumnSpec(TypedDict, total=False):
     type: ColumnType
     inner_type: ColumnType  # for use by array
     fk_table: str  # table name
@@ -60,7 +60,7 @@ class TableConstraint(TypedDict):
     columns: typing.Sequence[str]
 
 
-class TableIndex(TypedDict):
+class TableIndex(TypedDict, total=False):
     name: str
     columns: typing.Sequence[str]
     unique: bool

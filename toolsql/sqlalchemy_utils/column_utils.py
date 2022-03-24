@@ -1,7 +1,9 @@
-import sqlalchemy
+import sqlalchemy  # type: ignore
+
+from .. import spec
 
 
-def get_column_typemap():
+def get_column_typemap() -> dict[str, sqlalchemy.sql.type_api.TypeEngine]:
     """return conversions of types into sqlalchemy types"""
     return {
         'Boolean': sqlalchemy.Boolean,
@@ -16,7 +18,11 @@ def get_column_typemap():
     }
 
 
-def create_column_object_from_schema(column_name, column_schema):
+def create_column_object_from_schema(
+    column_name: str,
+    column_schema: spec.ColumnSpec,
+) -> spec.SAColumn:
+
     # add column properties
     args = []
     kwargs = {}
@@ -54,10 +60,11 @@ def create_column_object_from_schema(column_name, column_schema):
     typemap = get_column_typemap()
     column_type = typemap[column_schema['type']]
     column = sqlalchemy.Column(column_name, column_type, *args, **kwargs)
+
     return column
 
 
-def _create_foreign_key(column_spec):
+def _create_foreign_key(column_spec: spec.ColumnSpec) -> sqlalchemy.ForeignKey:
     """create sqlalchemy foreign key object from a column specification"""
     fk_id = column_spec['fk_table'] + '.' + column_spec['fk_column']
     fk_kwargs = {}

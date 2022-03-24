@@ -7,7 +7,7 @@ from typing_extensions import TypedDict
 from . import sa_spec
 
 
-class SQLQueryFilter(TypedDict):
+class QueryFilter(TypedDict):
     row_id: typing.Any
     row_ids: typing.Sequence[typing.Any]
     where_equals: typing.Mapping[str, typing.Any]  # column_name: column_value
@@ -17,15 +17,14 @@ class SQLQueryFilter(TypedDict):
         typing.Mapping[str, typing.Any],
     ]
     where_start_of: typing.Mapping[str, str]
-    filters: typing.Sequence['SQLAlchemyStatementObject']
+    filters: typing.Sequence[sa_spec.SAStatement]
     filter_by: typing.Mapping[str, typing.Any]
     order_by: typing.Union['ColumnOrder', typing.Sequence['ColumnOrder']]
     only_columns: typing.Sequence[typing.Union[str, sa_spec.SAColumn]]
 
 
-SQLAlchemyStatementObject = typing.Any
-SQLReturnCount = typing.Literal['one', 'all']
-SQLRowCount = typing.Literal['exactly_one', 'at_least_one', 'at_most_one']
+ReturnCount = typing.Literal['one', 'all']
+RowCount = typing.Literal['exactly_one', 'at_least_one', 'at_most_one']
 
 
 #
@@ -45,6 +44,13 @@ ColumnOrder = Literal[
     'ColumnOrderMap',
     'SAColumnOrderObject',
 ]
+
+
+#
+# # writes
+#
+
+ConflictOption = Literal['do_nothing', 'do_update']
 
 
 #

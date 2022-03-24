@@ -1,16 +1,23 @@
-import sqlalchemy
+from __future__ import annotations
 
+import typing
+
+import sqlalchemy  # type: ignore
+
+from .. import spec
 from . import table_utils
 
 
-def create_insert_statement(table):
+def create_blank_insert_statement(
+    table: spec.SATable,
+) -> sqlalchemy.sql.expression.Insert:
     engine = table.metadata.bind
     is_postgresql = isinstance(
         engine.dialect,
         sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2,
     )
     if is_postgresql:
-        from sqlalchemy.dialects import postgresql
+        from sqlalchemy.dialects import postgresql  # type: ignore
 
         return postgresql.insert(table=table)
     else:
@@ -19,13 +26,16 @@ def create_insert_statement(table):
 
 def add_where_clause(
     *,
-    table,
-    statement,
-    row_id=None,
-    row_ids=None,
-    where_equals=None,
-    where_in=None,
-    where_foreign_row_equals=None,
+    table: spec.SATable,
+    statement: spec.SAStatement,
+    row_id: typing.Any | None = None,
+    row_ids: typing.Sequence[typing.Any] | None = None,
+    where_equals: typing.Mapping[str, typing.Any] | None = None,
+    where_in: typing.Mapping[str, typing.Sequence[typing.Any]] | None = None,
+    where_foreign_row_equals: typing.Mapping[
+        str, typing.Mapping[str, typing.Any]
+    ]
+    | None = None,
     where_start_of=None,
     filters=None,
     filter_by=None,
@@ -67,7 +77,11 @@ def add_where_clause(
     return statement
 
 
-def add_order_by_clause(statement, order_by, table):
+def add_order_by_clause(
+    statement: spec.SAStatement,
+    order_by: str | typing.Sequence,
+    table: spec.SATable,
+) -> spec.SAStatement:
     """
     - see https://docs.sqlalchemy.org/en/14/core/tutorial.html#ordering-grouping-limiting-offset-ing
     """
@@ -102,11 +116,17 @@ def add_order_by_clause(statement, order_by, table):
     return statement
 
 
-def _create_foreign_row_equals(statement, table, where_foreign_row_equals):
+def _create_foreign_row_equals(
+    statement: spec.SAStatement,
+    table: spec.SATable,
+    where_foreign_row_equals: typing.Mapping[
+        str, typing.Mapping[str, typing.Any]
+    ],
+) -> spec.SAStatement:
     for column, foreign in where_foreign_row_equals.items():
 
-        column = table.c[column]
-        foreign_keys = column.foreign_keys
+        column_obj = table.c[column]
+        foreign_keys = column_obj.foreign_keys
         if len(foreign_keys) != 1:
             raise Exception('must have singular foreign key')
         foreign_primary_column = next(iter(foreign_keys)).column
@@ -118,7 +138,7 @@ def _create_foreign_row_equals(statement, table, where_foreign_row_equals):
         for foreign_column, foreign_value in foreign.items():
             statement = statement.where(
                 sqlalchemy.and_(
-                    column == foreign_table.c[foreign_primary_key],
+                    column_obj == foreign_table.c[foreign_primary_key],
                     foreign_table.c[foreign_column] == foreign_value,
                 )
             )

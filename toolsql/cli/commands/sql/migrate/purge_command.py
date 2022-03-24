@@ -7,19 +7,21 @@ import toolsql
 def get_command_spec() -> toolcli.CommandSpec:
     return {
         'f': migrate_purge_command,
-        'help': None,
-        'options': [
+        'help': 'purge migrations',
+        'args': [
             {'name': 'target'},
-            {'name': '--confirm', 'kwargs': {'action': 'store_true'}},
+            {'name': '--confirm', 'action': 'store_true'},
         ],
-        'inject': ['migrate_config'],
+        'special': {
+            'inject': ['migrate_config'],
+        },
     }
 
 
 def migrate_purge_command(
     target: str,
     confirm: bool,
-    migrate_config: toolcli.MigrateConfig,
+    migrate_config: toolsql.MigrateConfig,
 ) -> None:
     if target == 'pending':
         toolsql.purge_pending_migrations(

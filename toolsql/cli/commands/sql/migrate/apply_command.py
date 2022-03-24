@@ -7,7 +7,7 @@ import toolsql
 def get_command_spec() -> toolcli.CommandSpec:
     return {
         'f': migrate_apply_command,
-        'help': None,
+        'help': 'apply migrations',
         'special': {
             'inject': ['migrate_config'],
         },

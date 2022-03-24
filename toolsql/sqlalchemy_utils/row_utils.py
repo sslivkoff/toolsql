@@ -1,21 +1,26 @@
+from __future__ import annotations
+
+import typing
+
+from .. import spec
 from .. import exceptions
 from .. import crud_utils
 from . import table_utils
 
 
-def row_to_dict(row):
+def row_to_dict(row: spec.SARow) -> dict[str, typing.Any]:
     return {key: row[key] for key in row.keys()}
 
 
 def replace_row_foreign_keys(
     *,
-    row,
-    conn,
-    table,
-    foreign_name=None,
-    foreign_names=None,
-    insert_missing_rows=False,
-):
+    row: spec.Row,
+    conn: spec.SAConnection,
+    table: spec.TableRef,
+    foreign_name: str | None = None,
+    foreign_names: typing.Mapping[str, str] | None = None,
+    insert_missing_rows: bool = False,
+) -> dict[str, typing.Any]:
 
     if isinstance(table, str):
         table = table_utils.create_table_object_from_db(
