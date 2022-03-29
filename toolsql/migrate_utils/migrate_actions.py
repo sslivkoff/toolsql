@@ -3,8 +3,6 @@ import shutil
 import sys
 import time
 
-import alembic.command
-import alembic.util
 import toolcli
 
 from .. import sqlalchemy_utils
@@ -16,6 +14,9 @@ from . import migrate_revisions
 
 def create_migration(migrate_config, message, autogenerate=True):
     """create migration"""
+    import alembic.command
+    import alembic.util
+
     if message is None:
         message = time.strftime('%Y-%m-%d__%H-%M-%S', time.localtime())
     print('creating migration', message)
@@ -60,6 +61,8 @@ def edit_migrations(migrate_config, revision=None):
 
 def apply_migrations(migrate_config):
     """apply pending migrations"""
+    import alembic.command
+
     os.chdir(migrate_config['migrate_root'])
     alembic_config = migrate_alembic.get_alembic_config(migrate_config)
     alembic.command.upgrade(alembic_config, 'head')

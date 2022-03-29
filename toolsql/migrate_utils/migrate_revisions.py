@@ -1,9 +1,9 @@
-import alembic.script
-
 from .. import sqlalchemy_utils
 
 
 def get_current_revision(*, conn=None, migrate_config=None):
+    import alembic.migration
+
     if conn is None:
         if migrate_config is None:
             raise Exception('must specify conn or migrate_config')
@@ -15,6 +15,8 @@ def get_current_revision(*, conn=None, migrate_config=None):
 
 
 def get_pending_revisions(migrate_config):
+    import alembic.script
+
     current_revision_id = get_current_revision(migrate_config=migrate_config)
     script_dir = alembic.script.ScriptDirectory(migrate_config['migrate_root'])
     pending = []

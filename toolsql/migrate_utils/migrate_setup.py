@@ -2,7 +2,6 @@ import os
 import sys
 import textwrap
 
-import alembic.command
 import toolcli
 
 from . import migrate_alembic
@@ -15,6 +14,7 @@ def migrate_root_is_setup(migrate_config):
 
 
 def setup_migrate_root(migrate_config, db_schema_call, db_config_call, confirm=False):
+    import alembic.command
 
     migrate_root = migrate_config['migrate_root']
 
