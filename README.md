@@ -7,7 +7,7 @@ the goal is to create an opinionated lightweight wrapper around SqlAlchemy that 
 
 ## Features
 - define schemas, queries, and migrations using JSON
-- compatible with postgres and sqlite
+- compatible with postgresql and sqlite
 - uses sqlalchemy under the hood
 
 ## Contents

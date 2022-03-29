@@ -75,7 +75,7 @@ def get_db_uri(
         db_kwargs = dict(db_config)
     else:
         db_kwargs = {}
-    if dbms == 'postgres':
+    if dbms == 'postgresql':
         if server is not None:
             db_kwargs['server'] = server
         if database is not None:

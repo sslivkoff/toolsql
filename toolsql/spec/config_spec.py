@@ -4,7 +4,7 @@ import typing
 from typing_extensions import TypedDict, Literal
 
 
-DatabaseSystem = Literal['sqlite', 'postgres']
+DatabaseSystem = Literal['sqlite', 'postgresql']
 
 
 class DBConfig(TypedDict):

@@ -107,7 +107,7 @@ def get_bytes_usage_per_table(
     db_config: spec.DBConfig,
     include_indices: bool = True,
 ) -> dict[str, int]:
-    if db_config['dbms'] != 'postgres':
+    if db_config['dbms'] != 'postgresql':
         raise NotImplementedError()
 
     if include_indices:
