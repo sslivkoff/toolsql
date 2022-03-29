@@ -10,18 +10,38 @@ from . import table_utils
 
 def create_blank_insert_statement(
     table: spec.SATable,
+    engine: spec.SAEngine | None = None,
+    conn: spec.SAConnection | None = None,
+    dialect: str | None = None,
 ) -> sqlalchemy.sql.expression.Insert:
-    engine = table.metadata.bind
-    is_postgresql = isinstance(
-        engine.dialect,
-        sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2,
-    )
-    if is_postgresql:
+
+    if dialect is None:
+        # determine if dialect is available
+        if engine is None:
+            if conn is not None:
+                engine = conn.engine
+            else:
+                return table.insert()
+
+        # determine dialect
+        dialect = engine.dialect.__module__.split('.')[2]
+
+    # return statement based on dialect
+    if dialect == 'postgresql':
         from sqlalchemy.dialects import postgresql  # type: ignore
 
         return postgresql.insert(table=table)
-    else:
+
+    elif dialect == 'sqlite':
+        from sqlalchemy.dialects import sqlite  # type: ignore
+
+        return sqlite.insert(table=table)
+
+    elif dialect is None:
         return table.insert()
+
+    else:
+        raise Exception('unknown dialect format')
 
 
 def add_where_clause(

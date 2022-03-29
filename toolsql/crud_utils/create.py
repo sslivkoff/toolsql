@@ -60,6 +60,11 @@ def insert_row(
     )
 
     # execute statement
+    # import sqlalchemy
+    # result = typing.cast(
+    #     sqlalchemy.engine.CursorResult,
+    #     conn.execute(statement),
+    # )
     result = conn.execute(statement)
 
     # process result
@@ -182,18 +187,28 @@ def create_insert_statement(
 
     # create statement
     if statement is None:
-        statement = sqlalchemy_utils.create_blank_insert_statement(table)
-        # statement = table.insert()
+        statement = sqlalchemy_utils.create_blank_insert_statement(
+            table, conn=conn
+        )
 
     # add row
     if row is not None:
         statement = statement.values(**row)
 
     if upsert is not None:
+        primary_keys = [
+            column.name for column in table.primary_key.columns.values()
+        ]
+        if row is None:
+            raise NotImplementedError('must specify single row for upsert')
         if upsert == 'do_nothing':
-            statement = statement.on_conflict_do_nothing()
+            statement = statement.on_conflict_do_nothing(
+                index_elements=primary_keys
+            )
         elif upsert == 'do_update':
-            statement = statement.on_conflict_do_update(set_=row)
+            statement = statement.on_conflict_do_update(
+                index_elements=primary_keys, set_=row
+            )
         else:
             raise Exception('unknown upsert value: ' + str(upsert))
 

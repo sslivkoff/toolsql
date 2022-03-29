@@ -9,7 +9,7 @@ from . import table_utils
 
 
 def row_to_dict(row: spec.SARow) -> dict[str, typing.Any]:
-    return {key: row[key] for key in row.keys()}
+    return row._asdict()
 
 
 def replace_row_foreign_keys(

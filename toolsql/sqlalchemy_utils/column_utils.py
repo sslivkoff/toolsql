@@ -1,9 +1,13 @@
+from __future__ import annotations
+
+import typing
+
 import sqlalchemy  # type: ignore
 
 from .. import spec
 
 
-def get_column_typemap() -> dict[str, sqlalchemy.sql.type_api.TypeEngine]:
+def get_column_typemap() -> dict[str, typing.Any]:
     """return conversions of types into sqlalchemy types"""
     return {
         'Boolean': sqlalchemy.Boolean,
@@ -11,15 +15,14 @@ def get_column_typemap() -> dict[str, sqlalchemy.sql.type_api.TypeEngine]:
         'BigInteger': sqlalchemy.BigInteger,
         'Float': sqlalchemy.Float,
         'Text': sqlalchemy.Text,
-        'Map': sqlalchemy.JSON,
         'UUID': sqlalchemy.Text,
         'Timestamp': sqlalchemy.TIMESTAMP(timezone=True),
         'IP': sqlalchemy.Text,
+        'JSON': sqlalchemy.JSON,
     }
 
 
 def create_column_object_from_schema(
-    column_name: str,
     column_schema: spec.ColumnSpec,
 ) -> spec.SAColumn:
 
@@ -59,7 +62,7 @@ def create_column_object_from_schema(
     # create column
     typemap = get_column_typemap()
     column_type = typemap[column_schema['type']]
-    column = sqlalchemy.Column(column_name, column_type, *args, **kwargs)
+    column = sqlalchemy.Column(column_schema['name'], column_type, *args, **kwargs)
 
     return column
 

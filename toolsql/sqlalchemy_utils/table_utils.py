@@ -30,11 +30,10 @@ def create_table_object_from_schema(
     # create columns
     column_specs = table_schema['columns']
     table_items = []
-    for column_name, column_spec in column_specs.items():
+    for column_spec in column_specs:
         if column_spec.get('virtual'):
             continue
         column = column_utils.create_column_object_from_schema(
-            column_name=column_name,
             column_schema=column_spec,
         )
         table_items.append(column)

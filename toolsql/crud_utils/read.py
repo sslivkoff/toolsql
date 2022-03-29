@@ -139,10 +139,7 @@ def _process_select_result(
     # get return data
     if return_count == 'one':
         row = result.fetchone()
-        if row is None:
-            return None
-        column = next(iter(row.keys()))
-        formatted_row = _format_row(row, row_format, column)
+        formatted_row = _format_row(row, row_format)
         if include_id:
             return {row[primary_key]: formatted_row}
         else:
@@ -150,13 +147,7 @@ def _process_select_result(
 
     elif return_count == 'all':
         rows = result.fetchall()
-        if len(rows) > 0:
-            column = next(iter(rows[0].keys()))
-        else:
-            column = None
-        formatted_rows = [
-            _format_row(row, row_format, column) for row in rows
-        ]
+        formatted_rows = [_format_row(row, row_format) for row in rows]
         if include_id:
             return {
                 row[primary_key]: formatted_row
@@ -184,7 +175,7 @@ def _check_row_count(result, row_count):
         raise Exception('unknown row_count: ' + str(row_count))
 
 
-def _format_row(row, row_format, column):
+def _format_row(row, row_format, column=None):
     if row_format == 'dict':
         return sqlalchemy_utils.row_to_dict(row)
     elif row_format == 'list':
@@ -192,6 +183,12 @@ def _format_row(row, row_format, column):
     elif row_format == 'object':
         return row
     elif row_format == 'only_column':
+        if column is None:
+            columns = row._fields
+            if len(columns) != 1:
+                raise Exception('number of rows must equal 1')
+            else:
+                column = columns[0]
         return row[column]
     else:
         raise Exception('unknown row_format: ' + str(row_format))

@@ -23,6 +23,7 @@ class DBSchema(TypedDict):
 
 
 class TableSpec(TypedDict, total=False):
+    name: str  # name of table, usually specified in DBSchema
     columns: typing.Mapping[str, 'ColumnSpec']
     constraints: typing.Sequence['TableConstraint']
     indices: typing.Sequence['TableIndex']
@@ -30,6 +31,7 @@ class TableSpec(TypedDict, total=False):
 
 
 class ColumnSpec(TypedDict, total=False):
+    name: str  # name of table, usually specified in TableSpec
     type: ColumnType
     inner_type: ColumnType  # for use by array
     fk_table: str  # table name
