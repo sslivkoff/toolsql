@@ -23,6 +23,8 @@ class QueryFilter(TypedDict):
     only_columns: typing.Sequence[typing.Union[str, sa_spec.SAColumn]]
 
 
+# return_count = of the results, how many to return, similar to LIMIT
+# row_count = number of rows that can be in the result, otherwise raise error
 ReturnCount = typing.Literal['one', 'all']
 RowCount = typing.Literal['exactly_one', 'at_least_one', 'at_most_one']
 
