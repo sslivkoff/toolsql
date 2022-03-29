@@ -43,5 +43,7 @@ def create_metadata_object_from_db(
 def _create_metadata_object_from_engine(
     engine: spec.SAEngine,
 ) -> spec.SAMetadata:
-    return sqlalchemy.MetaData(bind=engine, reflect=True)
+    metadata = sqlalchemy.MetaData()
+    metadata.reflect(bind=engine)
+    return metadata
 

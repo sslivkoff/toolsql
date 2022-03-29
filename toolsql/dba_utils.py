@@ -7,6 +7,7 @@ from . import sqlalchemy_utils
 
 
 def create_tables(
+    *,
     spec_metadata: typing.Optional[spec.SAMetadata] = None,
     db_schema: typing.Optional[spec.DBSchema] = None,
     engine: typing.Optional[spec.SAEngine] = None,
@@ -27,11 +28,15 @@ def create_tables(
     print('...all tables created')
 
 
-def drop_tables(metadata: spec.SAMetadata, force: bool = False) -> None:
+def drop_tables(
+    metadata: spec.SAMetadata,
+    engine: spec.SAEngine,
+    force: bool = False,
+) -> None:
     if not force:
         raise Exception('use force=True')
     print('dropping tables...')
-    metadata.drop_all()
+    metadata.drop_all(bind=engine)
     print('...all tables dropped')
 
 

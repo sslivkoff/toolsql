@@ -63,6 +63,7 @@ def print_schema(
 
 def print_usage(
     *,
+    conn: spec.SAConnection,
     db_config: spec.DBConfig | None = None,
     db_metadata: spec.SAMetadata | None = None,
     spec_metadata: spec.SAMetadata | None = None,
@@ -83,19 +84,17 @@ def print_usage(
             db_schema=db_schema,
         )
 
-    if engine is None:
-        engine = db_metadata.bind
-
     print('usage')
     if len(db_metadata.tables.keys()) == 0:
         print('[no tables exist]')
     for name, table in db_metadata.tables.items():
 
         # get row count
-        statement = sqlalchemy.select([sqlalchemy.func.count()]).select_from(
+        statement = sqlalchemy.select([sqlalchemy.func.count()]).select_from(  # type: ignore
             table
         )
-        row_count = engine.execute(statement).scalar()
+
+        row_count = conn.execute(statement).scalar()
 
         print('-', table, '(' + str(row_count) + ' rows)')
 

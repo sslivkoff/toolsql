@@ -19,7 +19,9 @@ def usage_command(
     db_config: toolsql.DBConfig, db_schema: toolsql.DBSchema, full: bool
 ) -> None:
 
-    toolsql.print_usage(db_config=db_config, db_schema=db_schema)
+    engine = toolsql.create_engine(db_config=db_config)
+    with engine.connect() as conn:
+        toolsql.print_usage(conn=conn, db_config=db_config, db_schema=db_schema)
     if full:
         bytes_usage_per_table = toolsql.get_bytes_usage_per_table(
             db_config=db_config
