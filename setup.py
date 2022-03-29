@@ -10,6 +10,7 @@ setuptools.setup(
         'sqlalchemy',
         'toolcache',
         'toolcli',
+        'typing_extensions',
     ],
 )
 
