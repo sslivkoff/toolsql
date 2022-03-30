@@ -10,15 +10,16 @@ from .. import spec
 def get_column_typemap() -> dict[str, typing.Any]:
     """return conversions of types into sqlalchemy types"""
     return {
-        'Boolean': sqlalchemy.Boolean,
-        'Integer': sqlalchemy.Integer,
         'BigInteger': sqlalchemy.BigInteger,
+        'Binary': sqlalchemy.BLOB,
+        'Boolean': sqlalchemy.Boolean,
         'Float': sqlalchemy.Float,
-        'Text': sqlalchemy.Text,
-        'UUID': sqlalchemy.Text,
-        'Timestamp': sqlalchemy.TIMESTAMP(timezone=True),
         'IP': sqlalchemy.Text,
+        'Integer': sqlalchemy.Integer,
         'JSON': sqlalchemy.JSON,
+        'Text': sqlalchemy.Text,
+        'Timestamp': sqlalchemy.TIMESTAMP(timezone=True),
+        'UUID': sqlalchemy.Text,
     }
 
 

@@ -6,15 +6,16 @@ from typing_extensions import TypedDict
 
 
 ColumnType = Literal[
-    'Boolean',
-    'Integer',
     'BigInteger',
+    'Binary',
+    'Boolean',
     'Float',
-    'Text',
-    'Map',
-    'UUID',
-    'Timestamp',
     'IP',
+    'Integer',
+    'JSON',
+    'Text',
+    'Timestamp',
+    'UUID',
 ]
 
 
@@ -24,7 +25,7 @@ class DBSchema(TypedDict):
 
 class TableSpec(TypedDict, total=False):
     name: str  # name of table, usually specified in DBSchema
-    columns: typing.Mapping[str, 'ColumnSpec']
+    columns: typing.Sequence['ColumnSpec']
     constraints: typing.Sequence['TableConstraint']
     indices: typing.Sequence['TableIndex']
     column_order: typing.Sequence[str]
