@@ -7,10 +7,15 @@ from typing_extensions import TypedDict
 from . import sa_spec
 
 
-class QueryFilter(TypedDict):
+class SelectQuery(TypedDict, total=False):
+    table: str
     row_id: typing.Any
     row_ids: typing.Sequence[typing.Any]
     where_equals: typing.Mapping[str, typing.Any]  # column_name: column_value
+    where_lte: typing.Mapping[str, typing.Any]  # column_name: column_value
+    where_lt: typing.Mapping[str, typing.Any]  # column_name: column_value
+    where_gte: typing.Mapping[str, typing.Any]  # column_name: column_value
+    where_gt: typing.Mapping[str, typing.Any]  # column_name: column_value
     where_in: typing.Mapping[str, typing.Sequence[typing.Any]]  # column_name
     where_foreign_row_equals: typing.Mapping[
         str,

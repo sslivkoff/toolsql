@@ -56,6 +56,10 @@ def add_where_clause(
         str, typing.Mapping[str, typing.Any]
     ]
     | None = None,
+    where_gt=None,
+    where_gte=None,
+    where_lt=None,
+    where_lte=None,
     where_start_of=None,
     filters=None,
     filter_by=None,
@@ -78,6 +82,18 @@ def add_where_clause(
             table=table,
             where_foreign_row_equals=where_foreign_row_equals,
         )
+    if where_lt is not None:
+        for column_name, column_value in where_lt.items():
+            statement = statement.where(table.c[column_name] < column_value)
+    if where_lte is not None:
+        for column_name, column_value in where_lte.items():
+            statement = statement.where(table.c[column_name] <= column_value)
+    if where_gt is not None:
+        for column_name, column_value in where_gt.items():
+            statement = statement.where(table.c[column_name] > column_value)
+    if where_gte is not None:
+        for column_name, column_value in where_gte.items():
+            statement = statement.where(table.c[column_name] >= column_value)
     if where_start_of is not None:
         for column_name, full_value in where_start_of.items():
             bound_name = 'started_by_' + column_name
