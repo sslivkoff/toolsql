@@ -130,7 +130,7 @@ def create_select_statement(
     if only_columns is not None:
         if isinstance(only_columns[0], str):
             only_columns = [table.columns[column] for column in only_columns]
-        statement = statement.with_only_columns(only_columns)
+        statement = statement.with_only_columns(*only_columns)
 
     return statement
 
@@ -192,6 +192,9 @@ def _check_row_count(result, row_count):
 
 
 def _format_row(row, row_format, column=None):
+    if row is None:
+        return row
+
     if row_format == 'dict':
         return sqlalchemy_utils.row_to_dict(row)
     elif row_format == 'list':
@@ -205,7 +208,7 @@ def _format_row(row, row_format, column=None):
                 raise Exception('number of rows must equal 1')
             else:
                 column = columns[0]
-        return row[column]
+        return getattr(row, column)
     else:
         raise Exception('unknown row_format: ' + str(row_format))
 
