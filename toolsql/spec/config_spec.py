@@ -7,7 +7,7 @@ from typing_extensions import TypedDict, Literal
 DatabaseSystem = Literal['sqlite', 'postgresql']
 
 
-class DBConfig(TypedDict):
+class DBConfig(TypedDict, total=False):
     dbms: DatabaseSystem
     path: str
     engine: str
