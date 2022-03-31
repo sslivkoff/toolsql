@@ -199,15 +199,18 @@ def create_insert_statement(
         primary_keys = [
             column.name for column in table.primary_key.columns.values()
         ]
-        if row is None:
-            raise NotImplementedError('must specify single row for upsert')
         if upsert == 'do_nothing':
             statement = statement.on_conflict_do_nothing(
                 index_elements=primary_keys
             )
         elif upsert == 'do_update':
+            update_dict = {
+                c.name: c for c in statement.excluded if not c.primary_key
+            }
             statement = statement.on_conflict_do_update(
-                index_elements=primary_keys, set_=row
+                index_elements=primary_keys,
+                # set_=row,
+                set_=update_dict,
             )
         else:
             raise Exception('unknown upsert value: ' + str(upsert))
