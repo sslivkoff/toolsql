@@ -17,6 +17,7 @@ def select(
     filters=None,
     filter_by=None,
     only_columns=None,
+    sql_functions=None,
     order_by=None,
     include_id=False,
     row_count=None,
@@ -53,6 +54,7 @@ def select(
         filters=filters,
         filter_by=filter_by,
         only_columns=only_columns,
+        sql_functions=sql_functions,
         order_by=order_by,
     )
 
@@ -88,6 +90,7 @@ def create_select_statement(
     filter_by=None,
     order_by=None,
     only_columns=None,
+    sql_functions=None,
 ):
 
     # get table object
@@ -127,6 +130,18 @@ def create_select_statement(
         )
 
     # select columns to return
+    if sql_functions is not None:
+        import sqlalchemy
+        if only_columns is not None:
+            raise NotImplementedError('cannot use sql_functions and only_columns')
+        functions_as_columns = []
+        for function_name, column_name in sql_functions:
+            function = getattr(sqlalchemy.func, function_name)
+            column = table.columns[column_name]
+            expression = function(column)
+            expression = expression.label(function_name + '__' + column_name)
+            functions_as_columns.append(expression)
+        statement = statement.with_only_columns(*functions_as_columns)
     if only_columns is not None:
         if isinstance(only_columns[0], str):
             only_columns = [table.columns[column] for column in only_columns]
@@ -143,6 +158,7 @@ def _process_select_result(
     include_id,
     table,
 ):
+    """process sql query output into desired result"""
 
     # check row count
     if row_count is not None:
@@ -176,6 +192,7 @@ def _process_select_result(
 
 
 def _check_row_count(result, row_count):
+    """verify that an acceptable number of rows as found"""
     if row_count == 'exactly_one':
         if result.rowcount < 1:
             raise Exception('no rows found, expected exactly one')
@@ -192,6 +209,7 @@ def _check_row_count(result, row_count):
 
 
 def _format_row(row, row_format, column=None):
+    """format a row into the specified python type"""
     if row is None:
         return row
 
