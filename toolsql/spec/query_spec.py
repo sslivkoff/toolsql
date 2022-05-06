@@ -30,8 +30,8 @@ class SelectQuery(TypedDict, total=False):
 
 # return_count = of the results, how many to return, similar to LIMIT
 # row_count = number of rows that can be in the result, otherwise raise error
-ReturnCount = typing.Literal['one', 'all']
-RowCount = typing.Literal['exactly_one', 'at_least_one', 'at_most_one']
+ReturnCount = Literal['one', 'all']
+RowCount = Literal['exactly_one', 'at_least_one', 'at_most_one']
 
 
 #
@@ -41,7 +41,7 @@ RowCount = typing.Literal['exactly_one', 'at_least_one', 'at_most_one']
 
 class SQLColumnOrderMap(TypedDict):
     column: str
-    order: typing.Literal['descending', 'ascending']
+    order: Literal['descending', 'ascending']
 
 
 SAColumnOrderObject = typing.Any
