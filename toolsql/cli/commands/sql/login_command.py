@@ -10,7 +10,7 @@ def get_command_spec() -> toolcli.CommandSpec:
     return{
         'f': login_command,
         'help': 'log in to database',
-        'special': {'inject': ['db_config']},
+        'extra_data': ['db_config'],
     }
 
 
@@ -22,4 +22,3 @@ def login_command(db_config: toolsql.DBConfig) -> None:
         raise NotImplementedError()
     cmd = cmd.format(**db_config)
     subprocess.call(cmd.split(' '))
-

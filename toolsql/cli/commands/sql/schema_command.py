@@ -12,9 +12,7 @@ def get_command_spec() -> toolcli.CommandSpec:
             {'name': '--full', 'action': 'store_true'},
             {'name': '--json', 'action': 'store_true'},
         ],
-        'special': {
-            'inject': ['db_config', 'db_schema'],
-        },
+        'extra_data': ['db_config', 'db_schema'],
     }
 
 
@@ -32,4 +30,3 @@ def schema_command(
         toolsql.print_schema(
             db_config=db_config, db_schema=db_schema, full=full
         )
-
