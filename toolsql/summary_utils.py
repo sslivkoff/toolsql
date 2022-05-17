@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import os
 import subprocess
 
 import sqlalchemy  # type: ignore
+import toolstr
+import tooltable
 
 from . import sqlalchemy_utils
 from . import spec
@@ -37,7 +40,11 @@ def print_schema(
     table_names = list(db_metadata.tables.keys())
     n_db_tables = len(db_metadata.tables.keys())
     n_spec_tables = len(spec_metadata.tables.keys())
-    print('schema (' + str(n_db_tables) + '/' + str(n_spec_tables) + ' tables)')
+    toolstr.print_text_box('Schema Summary')
+    print('- tables specified in schema:', n_spec_tables)
+    print('- tables existing in database:', n_db_tables)
+    print()
+    toolstr.print_header('Database Tables')
     for table_name in sorted(table_names):
         n_db_columns = len(db_metadata.tables[table_name].columns)
         n_spec_columns = len(spec_metadata.tables[table_name].columns)
@@ -45,23 +52,24 @@ def print_schema(
             '- ' + table_name,
             '(' + str(n_db_columns) + '/' + str(n_spec_columns) + ' columns)',
         )
+    print()
+    toolstr.print_header('Missing Tables')
     for name, table in spec_metadata.tables.items():
         if name not in db_metadata.tables:
-            print('- missing', name, 'table')
+            print('- missing', name)
 
     if full:
         metadatas = {'spec': spec_metadata, 'db': db_metadata}
         for name, metadata in metadatas.items():
-            print(name, 'tables:')
+            print()
+            toolstr.print_header(name + ' tables')
             for table_name, table in spec_metadata.tables.items():
                 print('-', table_name)
                 for column_name, column in table.columns.items():
                     print('    -', column_name, repr(column))
-            print()
-            print()
 
 
-def print_usage(
+def print_row_counts(
     *,
     conn: spec.SAConnection,
     db_config: spec.DBConfig | None = None,
@@ -84,23 +92,30 @@ def print_usage(
             db_schema=db_schema,
         )
 
-    print('usage')
     if len(db_metadata.tables.keys()) == 0:
         print('[no tables exist]')
+
+    headers = ['table', 'n_rows']
+    rows = []
     for name, table in db_metadata.tables.items():
 
         # get row count
-        statement = sqlalchemy.select([sqlalchemy.func.count()]).select_from(  # type: ignore
+        statement = sqlalchemy.select(sqlalchemy.func.count()).select_from(  # type: ignore
             table
         )
 
         row_count = conn.execute(statement).scalar()
 
-        print('-', table, '(' + str(row_count) + ' rows)')
+        # print('-', table, '(' + str(row_count) + ' rows)')
+        row = [table, row_count]
+        rows.append(row)
 
     for name, table in spec_metadata.tables.items():
         if name not in db_metadata.tables:
-            print('- missing', name, 'table')
+            # print('- [missing]', name, 'table')
+            row = [name, '[missing]']
+            rows.append(row)
+    tooltable.print_table(rows=rows, headers=headers)
 
 
 def get_bytes_usage_per_table(
@@ -139,16 +154,22 @@ def get_bytes_usage_per_table(
 
 
 def get_bytes_usage_for_database(db_config: spec.DBConfig) -> int:
-    cmd = """psql --dbname {database} --user {username} -c "\l+" | grep {database} | awk -F "|" '{print $1} {print $7}'"""
-    output = subprocess.check_output(cmd, shell=True, universal_newlines=True)
-    output = output.strip()
-    lines = output.split('\n')
-    lines = [line.strip() for line in lines]
-    if len(lines) != 2:
-        raise Exception('could not parse output')
-    database = lines[0]
-    bytes_usage = lines[1]
-    if database != db_config['database']:
-        raise Exception('could not parse output')
-    return int(bytes_usage)
-
+    if db_config['dbms'] == 'sqlite':
+        return os.path.getsize(db_config['path'])
+    elif db_config['dbms'] == 'postgresql':
+        cmd = """psql --dbname {database} --user {username} -c "\l+" | grep {database} | awk -F "|" '{print $1} {print $7}'"""
+        for key, value in db_config.items():
+            token = '{' + key + '}'
+            if token in cmd:
+                cmd = cmd.replace(token, value)
+        output = subprocess.check_output(cmd, shell=True, universal_newlines=True)
+        output = output.strip()
+        lines = output.split('\n')
+        lines = [line.strip() for line in lines]
+        if len(lines) != 2:
+            raise Exception('could not parse output')
+        database = lines[0]
+        bytes_usage = lines[1]
+        if database != db_config['database']:
+            raise Exception('could not parse output')
+        return int(bytes_usage)
