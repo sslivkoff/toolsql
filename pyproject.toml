@@ -1,0 +1,23 @@
+
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "toolsql"
+readme = "README.md"
+requires-python = ">=3.7"
+dynamic = ["version", "description"]
+license = {file = "LICENSE"}
+dependencies = [
+    "alembic>=1.7.7",
+    "sqlalchemy>=1.4.7",
+    "toolcache>=0.4.0",
+    "toolcli>=0.5.0",
+    "toolstr>=0.2.2",
+    "typing_extensions>=4.2.0",
+]
+
+# [tool.mypy]
+# strict = true
+# files = ["toolsql"]
