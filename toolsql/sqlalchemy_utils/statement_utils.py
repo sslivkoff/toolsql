@@ -130,20 +130,20 @@ def add_order_by_clause(
     new_order_by = []
     for item in order_by:
         if isinstance(item, str):
-            item = table.c[item]
+            data = table.c[item]
         elif isinstance(item, dict):
-            item = table.c[item]['column']
+            data = table.c[item['column']]
             item_order = item.get('order')
             if item_order is not None:
                 if item_order == 'descending':
-                    item = item.desc()
+                    data = data.desc()
                 elif item_order == 'ascending':
-                    item = item.asc()
+                    data = data.asc()
                 else:
                     raise Exception('unknown item order: ' + str(item_order))
         else:
             raise Exception('unknown orderby type: ' + str(type(item)))
-        new_order_by.append(item)
+        new_order_by.append(data)
     order_by = new_order_by
 
     # add to statement
@@ -180,4 +180,3 @@ def _create_foreign_row_equals(
             )
 
     return statement
-
