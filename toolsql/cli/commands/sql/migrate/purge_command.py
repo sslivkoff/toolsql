@@ -12,9 +12,7 @@ def get_command_spec() -> toolcli.CommandSpec:
             {'name': 'target'},
             {'name': '--confirm', 'action': 'store_true'},
         ],
-        'special': {
-            'inject': ['migrate_config'],
-        },
+        'extra_data': ['migrate_config'],
     }
 
 
@@ -35,4 +33,3 @@ def migrate_purge_command(
         )
     else:
         raise Exception('purge target should be "pending" or "all"')
-

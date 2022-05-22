@@ -13,9 +13,7 @@ def get_command_spec() -> toolcli.CommandSpec:
             {'name': '--noedit', 'action': 'store_true'},
             {'name': '--noautogenerate', 'action': 'store_true'},
         ],
-        'special': {
-            'inject': ['migrate_config'],
-        },
+        'extra_data': ['migrate_config'],
     }
 
 
@@ -34,4 +32,3 @@ def migrate_upgrade_command(
     edit = not noedit
     if edit:
         toolsql.edit_migrations(migrate_config=migrate_config)
-

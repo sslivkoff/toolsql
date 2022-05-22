@@ -9,7 +9,7 @@ def get_command_spec() -> toolcli.CommandSpec:
         'f': migrate_setup_command,
         'help': 'setup migration root dir',
         'args': [{'name': '--confirm', 'action': 'store_true'}],
-        'special': {'inject': ['migrate_config', 'inject_calls']},
+        'extra_data': ['migrate_config', 'db_schema', 'db_config'],
     }
 
 
@@ -26,4 +26,3 @@ def migrate_setup_command(
         db_config_call=inject_calls['db_config'],
         confirm=confirm,
     )
-

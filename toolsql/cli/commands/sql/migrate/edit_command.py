@@ -11,9 +11,7 @@ def get_command_spec() -> toolcli.CommandSpec:
         'args': [
             {'name': '--revision'},
         ],
-        'special': {
-            'inject': ['migrate_config'],
-        },
+        'extra_data': ['migrate_config'],
     }
 
 
@@ -22,4 +20,3 @@ def migrate_edit_command(
     revision: str,
 ) -> None:
     toolsql.edit_migrations(migrate_config=migrate_config, revision=revision)
-
