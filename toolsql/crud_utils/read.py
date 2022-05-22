@@ -131,7 +131,7 @@ def create_select_statement(
 
     # select columns to return
     if sql_functions is not None:
-        import sqlalchemy
+        import sqlalchemy  # type: ignore
         if only_columns is not None:
             raise NotImplementedError('cannot use sql_functions and only_columns')
         functions_as_columns = []

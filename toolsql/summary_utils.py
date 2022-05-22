@@ -5,7 +5,6 @@ import subprocess
 
 import sqlalchemy  # type: ignore
 import toolstr
-import tooltable
 
 from . import sqlalchemy_utils
 from . import spec
@@ -115,7 +114,7 @@ def print_row_counts(
             # print('- [missing]', name, 'table')
             row = [name, '[missing]']
             rows.append(row)
-    tooltable.print_table(rows=rows, headers=headers)
+    toolstr.print_table(rows=rows, headers=headers)
 
 
 def get_bytes_usage_per_table(
@@ -161,6 +160,8 @@ def get_bytes_usage_for_database(db_config: spec.DBConfig) -> int:
         for key, value in db_config.items():
             token = '{' + key + '}'
             if token in cmd:
+                if not isinstance(value, str):
+                    raise Exception('value must be str')
                 cmd = cmd.replace(token, value)
         output = subprocess.check_output(cmd, shell=True, universal_newlines=True)
         output = output.strip()
