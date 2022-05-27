@@ -1,9 +1,17 @@
 from __future__ import annotations
 
+import os
 import typing
 
 from . import spec
 from . import sqlalchemy_utils
+
+
+def does_db_exist(db_config: spec.DBConfig) -> bool:
+    if db_config['dbms'] == 'sqlite':
+        return os.path.isfile(db_config['path'])
+    else:
+        raise NotImplementedError('dbms == ' + str(db_config['dbms']))
 
 
 def create_tables(
@@ -56,4 +64,3 @@ def drop_all_rows(
             statement = metadata.tables[table_name].delete()
             conn.execute(statement)
     print('...all rows dropped')
-
