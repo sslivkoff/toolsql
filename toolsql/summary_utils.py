@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import typing
 import os
 import subprocess
 
@@ -8,6 +9,37 @@ import toolstr
 
 from . import sqlalchemy_utils
 from . import spec
+
+
+def get_missing_tables(
+    db_config: spec.DBConfig | None = None,
+    db_metadata: spec.SAMetadata | None = None,
+    spec_metadata: spec.SAMetadata | None = None,
+    engine: spec.SAEngine | None = None,
+    db_schema: spec.DBSchema | None = None,
+) -> typing.Sequence[str]:
+    """return list of tables present in spec but missing in db"""
+
+    # obtain metadata
+    if db_metadata is None:
+        if engine is None and db_config is None:
+            raise Exception('must specify db_metadata, engine, or db_config')
+        db_metadata = sqlalchemy_utils.create_metadata_object_from_db(
+            db_config=db_config,
+            engine=engine,
+        )
+    if spec_metadata is None:
+        if db_schema is None:
+            raise Exception('must specify spec_metadata or db_schema')
+        spec_metadata = sqlalchemy_utils.create_metadata_object_from_schema(
+            db_schema=db_schema,
+        )
+
+    return [
+        name
+        for name, table in spec_metadata.tables.items()
+        if name not in db_metadata.tables
+    ]
 
 
 def print_schema(
@@ -53,9 +85,13 @@ def print_schema(
         )
     print()
     toolstr.print_header('Missing Tables')
+    n_missing = 0
     for name, table in spec_metadata.tables.items():
         if name not in db_metadata.tables:
             print('- missing', name)
+            n_missing += 1
+    if n_missing == 0:
+        print('- [none]')
 
     if full:
         metadatas = {'spec': spec_metadata, 'db': db_metadata}
@@ -163,7 +199,9 @@ def get_bytes_usage_for_database(db_config: spec.DBConfig) -> int:
                 if not isinstance(value, str):
                     raise Exception('value must be str')
                 cmd = cmd.replace(token, value)
-        output = subprocess.check_output(cmd, shell=True, universal_newlines=True)
+        output = subprocess.check_output(
+            cmd, shell=True, universal_newlines=True
+        )
         output = output.strip()
         lines = output.split('\n')
         lines = [line.strip() for line in lines]
