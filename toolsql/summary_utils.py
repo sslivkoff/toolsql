@@ -17,7 +17,7 @@ def get_missing_tables(
     spec_metadata: spec.SAMetadata | None = None,
     engine: spec.SAEngine | None = None,
     db_schema: spec.DBSchema | None = None,
-) -> typing.Sequence[str]:
+) -> typing.Mapping[str, typing.Sequence[str]]:
     """return list of tables present in spec but missing in db"""
 
     # obtain metadata
@@ -35,11 +35,20 @@ def get_missing_tables(
             db_schema=db_schema,
         )
 
-    return [
+    missing_from_db = [
         name
         for name, table in spec_metadata.tables.items()
         if name not in db_metadata.tables
     ]
+    missing_from_spec = [
+        name
+        for name, table in db_metadata.tables.items()
+        if name not in spec_metadata.tables
+    ]
+    return {
+        'missing_from_db': missing_from_db,
+        'missing_from_spec': missing_from_spec,
+    }
 
 
 def print_schema(
@@ -78,20 +87,36 @@ def print_schema(
     toolstr.print_header('Database Tables')
     for table_name in sorted(table_names):
         n_db_columns = len(db_metadata.tables[table_name].columns)
-        n_spec_columns = len(spec_metadata.tables[table_name].columns)
+        if table_name in spec_metadata.tables:
+            n_spec_columns: int | str = len(spec_metadata.tables[table_name].columns)
+        else:
+            n_spec_columns = '?'
         print(
             '- ' + table_name,
             '(' + str(n_db_columns) + '/' + str(n_spec_columns) + ' columns)',
         )
+
+    # print missing
+    missing_tables = get_missing_tables(
+        db_metadata=db_metadata,
+        spec_metadata=spec_metadata,
+    )
+    missing_from_db = missing_tables['missing_from_db']
+    missing_from_spec = missing_tables['missing_from_spec']
     print()
     toolstr.print_header('Missing Tables')
-    n_missing = 0
-    for name, table in spec_metadata.tables.items():
-        if name not in db_metadata.tables:
-            print('- missing', name)
-            n_missing += 1
-    if n_missing == 0:
-        print('- [none]')
+    print('- tables missing from db')
+    if len(missing_from_db) == 0:
+        print('    [none]')
+    else:
+        for table in missing_from_db:
+            print('    -', table)
+    print('- tables missing from spec')
+    if len(missing_from_spec) == 0:
+        print('    [none]')
+    else:
+        for table in missing_from_spec:
+            print('    -', table)
 
     if full:
         metadatas = {'spec': spec_metadata, 'db': db_metadata}
