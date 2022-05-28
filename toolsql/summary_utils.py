@@ -130,7 +130,7 @@ def print_row_counts(
     if len(db_metadata.tables.keys()) == 0:
         print('[no tables exist]')
 
-    headers = ['table', 'n_rows']
+    labels = ['table', 'n_rows']
     rows = []
     for name, table in db_metadata.tables.items():
 
@@ -150,7 +150,7 @@ def print_row_counts(
             # print('- [missing]', name, 'table')
             row = [name, '[missing]']
             rows.append(row)
-    toolstr.print_table(rows=rows, headers=headers)
+    toolstr.print_table(rows=rows, labels=labels)
 
 
 def get_bytes_usage_per_table(
