@@ -173,7 +173,7 @@ def print_row_counts(
     for name, table in spec_metadata.tables.items():
         if name not in db_metadata.tables:
             # print('- [missing]', name, 'table')
-            row = [name, '[missing]']
+            row = [name, 'missing']
             rows.append(row)
     toolstr.print_table(rows=rows, labels=labels)
 

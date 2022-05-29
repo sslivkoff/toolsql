@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 import typing
 
+import sqlalchemy
+
 from . import spec
 from . import sqlalchemy_utils
 
@@ -12,6 +14,16 @@ def does_db_exist(db_config: spec.DBConfig) -> bool:
         return os.path.isfile(db_config['path'])
     else:
         raise NotImplementedError('dbms == ' + str(db_config['dbms']))
+
+
+def create_table(table_name, table_schema, conn):
+    metadata = sqlalchemy.MetaData()
+    table = sqlalchemy_utils.create_table_object_from_schema(
+        table_name=table_name,
+        table_schema=table_schema,
+        metadata=metadata,
+    )
+    table.create(conn)
 
 
 def create_tables(
