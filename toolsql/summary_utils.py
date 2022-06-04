@@ -84,16 +84,18 @@ def print_schema(
     print('- tables specified in schema:', n_spec_tables)
     print('- tables existing in database:', n_db_tables)
     print()
-    toolstr.print_header('Database Tables')
+    toolstr.print_header('Database Tables (' + str(len(table_names)) + ')')
     for table_name in sorted(table_names):
-        n_db_columns = len(db_metadata.tables[table_name].columns)
-        if table_name in spec_metadata.tables:
-            n_spec_columns: int | str = len(spec_metadata.tables[table_name].columns)
-        else:
-            n_spec_columns = '?'
+        # n_db_columns = len(db_metadata.tables[table_name].columns)
+        # if table_name in spec_metadata.tables:
+        #     n_spec_columns: int | str = len(
+        #         spec_metadata.tables[table_name].columns
+        #     )
+        # else:
+        #     n_spec_columns = '?'
         print(
             '- ' + table_name,
-            '(' + str(n_db_columns) + '/' + str(n_spec_columns) + ' columns)',
+            # '(' + str(n_db_columns) + '/' + str(n_spec_columns) + ' columns)',
         )
 
     # print missing
@@ -105,13 +107,13 @@ def print_schema(
     missing_from_spec = missing_tables['missing_from_spec']
     print()
     toolstr.print_header('Missing Tables')
-    print('- tables missing from db')
+    print('- tables missing from db (' + str(len(missing_from_db)) + ')')
     if len(missing_from_db) == 0:
         print('    [none]')
     else:
         for table in missing_from_db:
             print('    -', table)
-    print('- tables missing from spec')
+    print('- tables missing from spec (' + str(len(missing_from_spec)) + ')')
     if len(missing_from_spec) == 0:
         print('    [none]')
     else:
