@@ -7,6 +7,7 @@ from .sqlalchemy_utils import *
 
 from .dba_utils import *
 from .exceptions import *
+from .external_utils import *
 from .schema_utils import *
 from .spec import *
 from .summary_utils import *

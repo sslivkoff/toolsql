@@ -88,6 +88,7 @@ def create_table_object_from_db(
             conn=conn,
             db_config=db_config,
         )
-    table = metadata.tables[table_name]
-    return table
-
+    if table_name in metadata.tables:
+        return metadata.tables[table_name]
+    else:
+        raise Exception('table not found in db: ' + str(table_name))
