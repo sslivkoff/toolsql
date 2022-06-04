@@ -52,10 +52,13 @@ def create_column_object_from_schema(
     if 'unique' in column_schema:
         kwargs['unique'] = column_schema['unique']
     if column_schema.get('created_time'):
-        # kwargs['default'] = datetime.datetime.utcnow
         kwargs['server_default'] = sqlalchemy.func.now()
     if column_schema.get('modified_time'):
-        # kwargs['onupdate'] = datetime.datetime.utcnow
+        raise NotImplementedError('modified time')
+        # need to make sure that this value is reflected in metadata reflect
+        # - might not be possible in sqlite + postgres
+        # - for this need triggers for this to be specified in the db itself?
+        # - need further testing here
         kwargs['server_onupdate'] = sqlalchemy.func.now()
     if 'index' in column_schema:
         kwargs['index'] = column_schema['index']
