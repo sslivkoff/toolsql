@@ -8,6 +8,10 @@ def delete(
     row_ids=None,
     where_equals=None,
     where_in=None,
+    where_gt=None,
+    where_gte=None,
+    where_lt=None,
+    where_lte=None,
     force=False,
 ):
     if (
@@ -16,6 +20,10 @@ def delete(
         and row_ids is None
         and (where_equals is None or len(where_equals) == 0)
         and (where_in is None or len(where_in) == 0)
+        and (where_lt is None or len(where_lt) == 0)
+        and (where_lte is None or len(where_lte) == 0)
+        and (where_gt is None or len(where_gt) == 0)
+        and (where_gte is None or len(where_gte) == 0)
     ):
         raise Exception('really delete all rows? use force=True')
 
@@ -27,6 +35,10 @@ def delete(
         row_ids=row_ids,
         where_equals=where_equals,
         where_in=where_in,
+        where_gt=where_gt,
+        where_gte=where_gte,
+        where_lt=where_lt,
+        where_lte=where_lte,
     )
 
     # execute statement
@@ -46,6 +58,10 @@ def create_delete_statement(
     row_ids=None,
     where_equals=None,
     where_in=None,
+    where_gt=None,
+    where_gte=None,
+    where_lt=None,
+    where_lte=None,
 ):
 
     # get table object
@@ -66,6 +82,10 @@ def create_delete_statement(
         row_ids=row_ids,
         where_equals=where_equals,
         where_in=where_in,
+        where_gt=where_gt,
+        where_gte=where_gte,
+        where_lt=where_lt,
+        where_lte=where_lte,
     )
 
     return statement
