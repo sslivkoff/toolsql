@@ -125,9 +125,9 @@ def print_schema(
         for name, metadata in metadatas.items():
             print()
             toolstr.print_header(name + ' tables')
-            for table_name, table in spec_metadata.tables.items():
+            for table_name, table_obj in spec_metadata.tables.items():
                 print('-', table_name)
-                for column_name, column in table.columns.items():
+                for column_name, column in table_obj.columns.items():
                     print('    -', column_name, repr(column))
 
 

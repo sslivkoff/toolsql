@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import typing
 
-import sqlalchemy
+import sqlalchemy  # type: ignore
 
 from . import spec
 from . import sqlalchemy_utils
