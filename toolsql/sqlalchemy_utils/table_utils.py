@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import typing
-
 import sqlalchemy  # type: ignore
 import toolcache
 
+from .. import exceptions
 from .. import spec
 from . import column_utils
 from . import metadata_utils
@@ -91,4 +90,4 @@ def create_table_object_from_db(
     if table_name in metadata.tables:
         return metadata.tables[table_name]
     else:
-        raise Exception('table not found in db: ' + str(table_name))
+        raise exceptions.TableNotFound('table not found in db: ' + str(table_name))

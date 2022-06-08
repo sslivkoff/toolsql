@@ -1,3 +1,4 @@
+from toolsql import exceptions
 from .. import sqlalchemy_utils
 
 
@@ -23,6 +24,7 @@ def select(
     row_count=None,
     row_format=None,
     return_count=None,
+    raise_if_table_dne=True,
 ):
     if row_format is None:
         row_format = 'dict'
@@ -33,9 +35,16 @@ def select(
 
     # get table object
     if isinstance(table, str):
-        table = sqlalchemy_utils.create_table_object_from_db(
-            table_name=table, conn=conn
-        )
+        try:
+            table = sqlalchemy_utils.create_table_object_from_db(
+                table_name=table,
+                conn=conn,
+            )
+        except exceptions.TableNotFound as exception:
+            if raise_if_table_dne:
+                raise exception
+            else:
+                return None
 
     # create statement
     statement = create_select_statement(
@@ -132,8 +141,11 @@ def create_select_statement(
     # select columns to return
     if sql_functions is not None:
         import sqlalchemy  # type: ignore
+
         if only_columns is not None:
-            raise NotImplementedError('cannot use sql_functions and only_columns')
+            raise NotImplementedError(
+                'cannot use sql_functions and only_columns'
+            )
         functions_as_columns = []
         for function_name, column_name in sql_functions:
             function = getattr(sqlalchemy.func, function_name)
@@ -229,4 +241,3 @@ def _format_row(row, row_format, column=None):
         return getattr(row, column)
     else:
         raise Exception('unknown row_format: ' + str(row_format))
-

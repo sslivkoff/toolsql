@@ -6,3 +6,6 @@ class InvalidOperationException(Exception):
 class DoesNotExistException(Exception):
     pass
 
+
+class TableNotFound(LookupError):
+    pass
