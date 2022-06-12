@@ -177,7 +177,9 @@ def print_row_counts(
             # print('- [missing]', name, 'table')
             row = [name, 'missing']
             rows.append(row)
-    toolstr.print_table(rows=rows, labels=labels)
+    toolstr.print_table(
+        rows=rows, labels=labels, column_justify=['left', 'right']
+    )
 
 
 def get_bytes_usage_per_table(
