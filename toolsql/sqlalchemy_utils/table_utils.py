@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import typing
+
 import sqlalchemy  # type: ignore
 import toolcache
 
@@ -69,7 +71,11 @@ def create_table_object_from_schema(
     return table
 
 
-@toolcache.cache(cachetype='memory')
+_table_cache: typing.MutableMapping[
+    str, typing.MutableMapping[str, spec.SATable]
+] = {}
+
+
 def create_table_object_from_db(
     *,
     table_name: str,
@@ -79,6 +85,20 @@ def create_table_object_from_db(
     db_config: spec.DBConfig | None = None,
 ) -> spec.SATable:
     """create sqlalchemy table object reflecting current database"""
+
+    # load from cache
+    db_url = None
+    if conn is not None:
+        db_url = conn.engine.url
+    elif engine is not None:
+        db_url = engine.url
+    if db_url is not None:
+        _table_cache.setdefault(db_url, {})
+        cached = _table_cache[db_url].get(table_name)
+        if cached is not None:
+            return cached
+
+    # create metadata object
     if metadata is None:
         if engine is None and conn is None:
             raise Exception('must specify metadata, engine, or conn')
@@ -87,7 +107,19 @@ def create_table_object_from_db(
             conn=conn,
             db_config=db_config,
         )
+
+    # return table if it exists
     if table_name in metadata.tables:
-        return metadata.tables[table_name]
+
+        # save to cache
+        table = metadata.tables[table_name]
+        if db_url is not None:
+            _table_cache.setdefault(db_url, {})
+            _table_cache[db_url][table_name] = table
+
+        return table
+
     else:
-        raise exceptions.TableNotFound('table not found in db: ' + str(table_name))
+        raise exceptions.TableNotFound(
+            'table not found in db: ' + str(table_name)
+        )

@@ -46,4 +46,3 @@ def _create_metadata_object_from_engine(
     metadata = sqlalchemy.MetaData()
     metadata.reflect(bind=engine)
     return metadata
-

@@ -26,7 +26,14 @@ def create_table(table_name, table_schema, conn):
     table.create(conn)
 
     # clear metadata cache once table is created
+    clear_table_caches(conn)
+
+
+def clear_table_caches(conn):
+    """clear table caches after tables are created or dropped"""
     sqlalchemy_utils.metadata_utils._create_metadata_object_from_engine.cache.delete_all_entries()
+    db_url = conn.engine.url
+    sqlalchemy_utils.table_utils._table_cache[db_url] = {}
 
 
 def create_tables(
