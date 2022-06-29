@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import typing
+
 from .. import sqlalchemy_utils
 
 
@@ -13,7 +17,7 @@ def delete(
     where_lt=None,
     where_lte=None,
     force=False,
-):
+) -> typing.Any:
     if (
         not force
         and row_id is None

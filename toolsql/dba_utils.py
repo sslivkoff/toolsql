@@ -16,7 +16,7 @@ def does_db_exist(db_config: spec.DBConfig) -> bool:
         raise NotImplementedError('dbms == ' + str(db_config['dbms']))
 
 
-def create_table(table_name, table_schema, conn):
+def create_table(table_name, table_schema, conn) -> None:
     metadata = sqlalchemy.MetaData()
     table = sqlalchemy_utils.create_table_object_from_schema(
         table_name=table_name,
@@ -29,7 +29,7 @@ def create_table(table_name, table_schema, conn):
     clear_table_caches(conn)
 
 
-def clear_table_caches(conn):
+def clear_table_caches(conn) -> None:
     """clear table caches after tables are created or dropped"""
     sqlalchemy_utils.metadata_utils._create_metadata_object_from_engine.cache.delete_all_entries()
     db_url = conn.engine.url

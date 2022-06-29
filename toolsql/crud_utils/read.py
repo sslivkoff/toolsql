@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import typing
+
 from toolsql import exceptions
 from .. import sqlalchemy_utils
 
@@ -25,7 +29,7 @@ def select(
     row_format=None,
     return_count=None,
     raise_if_table_dne=True,
-):
+) -> typing.Any:
     if row_format is None:
         row_format = 'dict'
     if row_format == 'only_column' and len(only_columns) > 1:
