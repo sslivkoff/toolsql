@@ -10,6 +10,9 @@ import toolstr
 from . import sqlalchemy_utils
 from . import spec
 
+if typing.TYPE_CHECKING:
+    import toolcli
+
 
 def get_missing_tables(
     db_config: spec.DBConfig | None = None,
@@ -59,6 +62,7 @@ def print_schema(
     engine: spec.SAEngine | None = None,
     db_schema: spec.DBSchema | None = None,
     full: bool = False,
+    styles: toolcli.StyleTheme | None = None,
 ) -> None:
 
     # obtain metadata
@@ -80,11 +84,22 @@ def print_schema(
     table_names = list(db_metadata.tables.keys())
     n_db_tables = len(db_metadata.tables.keys())
     n_spec_tables = len(spec_metadata.tables.keys())
-    toolstr.print_text_box('Schema Summary')
-    print('- tables specified in schema:', n_spec_tables)
-    print('- tables existing in database:', n_db_tables)
+    if styles is None:
+        styles = {}
+    toolstr.print_text_box('Schema Summary', style=styles.get('title'))
+    toolstr.print(
+        toolstr.add_style('- tables specified in schema:', styles['option']),
+        toolstr.add_style(str(n_spec_tables), styles['description'] + ' bold'),
+    )
+    toolstr.print(
+        toolstr.add_style('- tables existing in database:', styles['option']),
+        toolstr.add_style(str(n_db_tables), styles['description'] + ' bold'),
+    )
     print()
-    toolstr.print_header('Database Tables (' + str(len(table_names)) + ')')
+    toolstr.print_header(
+        'Database Tables (' + str(len(table_names)) + ')',
+        style=styles.get('title'),
+    )
     for table_name in sorted(table_names):
         # n_db_columns = len(db_metadata.tables[table_name].columns)
         # if table_name in spec_metadata.tables:
@@ -93,9 +108,10 @@ def print_schema(
         #     )
         # else:
         #     n_spec_columns = '?'
-        print(
+        toolstr.print(
             '- ' + table_name,
             # '(' + str(n_db_columns) + '/' + str(n_spec_columns) + ' columns)',
+            style=styles['description'],
         )
 
     # print missing
@@ -106,27 +122,37 @@ def print_schema(
     missing_from_db = missing_tables['missing_from_db']
     missing_from_spec = missing_tables['missing_from_spec']
     print()
-    toolstr.print_header('Missing Tables')
-    print('- tables missing from db (' + str(len(missing_from_db)) + ')')
+    toolstr.print_header('Missing Tables', style=styles.get('title'))
+    toolstr.print(
+        '- tables missing from db ('
+        + toolstr.add_style(str(len(missing_from_db)), styles['description'])
+        + ')',
+        style=styles['option'],
+    )
     if len(missing_from_db) == 0:
-        print('    [none]')
+        toolstr.print('    \[none]', style=styles['description'])
     else:
         for table in missing_from_db:
             print('    -', table)
-    print('- tables missing from spec (' + str(len(missing_from_spec)) + ')')
+    toolstr.print(
+        '- tables missing from spec ('
+        + toolstr.add_style(str(len(missing_from_spec)), styles['description'])
+        + ')',
+        style=styles['option'],
+    )
     if len(missing_from_spec) == 0:
-        print('    [none]')
+        toolstr.print('    \[none]', style=styles['description'])
     else:
         for table in missing_from_spec:
-            print('    -', table)
+            toolstr.print('    -', table, style=styles['description'])
 
     if full:
         metadatas = {'spec': spec_metadata, 'db': db_metadata}
         for name, metadata in metadatas.items():
             print()
-            toolstr.print_header(name + ' tables')
+            toolstr.print_header(name + ' tables', style=styles['title'])
             for table_name, table_obj in spec_metadata.tables.items():
-                print('-', table_name)
+                toolstr.print('-', table_name, style=styles['description'])
                 for column_name, column in table_obj.columns.items():
                     print('    -', column_name, repr(column))
 
@@ -139,6 +165,7 @@ def print_row_counts(
     spec_metadata: spec.SAMetadata | None = None,
     engine: spec.SAEngine | None = None,
     db_schema: spec.DBSchema | None = None,
+    styles: toolcli.StyleTheme | None = None,
 ) -> None:
     if db_metadata is None:
         if engine is None and db_config is None:
@@ -177,8 +204,24 @@ def print_row_counts(
             # print('- [missing]', name, 'table')
             row = [name, 'missing']
             rows.append(row)
+
+    if styles is not None:
+        styles_kwargs: typing.Mapping[str, str | typing.Mapping[str, str]] = {
+            'border': styles['comment'],
+            'label_style': styles['title'],
+            'column_style': {
+                # 'table': styles.get('option'),
+                'n_rows': styles['description'] + ' bold',
+            },
+        }
+    else:
+        styles_kwargs = {}
+
     toolstr.print_table(
-        rows=rows, labels=labels, column_justify=['left', 'right']
+        rows=rows,
+        labels=labels,
+        column_justify=['left', 'right'],
+        **styles_kwargs,  # type: ignore
     )
 
 
