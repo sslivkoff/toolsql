@@ -209,7 +209,7 @@ def print_row_counts(
         styles_kwargs: typing.Mapping[str, str | typing.Mapping[str, str]] = {
             'border': styles['comment'],
             'label_style': styles['title'],
-            'column_style': {
+            'column_styles': {
                 # 'table': styles.get('option'),
                 'n_rows': styles['description'] + ' bold',
             },
