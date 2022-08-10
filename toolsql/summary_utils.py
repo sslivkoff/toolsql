@@ -210,8 +210,8 @@ def print_row_counts(
             'border': styles['comment'],
             'label_style': styles['title'],
             'column_styles': {
-                # 'table': styles.get('option'),
-                'n_rows': styles['description'] + ' bold',
+                'table': styles['description'],
+                'n_rows': 'bold',
             },
         }
     else:
@@ -220,7 +220,6 @@ def print_row_counts(
     toolstr.print_table(
         rows=rows,
         labels=labels,
-        column_justify=['left', 'right'],
         **styles_kwargs,  # type: ignore
     )
 
@@ -284,3 +283,48 @@ def get_bytes_usage_for_database(db_config: spec.DBConfig) -> int:
         if database != db_config['database']:
             raise Exception('could not parse output')
         return int(bytes_usage)
+
+
+def print_db_usage(
+    db_config: spec.DBConfig,
+    db_schema: spec.DBSchema,
+    full: bool,
+    styles: toolcli.StyleTheme | None = None,
+) -> None:
+
+    import toolstr
+
+    if styles is None:
+        styles = {}
+
+    toolstr.print_text_box('Database Usage', style=styles.get('title'))
+
+    # print bytes in database
+    bytes_usage_for_database = get_bytes_usage_for_database(
+        db_config=db_config
+    )
+    toolstr.print(
+        toolstr.add_style('- storage size:', styles['option']),
+        toolstr.add_style(
+            toolstr.format_nbytes(bytes_usage_for_database),
+            styles['description'] + ' bold',
+        ),
+    )
+
+    # print row counts
+    engine = sqlalchemy_utils.create_engine(db_config=db_config)
+    print()
+    with engine.connect() as conn:
+        print_row_counts(
+            conn=conn,
+            db_config=db_config,
+            db_schema=db_schema,
+            styles=styles,
+        )
+
+    # print byte usage per table
+    if full:
+        bytes_usage_per_table = get_bytes_usage_per_table(
+            db_config=db_config
+        )
+        print(bytes_usage_per_table)
