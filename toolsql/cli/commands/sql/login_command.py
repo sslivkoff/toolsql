@@ -11,6 +11,7 @@ def get_command_spec() -> toolcli.CommandSpec:
         'f': login_command,
         'help': 'log in to database',
         'extra_data': ['db_config'],
+        'hidden': True,
     }
 
 
