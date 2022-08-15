@@ -39,7 +39,17 @@ def create_metadata_object_from_db(
     return _create_metadata_object_from_engine(engine=engine)
 
 
-@toolcache.cache(cachetype='memory')
+def _f_hash(engine: spec.SAEngine):
+    if engine is None:
+        raise Exception('engine is None')
+    url = engine.url
+    if url is None:
+        raise Exception('engine url is unspecified')
+    else:
+        return url
+
+
+@toolcache.cache(cachetype='memory', f_hash=_f_hash)
 def _create_metadata_object_from_engine(
     engine: spec.SAEngine,
 ) -> spec.SAMetadata:
