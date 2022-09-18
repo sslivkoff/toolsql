@@ -4,7 +4,6 @@ import typing
 import os
 import subprocess
 
-import sqlalchemy  # type: ignore
 import toolstr
 
 from . import sqlalchemy_utils
@@ -167,6 +166,9 @@ def print_row_counts(
     db_schema: spec.DBSchema | None = None,
     styles: toolcli.StyleTheme | None = None,
 ) -> None:
+
+    import sqlalchemy  # type: ignore
+
     if db_metadata is None:
         if engine is None and db_config is None:
             raise Exception('must specify db_metadata, engine, or db_config')

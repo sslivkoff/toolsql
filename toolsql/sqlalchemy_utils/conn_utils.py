@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import typing
 
-import sqlalchemy  # type: ignore
-
 from .. import spec
 from . import engine_utils
 
@@ -15,7 +13,10 @@ def create_connection(
     db_config: typing.Optional[spec.DBConfig] = None,
 ) -> spec.SAConnection:
     """create a sqlalchemy database conection"""
+
     if conn is None:
+        import sqlalchemy  # type: ignore
+
         if engine is None:
             if db_config is None:
                 raise Exception('must specify conn, engine, or db_config')

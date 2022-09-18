@@ -5,8 +5,7 @@ from __future__ import annotations
 import logging
 import typing
 
-import sqlalchemy  # type: ignore
-import sqlalchemy.dialects.sqlite  # type: ignore
+# import sqlalchemy.dialects.sqlite  # type: ignore
 import sqlite3  # type: ignore
 
 from .. import exceptions
@@ -25,6 +24,8 @@ def create_engine(
     engine_kwargs: typing.Mapping[str, typing.Any] | None = None,
 ) -> spec.SAEngine:
     """create sqlalchemy engine object"""
+
+    import sqlalchemy  # type: ignore
 
     # set logger
     if log_level is not None:
@@ -123,6 +124,8 @@ def _process_engine_kwargs(
 
 def _add_exception_handler(engine: spec.SAEngine) -> None:
     """add custom event handler to sqlalchemy engine"""
+
+    import sqlalchemy  # type: ignore
 
     @sqlalchemy.event.listens_for(engine, 'handle_error', retval=True)
     def handle_error(context):

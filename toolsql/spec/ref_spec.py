@@ -5,6 +5,6 @@ import typing
 from . import sa_spec
 
 
-TableRef = typing.Union[str, sa_spec.SATable]
-Row = typing.Union[typing.Mapping[str, typing.Any], sa_spec.SARow]
-
+if typing.TYPE_CHECKING:
+    TableRef = typing.Union[str, sa_spec.SATable]
+    Row = typing.Union[typing.Mapping[str, typing.Any], sa_spec.SARow]

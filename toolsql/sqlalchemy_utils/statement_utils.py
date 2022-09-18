@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import typing
 
-import sqlalchemy  # type: ignore
+if typing.TYPE_CHECKING:
+    import sqlalchemy  # type: ignore
 
 from .. import spec
 from . import table_utils
@@ -95,6 +96,8 @@ def add_where_clause(
         for column_name, column_value in where_gte.items():
             statement = statement.where(table.c[column_name] >= column_value)
     if where_start_of is not None:
+        import sqlalchemy  # type: ignore
+
         for column_name, full_value in where_start_of.items():
             bound_name = 'started_by_' + column_name
             if bound_name in table.c:
@@ -159,6 +162,9 @@ def _create_foreign_row_equals(
         str, typing.Mapping[str, typing.Any]
     ],
 ) -> spec.SAStatement:
+
+    import sqlalchemy  # type: ignore
+
     for column, foreign in where_foreign_row_equals.items():
 
         column_obj = table.c[column]

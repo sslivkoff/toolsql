@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import typing
 
-import sqlalchemy  # type: ignore
+if typing.TYPE_CHECKING:
+    import sqlalchemy  # type: ignore
 
 from .. import spec
 
 
 def get_column_typemap() -> dict[str, typing.Any]:
     """return conversions of types into sqlalchemy types"""
+    import sqlalchemy  # type: ignore
+
     return {
         'BigInteger': sqlalchemy.BigInteger,
         'Binary': sqlalchemy.BLOB,
@@ -26,6 +29,8 @@ def get_column_typemap() -> dict[str, typing.Any]:
 def create_column_object_from_schema(
     column_schema: spec.ColumnSpec,
 ) -> spec.SAColumn:
+
+    import sqlalchemy  # type: ignore
 
     # add column properties
     args = []
@@ -73,6 +78,8 @@ def create_column_object_from_schema(
 
 def _create_foreign_key(column_spec: spec.ColumnSpec) -> sqlalchemy.ForeignKey:
     """create sqlalchemy foreign key object from a column specification"""
+    import sqlalchemy  # type: ignore
+
     fk_id = column_spec['fk_table'] + '.' + column_spec['fk_column']
     fk_kwargs = {}
     if 'on_delete' in column_spec:

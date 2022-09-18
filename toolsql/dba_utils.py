@@ -3,8 +3,6 @@ from __future__ import annotations
 import os
 import typing
 
-import sqlalchemy  # type: ignore
-
 from . import spec
 from . import sqlalchemy_utils
 
@@ -17,6 +15,8 @@ def does_db_exist(db_config: spec.DBConfig) -> bool:
 
 
 def create_table(table_name, table_schema, conn) -> None:
+    import sqlalchemy  # type: ignore
+
     metadata = sqlalchemy.MetaData()
     table = sqlalchemy_utils.create_table_object_from_schema(
         table_name=table_name,

@@ -4,9 +4,6 @@ from __future__ import annotations
 
 import typing
 
-import sqlalchemy  # type: ignore
-import toolcache
-
 from .. import exceptions
 from .. import spec
 from . import column_utils
@@ -27,6 +24,8 @@ def create_table_object_from_schema(
     metadata: spec.SAMetadata,
 ) -> spec.SATable:
     """create sqlalchemy table object from schema specification"""
+
+    import sqlalchemy  # type: ignore
 
     # create columns
     column_specs = table_schema['columns']

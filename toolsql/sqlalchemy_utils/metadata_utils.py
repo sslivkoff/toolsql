@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sqlalchemy  # type: ignore
 import toolcache
 
 from .. import spec
@@ -12,6 +11,9 @@ def create_metadata_object_from_schema(
     db_schema: spec.DBSchema,
 ) -> spec.SAMetadata:
     """create sqlalchemy metadata object reflecting table specs"""
+
+    import sqlalchemy  # type: ignore
+
     metadata = sqlalchemy.MetaData()
     for table_name, table_schema in db_schema['tables'].items():
         table_utils.create_table_object_from_schema(
@@ -53,6 +55,9 @@ def _f_hash(engine: spec.SAEngine):
 def _create_metadata_object_from_engine(
     engine: spec.SAEngine,
 ) -> spec.SAMetadata:
+
+    import sqlalchemy  # type: ignore
+
     metadata = sqlalchemy.MetaData()
     metadata.reflect(bind=engine)
     return metadata
