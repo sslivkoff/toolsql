@@ -52,6 +52,8 @@ def add_where_clause(
     row_id: typing.Any | None = None,
     row_ids: typing.Sequence[typing.Any] | None = None,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
+    where_like: typing.Mapping[str, typing.Any] | None = None,
+    where_ilike: typing.Mapping[str, typing.Any] | None = None,
     where_in: typing.Mapping[str, typing.Sequence[typing.Any]] | None = None,
     where_foreign_row_equals: typing.Mapping[
         str, typing.Mapping[str, typing.Any]
@@ -74,6 +76,14 @@ def add_where_clause(
     if where_equals is not None:
         for column_name, column_value in where_equals.items():
             statement = statement.where(table.c[column_name] == column_value)
+    if where_like is not None:
+        for column_name, column_value in where_like.items():
+            statement = statement.where(table.c[column_name].like(column_value))
+    if where_ilike is not None:
+        for column_name, column_value in where_ilike.items():
+            statement = statement.where(
+                table.c[column_name].ilike(column_value)
+            )
     if where_in is not None:
         for column_name, value_list in where_in.items():
             statement = statement.where(table.c[column_name].in_(value_list))
