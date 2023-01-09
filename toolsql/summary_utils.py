@@ -156,6 +156,35 @@ def print_schema(
                     print('    -', column_name, repr(column))
 
 
+def get_table_row_count(
+    table: str | spec.SATable,
+    *,
+    conn: spec.SAConnection,
+    raise_if_table_dne: bool = True,
+) -> int | None:
+
+    import sqlalchemy  # type: ignore
+    from . import exceptions
+
+    if isinstance(table, str):
+        try:
+            table = sqlalchemy_utils.create_table_object_from_db(
+                table_name=table,
+                conn=conn,
+            )
+        except exceptions.TableNotFound as exception:
+            if raise_if_table_dne:
+                raise exception
+            else:
+                return None
+
+    statement = sqlalchemy.select(sqlalchemy.func.count()).select_from(table)
+
+    row_count = conn.execute(statement).scalar()
+
+    return row_count
+
+
 def print_row_counts(
     *,
     conn: spec.SAConnection,
@@ -302,9 +331,7 @@ def print_db_usage(
     toolstr.print_text_box('Database Usage', style=styles.get('title'))
 
     # print bytes in database
-    bytes_usage_for_database = get_bytes_usage_for_database(
-        db_config=db_config
-    )
+    bytes_usage_for_database = get_bytes_usage_for_database(db_config=db_config)
     toolstr.print(
         toolstr.add_style('- storage size:', styles['option']),
         toolstr.add_style(
@@ -326,7 +353,6 @@ def print_db_usage(
 
     # print byte usage per table
     if full:
-        bytes_usage_per_table = get_bytes_usage_per_table(
-            db_config=db_config
-        )
+        bytes_usage_per_table = get_bytes_usage_per_table(db_config=db_config)
         print(bytes_usage_per_table)
+
