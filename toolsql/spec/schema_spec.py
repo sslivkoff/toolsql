@@ -30,21 +30,21 @@ if typing.TYPE_CHECKING:
         column_order: typing.Sequence[str]
 
     class ColumnSpec(TypedDict, total=False):
-        name: str  # name of table, usually specified in TableSpec
-        type: ColumnType
-        inner_type: ColumnType  # for use by array
-        fk_table: str  # table name
-        fk_column: str  # column name
-        unique: bool  # for creating unique index
-        primary: bool  # for use as primary key
-        null: bool  # for whether column can be null
         created_time: bool  # timestamp of creation time
-        modified_time: bool  # timestamp of creation time
         default: typing.Any  # default value
-        length: int  # for use by Text columns
-        virtual: bool  # whether or not to actually create column in table
-        on_delete: 'DeleteOption'  # what to do when foreign key deleted
+        fk_column: str  # column name
+        fk_table: str  # table name
         index: bool  # whether to create an index for column
+        inner_type: ColumnType  # for use by array
+        length: int  # for use by Text columns
+        modified_time: bool  # timestamp of creation time
+        name: str  # name of table, usually specified in TableSpec
+        null: bool  # for whether column can be null
+        on_delete: 'DeleteOption'  # what to do when foreign key deleted
+        primary: bool  # for use as primary key
+        type: ColumnType
+        unique: bool  # for creating unique index
+        virtual: bool  # whether or not to actually create column in table
 
     DeleteOption = Literal[
         'cascade',
