@@ -10,14 +10,24 @@ requires-python = ">=3.7"
 dynamic = ["version", "description"]
 license = {file = "LICENSE"}
 dependencies = [
-    "alembic>=1.7.7",
-    "sqlalchemy>=1.4.7",
-    "toolcache>=0.4.0",
-    "toolcli>=0.5.1",
-    "toolstr>=0.6.1",
+    # "alembic>=1.7.7",
+    # "sqlalchemy>=1.4.7",
+    # "toolcache>=0.4.0",
+    # "toolcli>=0.5.1",
+    # "toolstr>=0.6.1",
     "typing_extensions>=4.2.0",
 ]
 
 [tool.mypy]
-# strict = true
+python_version = "3.9"
+strict = true
+implicit_reexport = true
 files = ["toolsql"]
+
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+asyncio_mode = 'auto'
+

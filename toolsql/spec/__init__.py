@@ -1,5 +1,5 @@
-from .config_spec import *
-from .query_spec import *
-from .ref_spec import *
-from .sa_spec import *
-from .schema_spec import *
+import typing
+
+if typing.TYPE_CHECKING:
+    from .typedefs import *
+
