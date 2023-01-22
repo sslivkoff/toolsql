@@ -121,12 +121,22 @@ class AbstractDriver:
     #
 
     @classmethod
-    def connect(cls, uri: str, *, as_context: bool = False) -> spec.Connection:
+    def connect(
+        cls,
+        uri: str,
+        *,
+        as_context: bool,
+        autocommit: bool,
+    ) -> spec.Connection:
         raise NotImplementedError('connect() for ' + cls.name)
 
     @classmethod
     def async_connect(
-        cls, uri: str, *, as_context: bool = False
+        cls,
+        uri: str,
+        *,
+        as_context: bool,
+        autocommit: bool,
     ) -> spec.AsyncConnection:
         raise NotImplementedError('async_connect() for ' + cls.name)
 

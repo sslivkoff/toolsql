@@ -21,12 +21,20 @@ class PsycopgDriver(abstract_driver.AbstractDriver):
         return 'dbname={database} user={username}'.format(**db_config)
 
     @classmethod
-    def connect(cls, uri: str, *, as_context: bool = True) -> spec.Connection:
+    def connect(
+        cls,
+        uri: str,
+        *,
+        as_context: bool,
+        autocommit: bool,
+    ) -> spec.Connection:
         connect_str = cls.get_psycopg_conn_str(uri)
-        return psycopg.connect(connect_str)
+        return psycopg.connect(connect_str, autocommit=autocommit)
 
     @classmethod
-    def get_cursor_output_names(cls, cursor: spec.Cursor) -> tuple[str, ...] | None:
+    def get_cursor_output_names(
+        cls, cursor: spec.Cursor
+    ) -> tuple[str, ...] | None:
         description = cursor.description
         if description is None:
             return None

@@ -10,10 +10,18 @@ class AiosqliteDriver(abstract_driver.AbstractDriver):
     name = 'aiosqlite'
 
     @classmethod
-    def async_connect(cls, uri: str, as_context: bool = True) -> spec.AsyncConnection:
+    def async_connect(
+        cls,
+        uri: str,
+        as_context: bool,
+        autocommit: bool,
+    ) -> spec.AsyncConnection:
         path = uri.split('sqlite://')[1]
-        conn = aiosqlite.connect(path)
-        return conn
+
+        if autocommit:
+            return aiosqlite.connect(path, isolation_level=None)
+        else:
+            return aiosqlite.connect(path)
 
     @classmethod
     def get_cursor_output_names(

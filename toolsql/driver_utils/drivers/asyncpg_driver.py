@@ -31,8 +31,14 @@ class AsyncpgDriver(abstract_driver.AbstractDriver):
 
     @classmethod
     def async_connect(
-        cls, uri: str, *, as_context: bool = True
+        cls,
+        uri: str,
+        *,
+        as_context: bool,
+        autocommit: bool,
     ) -> spec.AsyncConnection:
+        if not autocommit:
+            raise Exception('asyncpg only supports autocommit=True')
         if as_context:
             return AsyncpgConnContext(uri)
         else:
@@ -94,4 +100,8 @@ class AsyncpgDriver(abstract_driver.AbstractDriver):
                     return pd.DataFrame(rows)
             else:
                 raise Exception('unknown output format: ' + str(output_format))
+
+    # @classmethod
+    # def transaction(cls, conn: spec.AsyncConnection) -> None:
+    #     return conn.transaction()
 

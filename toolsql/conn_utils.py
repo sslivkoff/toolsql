@@ -28,7 +28,12 @@ def get_db_uri(db_config: spec.DBConfig) -> str:
 #
 
 
-def connect(target: str | spec.DBConfig, *, as_context: bool = True) -> spec.Connection:
+def connect(
+    target: str | spec.DBConfig,
+    *,
+    as_context: bool = True,
+    autocommit: bool = True,
+) -> spec.Connection:
 
     if isinstance(target, str):
         uri = target
@@ -36,11 +41,19 @@ def connect(target: str | spec.DBConfig, *, as_context: bool = True) -> spec.Con
         uri = get_db_uri(db_config=target)
     else:
         raise Exception('must specify uri or db_config')
-    driver = driver_utils.get_driver(uri=uri, sync=True)
-    return driver.connect(uri=uri)
+    if isinstance(target, dict):
+        driver = driver_utils.get_driver(driver=target['driver'], sync=True)
+    else:
+        driver = driver_utils.get_driver(uri=uri, sync=True)
+    return driver.connect(uri=uri, autocommit=autocommit, as_context=as_context)
 
 
-def async_connect(target: str | spec.DBConfig, *, as_context: bool = True) -> spec.AsyncConnection:
+def async_connect(
+    target: str | spec.DBConfig,
+    *,
+    as_context: bool = True,
+    autocommit: bool = True,
+) -> spec.AsyncConnection:
 
     if isinstance(target, str):
         uri = target
@@ -48,8 +61,13 @@ def async_connect(target: str | spec.DBConfig, *, as_context: bool = True) -> sp
         uri = get_db_uri(db_config=target)
     else:
         raise Exception('must specify uri or db_config')
-    driver = driver_utils.get_driver(uri=uri, sync=False)
-    return driver.async_connect(uri=uri, as_context=as_context)
+    if isinstance(target, dict):
+        driver = driver_utils.get_driver(driver=target['driver'], sync=True)
+    else:
+        driver = driver_utils.get_driver(uri=uri, sync=True)
+    return driver.async_connect(
+        uri=uri, as_context=as_context, autocommit=autocommit
+    )
 
 
 #

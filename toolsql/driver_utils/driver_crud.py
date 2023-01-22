@@ -87,11 +87,23 @@ def get_driver_of_conn(
     ]:
         module = sys.modules.get(driver_name)
         if module is not None:
-            ConnectionType = getattr(module, 'Connection', None)
-            if isinstance(ConnectionType, type) and isinstance(
-                conn, ConnectionType
-            ):
-                return resolve_driver(driver_name)
+            if driver_name == 'connectorx':
+                from .drivers import connectorx_driver
+
+                if isinstance(
+                    conn,
+                    (
+                        connectorx_driver.ConnectorxConn,
+                        connectorx_driver.ConnectorxAsyncConn,
+                    )
+                ):
+                    return resolve_driver('connectorx')
+            else:
+                ConnectionType = getattr(module, 'Connection', None)
+                if isinstance(ConnectionType, type) and isinstance(
+                    conn, ConnectionType
+                ):
+                    return resolve_driver(driver_name)
     else:
         raise Exception('could not determine driver of conn')
 
@@ -134,7 +146,7 @@ def parse_uri(uri: str) -> spec.DBConfig:
             'path': path,
         }
     elif uri.startswith('postgres'):
-        database = uri[uri.rfind('/') + 1:]
+        database = uri[uri.rfind('/') + 1 :]
         head, tail = uri.split('@')
         username = head.split('/')[-1]
         if ':' in username:

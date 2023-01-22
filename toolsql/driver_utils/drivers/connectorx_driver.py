@@ -1,13 +1,65 @@
 from __future__ import annotations
 
+import typing
+
 from toolsql import spec
 import connectorx  # type: ignore
 
 from . import abstract_driver
 
 
+class ConnectorxConn(str):
+    def __enter__(self) -> ConnectorxConn:
+        return self
+
+    def __exit__(self, *args: typing.Any) -> None:
+        pass
+
+    def close(self) -> None:
+        pass
+
+
+class ConnectorxAsyncConn(str):
+    async def __aenter__(self) -> ConnectorxAsyncConn:
+        return self
+
+    async def __aexit__(self, *args: typing.Any) -> None:
+        pass
+
+    def __await__(
+        self,
+    ) -> typing.Generator[typing.Any, None, ConnectorxAsyncConn]:
+        async def closure() -> ConnectorxAsyncConn:
+            return self
+
+        return closure().__await__()
+
+    async def close(self) -> None:
+        pass
+
+
 class ConnectorxDriver(abstract_driver.AbstractDriver):
     name = 'connectorx'
+
+    @classmethod
+    def connect(
+        cls,
+        uri: str,
+        *,
+        as_context: bool,
+        autocommit: bool,
+    ) -> spec.Connection:
+        return ConnectorxConn(uri)
+
+    @classmethod
+    def async_connect(
+        cls,
+        uri: str,
+        *,
+        as_context: bool,
+        autocommit: bool,
+    ) -> spec.Connection:
+        return ConnectorxAsyncConn(uri)
 
     @classmethod
     def select(
@@ -31,7 +83,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         else:
             result_format = 'polars'
         result = connectorx.read_sql(
-            conn_str, compiled_sql, target=result_format
+            conn_str, compiled_sql, return_type=result_format
         )
 
         # convert to output_format
@@ -52,7 +104,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
             else:
                 raise Exception('improper format')
         elif output_format == 'tuple':
-            return list(zip(*result.to_dict.values()))
+            return list(zip(*result.to_dict().values()))
         elif output_format == 'dict':
             as_dicts: spec.DictRows = result.to_dicts()
             return as_dicts
@@ -89,5 +141,8 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
 
     @classmethod
     def compile_sql(cls, sql: str, parameters: spec.SqlParameters) -> str:
-        raise NotImplementedError()
+        if parameters is not None and len(parameters) > 0:
+            raise NotImplementedError('compile_sql() for ' + str(cls.__name__))
+        else:
+            return sql
 

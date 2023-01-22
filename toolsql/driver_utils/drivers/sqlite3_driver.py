@@ -10,9 +10,19 @@ class Sqlite3Driver(abstract_driver.AbstractDriver):
     name = 'sqlite3'
 
     @classmethod
-    def connect(cls, uri: str, *, as_context: bool = True) -> spec.Connection:
+    def connect(
+        cls,
+        uri: str,
+        *,
+        as_context: bool,
+        autocommit: bool,
+    ) -> spec.Connection:
         path = uri.split('sqlite://')[1]
-        return sqlite3.connect(path)
+
+        if autocommit:
+            return sqlite3.connect(path, isolation_level=None)
+        else:
+            return sqlite3.connect(path)
 
     @classmethod
     def get_cursor_output_names(
