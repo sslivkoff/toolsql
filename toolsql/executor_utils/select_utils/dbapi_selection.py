@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import typing
 
+from toolsql import driver_utils
 from toolsql import spec
 from . import row_formats
 
@@ -12,7 +13,7 @@ def _select_dbapi(
     parameters: spec.SqlParameters | None = None,
     conn: spec.Connection,
     output_format: spec.QueryOutputFormat = 'dict',
-    driver: spec.DriverClass,
+    driver: spec.DriverReference,
 ) -> spec.SelectOutput:
 
     cursor = conn.cursor()
@@ -28,6 +29,7 @@ def _select_dbapi(
     if output_format == 'tuple':
         return rows
     else:
+        driver = driver_utils.get_driver_class(driver)
         names = driver.get_cursor_output_names(cursor)
         return row_formats.format_row_tuples(
             rows=rows, names=names, output_format=output_format
@@ -40,7 +42,7 @@ async def _async_select_dbapi(
     parameters: spec.SqlParameters | None = None,
     conn: spec.AsyncConnection,
     output_format: spec.QueryOutputFormat = 'dict',
-    driver: spec.DriverClass,
+    driver: spec.DriverReference,
 ) -> spec.AsyncSelectOutput:
 
     cursor: spec.AsyncCursor = await conn.execute(sql, parameters)
@@ -51,6 +53,7 @@ async def _async_select_dbapi(
     if output_format == 'tuple':
         return rows
     else:
+        driver = driver_utils.get_driver_class(driver)
         names = driver.get_cursor_output_names(cursor)
         return row_formats.format_row_tuples(
             rows=rows, names=names, output_format=output_format

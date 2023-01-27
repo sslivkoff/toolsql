@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import sys
+
 from toolsql import conn_utils
 from .. import spec
 from .drivers import abstract_driver
@@ -12,6 +14,11 @@ def get_driver_name(
     output_format: spec.QueryOutputFormat | None = None,
     db_config: spec.DBConfig | None = None,
     uri: str | None = None,
+    conn: spec.Connection
+    | spec.AsyncConnection
+    | str
+    | spec.DBConfig
+    | None = None,
 ) -> str:
 
     if (
@@ -22,10 +29,16 @@ def get_driver_name(
         return driver.name
 
     elif isinstance(driver, str):
-        return driver
+        if driver in ['sqlite3', 'aiosqlite', 'psycopg', 'connectorx']:
+            return driver
+        else:
+            raise Exception('unknown driver name: ' + str(driver))
 
     elif db_config is not None and db_config.get('driver') is not None:
         return db_config['driver']
+
+    elif conn is not None:
+        return _get_conn_driver_name(conn)
 
     elif output_format in ('polars', 'pandas'):
         return 'connectorx'
@@ -40,6 +53,29 @@ def get_driver_name(
         else:
             raise Exception('must specify more parameters to determine driver')
         return _get_default_dbms_driver_name(dbms, sync=sync)
+
+
+def _get_conn_driver_name(
+    conn: spec.Connection | spec.AsyncConnection | str | spec.DBConfig,
+) -> str:
+
+    if isinstance(conn, (str, dict)):
+        return 'connectorx'
+
+    for driver_name in [
+        'sqlite3',
+        'aiosqlite',
+        'psycopg',
+    ]:
+        module = sys.modules.get(driver_name)
+        if module is not None:
+            ConnectionType = getattr(module, 'Connection', None)
+            if isinstance(ConnectionType, type) and isinstance(
+                conn, ConnectionType
+            ):
+                return driver_name
+    else:
+        raise Exception('could not determine driver of conn')
 
 
 def _get_default_dbms_driver_name(dbms: str, sync: bool) -> str:
@@ -61,6 +97,11 @@ def get_driver_class(
     output_format: spec.QueryOutputFormat | None = None,
     db_config: spec.DBConfig | None = None,
     uri: str | None = None,
+    conn: spec.Connection
+    | spec.AsyncConnection
+    | str
+    | spec.DBConfig
+    | None = None,
 ) -> spec.DriverClass:
 
     if (
@@ -76,6 +117,7 @@ def get_driver_class(
         output_format=output_format,
         db_config=db_config,
         uri=uri,
+        conn=conn,
     )
 
     if driver_name == 'sqlite3':

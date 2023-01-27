@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import typing
-from .. import conn_utils
-from .. import dialect_utils
-from .. import spec
+from toolsql import conn_utils
+from toolsql import dialect_utils
+from toolsql import driver_utils
+from toolsql import spec
 
 
 def insert(
@@ -11,7 +12,7 @@ def insert(
     sql: str | None = None,
     row: spec.ExecuteParams | None = None,
     rows: spec.ExecuteManyParams | None = None,
-    table_name: str | None = None,
+    table: str | None = None,
     columns: typing.Sequence[str] | None = None,
     conn: spec.Connection,
 ) -> None:
@@ -22,13 +23,13 @@ def insert(
         sql=sql,
         row=row,
         rows=rows,
-        table_name=table_name,
+        table=table,
         columns=columns,
         dialect=dialect,
     )
 
     # execute query
-    driver = conn_utils.get_conn_driver(conn)
+    driver = driver_utils.get_driver_class(conn=conn)
     driver.executemany(conn=conn, sql=sql, parameters=parameters)
 
 
@@ -37,7 +38,7 @@ async def async_insert(
     sql: str | None = None,
     row: spec.ExecuteParams | None = None,
     rows: spec.ExecuteManyParams | None = None,
-    table_name: str | None = None,
+    table: str | None = None,
     columns: typing.Sequence[str] | None = None,
     conn: spec.AsyncConnection,
 ) -> None:
@@ -48,12 +49,12 @@ async def async_insert(
         sql=sql,
         row=row,
         rows=rows,
-        table_name=table_name,
+        table=table,
         columns=columns,
         dialect=dialect,
     )
 
     # execute query
-    driver = conn_utils.get_conn_driver(conn)
+    driver = driver_utils.get_driver_class(conn=conn)
     await driver.async_executemany(conn=conn, sql=sql, parameters=parameters)
 
