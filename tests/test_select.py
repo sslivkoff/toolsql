@@ -59,9 +59,9 @@ async def test_async_select_no_context(
     sql = select_query['sql']
     output_format = select_query['output_format']
     target_result = select_query['target_result']
-    conn = await toolsql.async_connect(
+    conn = await (toolsql.async_connect(
         async_read_conn_db_config, as_context=False
-    )
+    ))
 
     try:
         result = await toolsql.async_select(

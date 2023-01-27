@@ -74,6 +74,10 @@ def _get_conn_driver_name(
                 conn, ConnectionType
             ):
                 return driver_name
+
+            if driver_name == 'psycopg':
+                if isinstance(conn, module.AsyncConnection):
+                    return driver_name
     else:
         raise Exception('could not determine driver of conn')
 

@@ -1,10 +1,46 @@
 from __future__ import annotations
 
+import typing
+
 import psycopg
 
 from toolsql import conn_utils
 from toolsql import spec
 from . import abstract_driver
+
+
+class PsycopgAsyncConnWrapper:
+    """this wrapper modifies the semantics of psycopg AsyncConnection's
+    - can be used in async contexts without "async with await" syntax
+    - has identical semantics to aiosqlite conn
+    """
+
+    conn: typing.Awaitable[psycopg.AsyncConnection[typing.Any]]
+    awaited: psycopg.AsyncConnection[typing.Any]
+
+    def __init__(
+        self, conn: typing.Awaitable[psycopg.AsyncConnection[typing.Any]]
+    ) -> None:
+        self.conn = conn
+
+    async def __aenter__(self) -> psycopg.AsyncConnection[typing.Any]:
+        self.awaited = await self.conn
+        return await self.awaited.__aenter__()
+
+    async def __aexit__(self, *args: typing.Any) -> None:
+        return await self.awaited.__aexit__(*args)
+
+    def __await__(
+        self,
+    ) -> typing.Generator[
+        typing.Any, None, psycopg.AsyncConnection[typing.Any]
+    ]:
+        async def closure() -> psycopg.AsyncConnection[typing.Any]:
+            if not hasattr(self, 'awaited'):
+                self.awaited = await self.conn
+            return self.awaited
+
+        return closure().__await__()
 
 
 class PsycopgDriver(abstract_driver.AbstractDriver):
@@ -41,4 +77,22 @@ class PsycopgDriver(abstract_driver.AbstractDriver):
             return None
         else:
             return tuple(item.name for item in description)  # type: ignore
+
+    @classmethod
+    def async_connect(
+        cls,
+        uri: str,
+        as_context: bool,
+        autocommit: bool,
+    ) -> spec.AsyncConnection:
+
+        connect_str = cls.get_psycopg_conn_str(uri)
+        if autocommit:
+            conn = psycopg.AsyncConnection.connect(
+                connect_str, autocommit=autocommit
+            )
+        else:
+            conn = psycopg.AsyncConnection.connect(connect_str)
+
+        return PsycopgAsyncConnWrapper(conn)  # type: ignore
 
