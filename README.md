@@ -1,53 +1,35 @@
 # toolsql
 
-toolsql makes it simple to work with db schemas and queries
-
-the goal is to create an opinionated lightweight wrapper around SqlAlchemy that lowers boilerlpace and cognitive overhead without resorting to magic
-
-
-## Features
-- define schemas, queries, and migrations using JSON
-- compatible with postgresql and sqlite
-- uses sqlalchemy under the hood
-
-## Contents
-1. Installation
-2. Usage
-3. Reference
-
-## Installation
-
-## Usage
-
-#### Log In To Database
+## goals
+- provider **minimal** wrapper around raw sql and around db-specific drivers
+- provide sync and async interfaces
+- support sqlite and postgresql
+- minimize startup import time
+- maximize read/write performance
+- provide tight integration with polars
 
 
-#### Inspect Current Database Schema
+Two levels of abstraction:
+1. raw sql
+2. python wrapper around common sql operations
+
+If python does not cover some functionality, make it easy to drop into SQL
+
+## requirements
+- python 3.7 - 3.11
 
 
-#### Define CLI
+## supported executors
+- `sqlite3`: sqlite sync reads
+- `aiosqlite`: sqlite async reads
+- `psycopg`: postres sync / async reads
+- `connectorx`: simple read queries
 
-#### Insert, Select, Update, and Delete Rows
 
-## Reference
-1. Module Reference
-2. CLI Reference
-3. Schema Reference
-4. Function Reference
-
-#### Module Reference
-- `toolsql.cli` defines command line interface for toolsql
-- `toolsql.crud_utils` functions for inserting, selecting, updating, and deleting rows
-- `toolsql.migrate_utils` functions for migrations
-- `toolsql.sqlalchemy` functions for interfacing with sqlalchemy
-- `toolsql.admin_utils`
-- `toolsql.summary_utils`
-
-#### CLI Reference
-
-#### Schema Reference
-- `SQLDBSchema` describes a database, including its tables
-- `SQLTableSpec` describes a table, including its columns, indices, and constraints
-- `SQLColumn` describes a column, including its datatype and constraints
-- see `spec.py` for specific structure of each schema
+## `SELECT` output formats
+- `'tuple'`: each row is a tuple
+- `'dict'`: each row is a dict
+- `'cursor'`: query cursor
+- `'polars'`: polars dataframe of rows
+- `'pandas'`: pandas dataframe of rows
 

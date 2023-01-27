@@ -27,9 +27,26 @@ class Sqlite3Driver(abstract_driver.AbstractDriver):
     @classmethod
     def get_cursor_output_names(
         cls,
-        cursor: spec.Cursor,
+        cursor: spec.Cursor | spec.AsyncCursor,
     ) -> tuple[str, ...] | None:
         if not isinstance(cursor, sqlite3.Cursor):
             raise Exception('not a sqlite3 cursor')
         return tuple(item[0] for item in cursor.description)
+
+    @classmethod
+    def executemany(
+        cls,
+        *,
+        sql: str,
+        parameters: spec.ExecuteManyParams | None,
+        conn: spec.Connection,
+    ) -> None:
+        cursor = conn.cursor()
+        try:
+            if parameters is None:
+                cursor.execute(sql)
+            else:
+                cursor.executemany(sql, parameters)
+        finally:
+            cursor.close()
 

@@ -26,7 +26,7 @@ class AiosqliteDriver(abstract_driver.AbstractDriver):
     @classmethod
     def get_cursor_output_names(
         cls,
-        cursor: spec.Cursor,
+        cursor: spec.Cursor | spec.AsyncCursor,
     ) -> tuple[str, ...] | None:
         if not isinstance(cursor, aiosqlite.Cursor):
             raise Exception('not an aiosqlite cursor')

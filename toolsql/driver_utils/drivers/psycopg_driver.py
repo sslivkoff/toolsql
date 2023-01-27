@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import psycopg
 
+from toolsql import conn_utils
 from toolsql import spec
 from . import abstract_driver
-from .. import driver_crud
 
 
 class PsycopgDriver(abstract_driver.AbstractDriver):
@@ -13,7 +13,7 @@ class PsycopgDriver(abstract_driver.AbstractDriver):
     @classmethod
     def get_psycopg_conn_str(cls, target: str | spec.DBConfig) -> str:
         if isinstance(target, str):
-            db_config = driver_crud.parse_uri(target)
+            db_config = conn_utils.parse_uri(target)
         elif isinstance(target, dict):
             db_config = target
         else:
@@ -33,7 +33,8 @@ class PsycopgDriver(abstract_driver.AbstractDriver):
 
     @classmethod
     def get_cursor_output_names(
-        cls, cursor: spec.Cursor
+        cls,
+        cursor: spec.Cursor | spec.AsyncCursor,
     ) -> tuple[str, ...] | None:
         description = cursor.description
         if description is None:
