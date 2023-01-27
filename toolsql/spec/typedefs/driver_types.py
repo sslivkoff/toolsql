@@ -12,8 +12,7 @@ import sqlite3
 from toolsql.driver_utils.drivers.abstract_driver import AbstractDriver
 
 
-Dialect = Literal['sqlite', 'postgresql', 'literal']
-DbapiDialect = Literal['sqlite', 'postgresql']
+Dialect = Literal['sqlite', 'postgresql']
 DriverName = Literal[
     'sqlite3',
     'aiosqlite',
