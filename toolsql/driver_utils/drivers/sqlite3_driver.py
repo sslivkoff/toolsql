@@ -41,6 +41,10 @@ class Sqlite3Driver(abstract_driver.AbstractDriver):
         parameters: spec.ExecuteManyParams | None,
         conn: spec.Connection,
     ) -> None:
+
+        if not isinstance(conn, sqlite3.dbapi2.Connection):
+            raise Exception('not a sqlite conn')
+
         cursor = conn.cursor()
         try:
             if parameters is None:

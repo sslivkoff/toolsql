@@ -9,7 +9,8 @@ import aiosqlite
 import psycopg
 import sqlite3
 
-from toolsql.driver_utils.drivers.abstract_driver import AbstractDriver
+from toolsql.driver_utils.drivers import abstract_driver
+from toolsql.driver_utils.drivers import connectorx_driver
 
 
 Dialect = Literal['sqlite', 'postgresql']
@@ -19,7 +20,7 @@ DriverName = Literal[
     'psycopg',
     'connectorx',
 ]
-DriverClass = type[AbstractDriver]
+DriverClass = type[abstract_driver.AbstractDriver]
 DriverReference = typing.Union[
     str,
     types.ModuleType,
@@ -29,12 +30,23 @@ DriverReference = typing.Union[
 Connection = typing.Union[
     sqlite3.Connection,
     psycopg.Connection,
-    # str,  # connectorx
+    connectorx_driver.ConnectorxConnection,
 ]
 AsyncConnection = typing.Union[
     aiosqlite.Connection,
     psycopg.AsyncConnection,
-    # str,  # connectorx
+    connectorx_driver.ConnectorxAsyncConnection,
+]
+
+FullConnection = typing.Union[
+    sqlite3.Connection,
+    psycopg.Connection,
+    # connectorx_driver.ConnectorxConnection,
+]
+FullAsyncConnection = typing.Union[
+    aiosqlite.Connection,
+    psycopg.AsyncConnection,
+    # connectorx_driver.ConnectorxAsyncConnection,
 ]
 
 

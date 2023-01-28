@@ -32,6 +32,8 @@ postgres_db_config = {
 sync_read_conn_db_configs = [
     {'driver': 'sqlite3', **sqlite_db_config},
     {'driver': 'psycopg', **postgres_db_config},
+    {'driver': 'connectorx', **sqlite_db_config},
+    {'driver': 'connectorx', **postgres_db_config},
 ]
 
 sync_read_bare_db_configs = [
@@ -49,6 +51,8 @@ sync_read_db_configs = [
 async_read_conn_db_configs = [
     {'driver': 'aiosqlite', **sqlite_db_config},
     {'driver': 'psycopg', **postgres_db_config},
+    {'driver': 'connectorx', **sqlite_db_config},
+    {'driver': 'connectorx', **postgres_db_config},
 ]
 
 async_read_bare_db_configs = [
@@ -62,6 +66,10 @@ async_read_db_configs = [
     {'driver': 'connectorx', **sqlite_db_config},
     {'driver': 'connectorx', **postgres_db_config},
 ]
+
+#
+# # write configs
+#
 
 sync_write_db_configs = [
     {'driver': 'sqlite3', **sqlite_db_config},

@@ -1,5 +1,6 @@
 import asyncio
 import sqlite3
+import uuid
 
 import psycopg
 import pytest
@@ -115,6 +116,13 @@ def setup_teardown():
 
     # teardown
     pass
+
+
+# @pytest.fixture()
+# def fresh_pokemon_table():
+#     table = conf_tables.pokemon_table()
+#     table['schema']['name'] = str(uuid.uuid4())
+#     return table, db_config
 
 
 #

@@ -137,7 +137,9 @@ def get_driver_class(
 
         return psycopg_driver.PsycopgDriver
     elif driver_name == 'connectorx':
-        raise Exception('connectorx has no driver class')
+        from .drivers import connectorx_driver
+
+        return connectorx_driver.ConnectorxDriver
     else:
         raise Exception('unknown driver: ' + str(driver))
 

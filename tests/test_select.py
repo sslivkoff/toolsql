@@ -41,6 +41,10 @@ def test_sync_driver_bare_conn(sync_read_bare_db_config, select_query, helpers):
     helpers.assert_results_equal(result=result, target_result=target_result)
 
 
+#
+# # async
+#
+
 async def test_async_select(async_read_conn_db_config, select_query, helpers):
     sql = select_query['sql']
     output_format = select_query['output_format']

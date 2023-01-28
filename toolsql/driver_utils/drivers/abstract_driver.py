@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import types
 from toolsql import spec
 
 
@@ -11,14 +10,8 @@ class AbstractDriver:
         name = self.__class__.__name__
         raise Exception('do not instantiate ' + name + ', just use its methods')
 
-    @classmethod
-    def get_module(cls) -> types.ModuleType:
-        import importlib
-
-        return importlib.import_module(cls.name)
-
     #
-    # # Connections
+    # # connections
     #
 
     @classmethod
@@ -48,6 +41,10 @@ class AbstractDriver:
     ) -> tuple[str, ...] | None:
         raise NotImplementedError('get_cursor_output_names() for ' + cls.name)
 
+    #
+    # # executions
+    #
+
     @classmethod
     def executemany(
         cls,
@@ -71,6 +68,6 @@ class AbstractDriver:
         parameters: spec.ExecuteManyParams | None,
         conn: spec.AsyncConnection,
     ) -> None:
-        async with conn.cursor() as cursor:
+        async with conn.cursor() as cursor:  # type: ignore
             await cursor.executemany(sql, parameters)
 
