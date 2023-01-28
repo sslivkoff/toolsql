@@ -10,7 +10,6 @@ from toolsql.driver_utils.drivers.psycopg_driver import PsycopgDriver
 
 import conf.conf_db_configs as conf_db_configs
 import conf.conf_helpers as conf_helpers
-import conf.conf_read_queries as conf_read_queries
 import conf.conf_write_queries as conf_write_queries
 import conf.conf_tables as conf_tables
 
@@ -30,11 +29,19 @@ def event_loop(request):
 # # db configs
 #
 
+# dbapi
 
-@pytest.fixture(params=conf_db_configs.sync_read_db_configs)
-def sync_read_db_config(request):
+@pytest.fixture(params=conf_db_configs.sync_dbapi_db_configs)
+def sync_dbapi_db_config(request):
     return request.param
 
+
+@pytest.fixture(params=conf_db_configs.async_dbapi_db_configs)
+def async_dbapi_db_config(request):
+    return request.param
+
+
+# sync read
 
 @pytest.fixture(params=conf_db_configs.sync_read_conn_db_configs)
 def sync_read_conn_db_config(request):
@@ -46,10 +53,7 @@ def sync_read_bare_db_config(request):
     return request.param
 
 
-@pytest.fixture(params=conf_db_configs.async_read_db_configs)
-def async_read_db_config(request):
-    return request.param
-
+# async read
 
 @pytest.fixture(params=conf_db_configs.async_read_conn_db_configs)
 def async_read_conn_db_config(request):
@@ -60,6 +64,7 @@ def async_read_conn_db_config(request):
 def async_read_bare_db_config(request):
     return request.param
 
+# write
 
 @pytest.fixture(params=conf_db_configs.sync_write_db_configs)
 def sync_write_db_config(request):
@@ -118,21 +123,16 @@ def setup_teardown():
     pass
 
 
-# @pytest.fixture()
-# def fresh_pokemon_table():
-#     table = conf_tables.pokemon_table()
-#     table['schema']['name'] = str(uuid.uuid4())
-#     return table, db_config
+@pytest.fixture()
+def fresh_pokemon_table(sync_read_db_config):
+    table = conf_tables.pokemon_table()
+    table['schema']['name'] = str(uuid.uuid4())
+    return table, sync_read_db_config
 
 
 #
 # # queries
 #
-
-
-@pytest.fixture(params=conf_read_queries.select_queries)
-def select_query(request):
-    return request.param
 
 
 @pytest.fixture(params=conf_write_queries.insert_queries)

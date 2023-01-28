@@ -9,9 +9,14 @@ def get_db_uri(db_config: spec.DBConfig) -> str:
 
     dbms = db_config['dbms']
     if dbms == 'postgresql':
-        uri_template = (
-            '{dbms}://{username}:{password}@{hostname}:{port}/{database}'
-        )
+        if db_config.get('password') in [None, '']:
+            uri_template = (
+                '{dbms}://{username}@{hostname}:{port}/{database}'
+            )
+        else:
+            uri_template = (
+                '{dbms}://{username}:{password}@{hostname}:{port}/{database}'
+            )
         db_config = db_config.copy()
         db_config.setdefault('password', '')
         db_config.setdefault('hostname', 'localhost')

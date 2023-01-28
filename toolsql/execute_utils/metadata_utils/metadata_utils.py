@@ -7,15 +7,15 @@ from toolsql import spec
 from . import dbms_utils
 
 
-def get_tables_metadata(
+def get_table_schemas(
     conn: spec.Connection,
 ) -> typing.Mapping[str, spec.TableSchema]:
     dialect = conn_utils.get_conn_dialect(conn)
     dbms = dbms_utils.get_dbms_class(name=dialect)
-    return dbms.get_tables_metadata(conn=conn)
+    return dbms.get_table_schemas(conn=conn)
 
 
-def get_tables_names(conn: spec.Connection) -> typing.Sequence[str]:
+def get_table_names(conn: spec.Connection) -> typing.Sequence[str]:
     dialect = conn_utils.get_conn_dialect(conn)
     dbms = dbms_utils.get_dbms_class(name=dialect)
     return dbms.get_tables_names(conn=conn)
@@ -27,12 +27,12 @@ def get_indices_names(conn: spec.Connection) -> typing.Sequence[str]:
     return dbms.get_indices_names(conn=conn)
 
 
-def get_table_metadata(
+def get_table_schema(
     table_name: str, conn: spec.Connection
 ) -> spec.TableSchema:
     dialect = conn_utils.get_conn_dialect(conn)
     dbms = dbms_utils.get_dbms_class(name=dialect)
-    return dbms.get_table_metadata(table_name=table_name, conn=conn)
+    return dbms.get_table_schema(table_name=table_name, conn=conn)
 
 
 def get_table_create_statement(

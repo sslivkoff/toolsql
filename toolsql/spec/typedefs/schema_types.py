@@ -1,59 +1,43 @@
 from __future__ import annotations
 
-import decimal
 import typing
 
 from typing_extensions import Literal
 from typing_extensions import TypedDict
 
 
-# PythonColumntype = Literal[
-#     int,
-#     float,
-#     decimal.Decimal,
-#     str,
-#     bytes,
-#     dict,
-# ]
-# from typing_extensions import TypeVar
-# PythonColumntype = TypeVar[
-#     int,
-#     float,
-#     decimal.Decimal,
-#     str,
-#     bytes,
-#     dict,
-# ]
 PythonColumntype = type
 
 # https://www.sqlite.org/datatype3.html
 SqliteColumntype = Literal[
-    'integer',
-    'float',
-    'decimal',
-    'text',
-    'blob',
-    'json',
+    'INTEGER',
+    'FLOAT',
+    'DECIMAL',
+    'TEXT',
+    'BLOB',
+    'JSON',
 ]
 
 # https://www.postgresql.org/docs/current/datatype.html
 PostgresqlColumntype = Literal[
-    'smallint',  # int16
-    'int4',  # int32
-    'bigint',  # int64
-    'real',  # float32
-    'double precision',  # float64
-    'numeric',  # decimal
-    'text',
-    'bytea',  # binary
-    'jsonb',
-    'timestampz',
+    'SMALLINT',  # INT16
+    'INT4',  # INT32
+    'BIGINT',  # INT64
+    'REAL',  # FLOAT32
+    'DOUBLE PRECISION',  # FLOAT64
+    'NUMERIC',  # DECIMAL
+    'TEXT',
+    'BYTEA',  # BINARY
+    'JSONB',
+    'TIMESTAMPZ',
 ]
 
 ColumntypeShorthand = typing.Union[
     PythonColumntype,
     SqliteColumntype,
     PostgresqlColumntype,
+    str,
+    type,
 ]
 Columntype = typing.Union[
     SqliteColumntype,
@@ -61,7 +45,17 @@ Columntype = typing.Union[
 ]
 
 
-class ColumnSchema(TypedDict, total=False):
+class ColumnSchemaPartial(TypedDict, total=False):
+    default: typing.Any  # default value
+    index: bool  # whether to create an index for column
+    name: str  # name of table, usually specified in TableSpec
+    nullable: bool  # for whether column can be null
+    primary: bool  # for use as primary key
+    type: ColumntypeShorthand
+    unique: bool  # for creating unique index
+
+
+class ColumnSchema(TypedDict):
     default: typing.Any  # default value
     index: bool  # whether to create an index for column
     name: str  # name of table, usually specified in TableSpec
@@ -94,6 +88,7 @@ DeleteOption = Literal[
 
 ColumnSchemaShorthand = typing.Union[
     ColumntypeShorthand,
+    ColumnSchemaPartial,
     ColumnSchema,
 ]
 
@@ -105,12 +100,15 @@ class TableSchema(TypedDict):
     indices: typing.Sequence[IndexSchema]
 
 
+ColumnsShorthand = typing.Union[
+    typing.Mapping[str, ColumnSchemaShorthand],
+    typing.Sequence[ColumnSchema],
+]
+
+
 class TableSchemaShorthand(TypedDict, total=False):
     name: str
-    columns: typing.Union[
-        typing.Mapping[str, ColumnSchemaShorthand],
-        typing.Sequence[ColumnSchema],
-    ]
+    columns: ColumnsShorthand
     constraints: typing.Sequence[ConstraintSchema]
     indices: typing.Sequence[IndexSchema]
 

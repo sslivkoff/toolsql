@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import typing
 
+from toolsql import execute_utils
 from toolsql import spec
 from . import abstract_dbms
 
@@ -9,24 +10,21 @@ from . import abstract_dbms
 class SqliteDbms(abstract_dbms.AbstractDbms):
     @classmethod
     def get_tables_names(cls, conn: spec.Connection) -> typing.Sequence[str]:
-        if isinstance(conn, str):
-            raise Exception('conn not initialized')
         sql = """SELECT name FROM sqlite_schema WHERE type =='table'"""
-        cursor = conn.execute(sql)
-        result = cursor.fetchall()
-        return [item[0] for item in result]
+        result = execute_utils.select(sql=sql, conn=conn, output_format='tuple')
+        return [item[0] for item in result]  # type: ignore
 
     @classmethod
-    def get_table_metadata(
+    def get_table_schema(
         cls, table_name: str, conn: spec.Connection
     ) -> spec.TableSchema:
 
         if isinstance(conn, str):
             raise Exception('conn not initialized')
 
-        column_indices, multicolumn_indices = cls._get_table_indices(
-            table_name=table_name, conn=conn
-        )
+        # column_indices, multicolumn_indices = cls._get_table_indices(
+        #     table_name=table_name, conn=conn
+        # )
 
         sql = 'PRAGMA table_info({table_name})'.format(table_name=table_name)
         cursor = conn.execute(sql)
@@ -40,12 +38,16 @@ class SqliteDbms(abstract_dbms.AbstractDbms):
                 'nullable': not not_null,
                 'default': default,
                 'primary': primary,
-                'index': name in column_indices,
+                #
+                # todo
+                # 'index': name in column_indices,
+                'index': False,
+                'unique': False,
             }
             columns.append(column)
 
-        if len(multicolumn_indices) > 0:
-            raise NotImplementedError('multicolumn_indices')
+        # if len(multicolumn_indices) > 0:
+        #     raise NotImplementedError('multicolumn_indices')
 
         return {
             'name': table_name,
@@ -59,37 +61,41 @@ class SqliteDbms(abstract_dbms.AbstractDbms):
         cls, table_name: str, conn: spec.Connection
     ) -> tuple[set[str], typing.Sequence[set[str]]]:
 
-        if isinstance(conn, str):
-            raise Exception('conn not initialized')
+        column_indices: set[str] = set()
+        multicolumn_indices: typing.Sequence[set[str]] = []
+        return (column_indices, multicolumn_indices)
 
-        # get index names
-        sql = """
-        SELECT name FROM sqlite_schema
-        WHERE type == 'index' AND table_name == '{table_name}'
-        """
-        sql = sql.format(table_name=table_name)
-        cursor = conn.execute(sql)
-        result = cursor.fetchall()
-        index_names = [item[0] for item in result]
+        # if isinstance(conn, str):
+        #     raise Exception('conn not initialized')
 
-        # get index info
-        column_indices = set()
-        multicolumn_indices: list[set[str]] = list()
-        for index_name in index_names:
-            sql = 'PRAGMA index_info({index_name})'.format(
-                index_name=index_name
-            )
-            cursor = conn.execute(sql)
-            results = cursor.fetchall()
-            for index_rank, cid, column_name in results:
-                if cid == -2:
-                    raise NotImplementedError('indexed expression')
-            if len(results) == 1:
-                column_indices.add(results[0][2])
-            else:
-                multicolumn_indices.append({result[2] for result in results})
+        # # get index names
+        # sql = """
+        # SELECT name FROM sqlite_schema
+        # WHERE type == 'index' AND table_name == '{table_name}'
+        # """
+        # sql = sql.format(table_name=table_name)
+        # cursor = conn.execute(sql)
+        # result = cursor.fetchall()
+        # index_names = [item[0] for item in result]
 
-        return column_indices, multicolumn_indices
+        # # get index info
+        # column_indices = set()
+        # multicolumn_indices: list[set[str]] = list()
+        # for index_name in index_names:
+        #     sql = 'PRAGMA index_info({index_name})'.format(
+        #         index_name=index_name
+        #     )
+        #     cursor = conn.execute(sql)
+        #     results = cursor.fetchall()
+        #     for index_rank, cid, column_name in results:
+        #         if cid == -2:
+        #             raise NotImplementedError('indexed expression')
+        #     if len(results) == 1:
+        #         column_indices.add(results[0][2])
+        #     else:
+        #         multicolumn_indices.append({result[2] for result in results})
+
+        # return column_indices, multicolumn_indices
 
     @classmethod
     def get_table_create_statement(

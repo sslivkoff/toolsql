@@ -16,7 +16,9 @@ class ToolsqlTestHelpers:
                 assert np.all(column.values == result[name].values)
         elif isinstance(target_result, dict):
             assert type(result) is dict
-            assert set(result.keys()) == set(target_result.keys())
+            actual_keys = set(result.keys())
+            target_keys = set(target_result.keys())
+            assert actual_keys == target_keys
             for key, value in result.items():
                 ToolsqlTestHelpers.assert_results_equal(
                     value, target_result[key]

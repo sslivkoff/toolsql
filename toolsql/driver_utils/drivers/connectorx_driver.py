@@ -27,6 +27,15 @@ class ConnectorxConnection(str):
     def executemany(self, sql: str, parameters: typing.Any = None) -> None:
         raise NotImplementedError('no executemany() for connectorx')
 
+    def fetchone(self) -> typing.Any:
+        raise NotImplementedError('no fetchone() for connectorx')
+
+    def fetchmany(self) -> typing.Any:
+        raise NotImplementedError('no fetchmany() for connectorx')
+
+    def fetchall(self) -> typing.Any:
+        raise NotImplementedError('no fetchall() for connectorx')
+
     def close(self) -> None:
         pass
 
@@ -58,6 +67,15 @@ class ConnectorxAsyncConnection(str):
         self, sql: str, parameters: typing.Any = None
     ) -> None:
         raise NotImplementedError('no executemany() for connectorx')
+
+    async def fetchone(self) -> typing.Any:
+        raise NotImplementedError('no fetchone() for connectorx')
+
+    async def fetchmany(self) -> typing.Any:
+        raise NotImplementedError('no fetchmany() for connectorx')
+
+    async def fetchall(self) -> typing.Any:
+        raise NotImplementedError('no fetchall() for connectorx')
 
     async def close(self) -> None:
         pass

@@ -9,28 +9,28 @@ sqlite_to_postgres_conversions: typing.Mapping[
     spec.SqliteColumntype,
     spec.PostgresqlColumntype,
 ] = {
-    'integer': 'bigint',
-    'float': 'double precision',
-    'decimal': 'numeric',
-    'text': 'text',
-    'blob': 'bytea',
-    'json': 'jsonb',
+    'INTEGER': 'BIGINT',
+    'FLOAT': 'DOUBLE PRECISION',
+    'DECIMAL': 'NUMERIC',
+    'TEXT': 'TEXT',
+    'BLOB': 'BYTEA',
+    'JSON': 'JSONB',
 }
 
 postgres_to_sqlite_conversions: typing.Mapping[
     spec.PostgresqlColumntype,
     spec.SqliteColumntype,
 ] = {
-    'smallint': 'integer',
-    'int4': 'integer',
-    'bigint': 'integer',
-    'real': 'float',
-    'double precision': 'float',
-    'numeric': 'decimal',
-    'text': 'text',
-    'bytea': 'blob',
-    'jsonb': 'json',
-    'timestampz': 'integer',
+    'SMALLINT': 'INTEGER',
+    'INT4': 'INTEGER',
+    'BIGINT': 'INTEGER',
+    'REAL': 'FLOAT',
+    'DOUBLE PRECISION': 'FLOAT',
+    'NUMERIC': 'DECIMAL',
+    'TEXT': 'TEXT',
+    'BYTEA': 'BLOB',
+    'JSONB': 'JSON',
+    'TIMESTAMPZ': 'INTEGER',
 }
 
 
@@ -41,28 +41,29 @@ def get_basic_python_types() -> typing.Mapping[
     import datetime
 
     return {
-        int: 'integer',
-        float: 'float',
-        datetime.datetime: 'timestampz',
-        decimal.Decimal: 'numeric',
-        str: 'text',
-        bytes: 'blob',
-        dict: 'json',
+        int: 'BIGINT',
+        float: 'FLOAT',
+        datetime.datetime: 'TIMESTAMPZ',
+        decimal.Decimal: 'NUMERIC',
+        str: 'TEXT',
+        bytes: 'BLOB',
+        dict: 'JSON',
     }
 
 
 def convert_columntype_to_dialect(
-    columntype: spec.Columntype, dialect: spec.Dialect,
+    columntype: spec.Columntype,
+    dialect: spec.Dialect,
 ) -> spec.Columntype:
     if dialect == 'sqlite':
-        return convert_columntype_to_sqlite(columntype)
+        return _convert_columntype_to_sqlite(columntype)
     elif dialect == 'postgresql':
-        return convert_columntype_to_postgres(columntype)
+        return _convert_columntype_to_postgres(columntype)
     else:
         raise Exception('unknown dialect: ' + str(dialect))
 
 
-def convert_columntype_to_sqlite(
+def _convert_columntype_to_sqlite(
     columntype: spec.Columntype,
 ) -> spec.SqliteColumntype:
 
@@ -77,9 +78,7 @@ def convert_columntype_to_sqlite(
     elif isinstance(columntype, type):
         basic_python_types = get_basic_python_types()
         if columntype in basic_python_types:
-            return convert_columntype_to_sqlite(
-                basic_python_types[columntype]
-            )
+            return _convert_columntype_to_sqlite(basic_python_types[columntype])
         else:
             raise Exception('unknown column type: ' + str(columntype))
 
@@ -87,7 +86,7 @@ def convert_columntype_to_sqlite(
         raise Exception('unknown column type: ' + str(columntype))
 
 
-def convert_columntype_to_postgres(
+def _convert_columntype_to_postgres(
     columntype: spec.Columntype,
 ) -> spec.PostgresqlColumntype:
 
@@ -109,4 +108,22 @@ def convert_columntype_to_postgres(
 
     else:
         raise Exception('unknown column type: ' + str(columntype))
+
+
+def convert_table_schema_to_dialect(
+    table_schema: spec.TableSchema, dialect: spec.Dialect
+) -> spec.TableSchema:
+
+    new_columns = []
+    for column in table_schema['columns']:
+        new_column = column.copy()
+        new_column['type'] = convert_columntype_to_dialect(
+            column['type'], dialect
+        )
+        new_columns.append(new_column)
+
+    new_table_schema = table_schema.copy()
+    new_table_schema['columns'] = new_columns
+
+    return new_table_schema
 

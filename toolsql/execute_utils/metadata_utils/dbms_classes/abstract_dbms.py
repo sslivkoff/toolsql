@@ -12,11 +12,11 @@ class AbstractDbms:
     #
 
     @classmethod
-    def get_tables_metadata(
+    def get_table_schemas(
         cls, conn: spec.Connection
     ) -> typing.Mapping[str, spec.TableSchema]:
         return {
-            table_name: cls.get_table_metadata(table_name, conn=conn)
+            table_name: cls.get_table_schema(table_name, conn=conn)
             for table_name in cls.get_tables_names(conn=conn)
         }
 
@@ -29,10 +29,10 @@ class AbstractDbms:
         raise Exception('get_indices_names() for ' + cls.__name__)
 
     @classmethod
-    def get_table_metadata(
+    def get_table_schema(
         cls, table_name: str, conn: spec.Connection
     ) -> spec.TableSchema:
-        raise Exception('get_table_metadata() for ' + cls.__name__)
+        raise Exception('get_table_schema() for ' + cls.__name__)
 
     @classmethod
     def get_table_create_statement(
@@ -45,10 +45,10 @@ class AbstractDbms:
     #
 
     @classmethod
-    async def async_get_tables_metadata(
+    async def async_get_table_schemas(
         cls, conn: spec.Connection
     ) -> typing.Mapping[str, spec.TableSchema]:
-        return cls.get_tables_metadata(conn=conn)
+        return cls.get_table_schemas(conn=conn)
 
     @classmethod
     async def async_get_tables_names(
@@ -63,10 +63,10 @@ class AbstractDbms:
         return cls.get_indices_names(conn=conn)
 
     @classmethod
-    async def async_get_table_metadata(
+    async def async_get_table_schema(
         cls, table_name: str, conn: spec.Connection
     ) -> spec.TableSchema:
-        return cls.get_table_metadata(
+        return cls.get_table_schema(
             table_name=table_name, conn=conn
         )
 

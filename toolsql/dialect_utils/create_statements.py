@@ -37,7 +37,7 @@ def build_create_statement(
         import re
 
         # https://stackoverflow.com/a/1546245
-        sql = re.sub('\s\s+', ' ', sql).lstrip()
+        sql = re.sub('[\n\t ]{2,}', ' ', sql).lstrip()
 
     return sql.rstrip()
 
@@ -48,7 +48,11 @@ def _format_column(column: spec.ColumnSchema, dialect: spec.Dialect) -> str:
         dialect,
     )
     line = column['name'] + ' ' + columntype.upper()
-    if column.get('primary'):
+    if column['primary']:
         line = line + ' PRIMARY KEY'
+
+    if not column['nullable']:
+        line = line + ' NOT NULL'
+
     return line
 
