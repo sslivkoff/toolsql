@@ -46,6 +46,31 @@ class PostgresqlDbms(abstract_dbms.AbstractDbms):
             sql=sql, conn=conn, output_format='dict'
         )
 
+        primary_keys = cls._get_table_primary_keys(table_name, conn=conn)
+        unique_single_columns, unique_multi_columns = cls._get_unique_columns(
+            table_name, conn=conn
+        )
+        indexed_single_columns, indexed_multi_columns = cls._get_indexed_columns(
+            table_name, conn=conn
+        )
+        for raw_column in raw_columns:
+            raw_column['primary'] = raw_column['name'] in primary_keys
+
+            # TODO
+            raw_column['index'] = raw_column['name'] in indexed_single_columns
+            raw_column['unique'] = raw_column['name'] in unique_single_columns
+
+        return {
+            'name': table_name,
+            'columns': raw_columns,  # type: ignore
+            'indices': [],
+            'constraints': [],
+        }
+
+    @classmethod
+    def _get_table_primary_keys(
+        cls, table_name: str, conn: spec.Connection
+    ) -> set[str]:
         # https://wiki.postgresql.org/wiki/Retrieve_primary_key_columns
         primary_keys_sql = """
         SELECT
@@ -65,21 +90,93 @@ class PostgresqlDbms(abstract_dbms.AbstractDbms):
         raw_pks = execute_utils.select(
             sql=primary_keys_sql, conn=conn, output_format='dict'
         )
-        primary_keys = {raw_pk['attname'] for raw_pk in raw_pks}
+        return {raw_pk['attname'] for raw_pk in raw_pks}
 
-        for raw_column in raw_columns:
-            raw_column['primary'] = raw_column['name'] in primary_keys
+    @classmethod
+    def _get_unique_columns(
+        cls, table_name: str, conn: spec.Connection
+    ) -> set[str]:
+        # https://stackoverflow.com/a/27752061
+        sql = """
+        SELECT * 
+        FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+            inner join INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE cu 
+                on cu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME 
+        where 
+            tc.CONSTRAINT_TYPE = 'UNIQUE'
+            and tc.TABLE_NAME = '{table_name}'
+        """.format(
+            table_name=table_name
+        )
+        raw_unique = execute_utils.select(
+            sql=sql, conn=conn, output_format='dict'
+        )
 
-            # TODO
-            raw_column['index'] = False
-            raw_column['unique'] = False
+        index_columns = {}
+        for item in raw_unique:
+            index_name = item['constraint_name']
+            column_name = item['column_name']
+            index_columns.setdefault(index_name, [])
+            index_columns[index_name].append(column_name)
 
-        return {
-            'name': table_name,
-            'columns': raw_columns,  # type: ignore
-            'indices': [],
-            'constraints': [],
-        }
+        single_column_indices = set()
+        multicolumn_indices = set()
+        for columns in index_columns.values():
+            if len(columns) == 1:
+                single_column_indices.add(next(iter(columns)))
+            else:
+                multicolumn_indices.add(columns)
+        return single_column_indices, multicolumn_indices
+
+    @classmethod
+    def _get_indexed_columns(
+        cls, table_name: str, conn: spec.Connection
+    ) -> tuple[set[str], typing.Sequence[set[str]]]:
+
+        sql = """
+        select
+            t.relname as table_name,
+            i.relname as index_name,
+            a.attname as column_name
+        from
+            pg_class t,
+            pg_class i,
+            pg_index ix,
+            pg_attribute a
+        where
+            t.oid = ix.indrelid
+            and i.oid = ix.indexrelid
+            and a.attrelid = t.oid
+            and a.attnum = ANY(ix.indkey)
+            and t.relkind = 'r'
+            and t.relname = '{table_name}'
+        order by
+            t.relname,
+            i.relname
+        """.format(
+            table_name=table_name
+        )
+        indices = execute_utils.select(
+            sql=sql,
+            conn=conn,
+            output_format='dict',
+        )
+
+        index_columns = {}
+        for item in indices:
+            index_name = item['index_name']
+            column_name = item['column_name']
+            index_columns.setdefault(index_name, [])
+            index_columns[index_name].append(column_name)
+
+        single_column_indices = set()
+        multicolumn_indices = set()
+        for columns in index_columns.values():
+            if len(columns) == 1:
+                single_column_indices.add(next(iter(columns)))
+            else:
+                multicolumn_indices.add(columns)
+        return single_column_indices, multicolumn_indices
 
     @classmethod
     def get_table_create_statement(

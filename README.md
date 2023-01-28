@@ -7,8 +7,10 @@
 - minimize startup import time
 - maximize read/write performance
 - provide tight integration with polars
+- direct integration with polars and pandas
 
 
+## usage
 Two levels of abstraction:
 1. raw sql
 2. python wrapper around common sql operations

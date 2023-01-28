@@ -31,6 +31,7 @@ def event_loop(request):
 
 # dbapi
 
+
 @pytest.fixture(params=conf_db_configs.sync_dbapi_db_configs)
 def sync_dbapi_db_config(request):
     return request.param
@@ -42,6 +43,7 @@ def async_dbapi_db_config(request):
 
 
 # sync read
+
 
 @pytest.fixture(params=conf_db_configs.sync_read_conn_db_configs)
 def sync_read_conn_db_config(request):
@@ -55,6 +57,7 @@ def sync_read_bare_db_config(request):
 
 # async read
 
+
 @pytest.fixture(params=conf_db_configs.async_read_conn_db_configs)
 def async_read_conn_db_config(request):
     return request.param
@@ -64,7 +67,9 @@ def async_read_conn_db_config(request):
 def async_read_bare_db_config(request):
     return request.param
 
+
 # write
+
 
 @pytest.fixture(params=conf_db_configs.sync_write_db_configs)
 def sync_write_db_config(request):
@@ -85,6 +90,12 @@ def async_write_db_config(request):
 def setup_teardown():
 
     test_tables = conf_tables.get_test_tables()
+    for table_name in test_tables.keys():
+        test_tables[table_name][
+            'schema'
+        ] = toolsql.normalize_shorthand_table_schema(
+            test_tables[table_name]['schema']
+        )
 
     # setup sqlite tables
     with sqlite3.connect(conf_db_configs.test_sqlite_path) as conn:

@@ -15,6 +15,12 @@ def create_table(
         raise Exception('conn not initialized')
 
     dialect = conn_utils.get_conn_dialect(conn)
-    sql = dialect_utils.build_create_statement(table, dialect=dialect)
-    conn.execute(sql)
+    # sql = dialect_utils.build_create_statement(table, dialect=dialect)
+    # conn.execute(sql)
+
+    statements = dialect_utils.build_all_table_schema_create_statements(
+        table, dialect=dialect
+    )
+    for statement in statements:
+        conn.execute(statement)
 

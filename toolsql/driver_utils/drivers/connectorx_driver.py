@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing
+
 if typing.TYPE_CHECKING:
     import psycopg
 
@@ -21,10 +22,14 @@ class ConnectorxConnection(str):
     ) -> psycopg.Cursor[typing.Any]:
         raise NotImplementedError('no cursor() for connectorx')
 
-    def execute(self, sql: str, parameters: typing.Any = None) -> None:
+    def execute(
+        self, sql: str, parameters: typing.Any = None
+    ) -> psycopg.Cursor[typing.Any]:
         raise NotImplementedError('no execute() for connectorx')
 
-    def executemany(self, sql: str, parameters: typing.Any = None) -> None:
+    def executemany(
+        self, sql: str, parameters: typing.Any = None
+    ) -> psycopg.Cursor[typing.Any]:
         raise NotImplementedError('no executemany() for connectorx')
 
     def fetchone(self) -> typing.Any:

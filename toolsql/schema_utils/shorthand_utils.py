@@ -69,10 +69,6 @@ def _normalize_shorthand_column(
     if not isinstance(column, dict):
         raise Exception('unknown column specification: ' + str(column))
 
-    index = column.get('index')
-    if index is None:
-        index = False
-
     default = column.get('default')
 
     name = column.get('name')
@@ -96,15 +92,19 @@ def _normalize_shorthand_column(
             column_type = python_types[column_type]
         else:
             raise Exception('unknown column type: ' + str(column_type))
+    column_type = column_type.upper()
     if not spec.is_sqlite_columntype(
         column_type
     ) and not spec.is_postgresql_columntype(column_type):
         raise Exception('could not determine valid columntype')
-    column_type = column_type.upper()
 
     unique = column.get('unique')
     if unique is None:
         unique = False
+
+    index = column.get('index')
+    if index is None:
+        index = unique or primary
 
     return {
         'default': default,

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import typing
+
 from toolsql import schema_utils
 from toolsql import spec
 
 
-def build_create_statement(
+def build_create_table_statement(
     table: spec.TableSchema,
     *,
     if_not_exists: bool = True,
@@ -54,5 +56,76 @@ def _format_column(column: spec.ColumnSchema, dialect: spec.Dialect) -> str:
     if not column['nullable']:
         line = line + ' NOT NULL'
 
+    if column['unique']:
+        line = line + ' UNIQUE'
+
     return line
+
+
+def build_create_index_statement(
+    table_name: str,
+    column_name: str | None = None,
+    *,
+    column_names: typing.Sequence[str] | None = None,
+    index_name: str | None = None,
+    if_not_exists: bool = True,
+    single_line: bool = False,
+    dialect: spec.Dialect,
+) -> str:
+    """
+    - sqlite: https://www.sqlite.org/lang_createindex.html
+    - postgresql: https://www.postgresql.org/docs/current/sql-createindex.html
+    """
+
+    if column_name is not None and column_names is not None:
+        raise Exception('specify only column_name or column_names')
+    elif column_name is not None:
+        columns: typing.Sequence[str] = [column_name]
+    elif column_names is not None:
+        columns = column_names
+    else:
+        raise Exception('specify column_name or column_names')
+
+    if index_name is None:
+        index_name = 'index___' + table_name + '___' + '__'.join(columns)
+
+    template = """
+    CREATE INDEX
+    {if_not_exists}
+    {index_name}
+    ON
+    {table_name}
+    ( {columns} )
+    """
+    sql = template.format(
+        if_not_exists=('IF NOT EXISTS' if if_not_exists else ''),
+        index_name=index_name,
+        table_name=table_name,
+        columns=', '.join(columns),
+    )
+
+    return sql
+
+
+def build_all_table_schema_create_statements(
+    table_schema: spec.TableSchema,
+    dialect: spec.Dialect,
+) -> typing.Sequence[str]:
+
+    create_table = build_create_table_statement(
+        table_schema,
+        dialect=dialect,
+    )
+
+    create_index_statements = [
+        build_create_index_statement(
+            table_name=table_schema['name'],
+            column_name=column['name'],
+            dialect=dialect,
+        )
+        for column in table_schema['columns']
+        if column['index']
+    ]
+
+    return [create_table] + create_index_statements
 
