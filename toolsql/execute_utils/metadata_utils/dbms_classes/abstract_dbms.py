@@ -21,6 +21,10 @@ class AbstractDbms:
         }
 
     @classmethod
+    def has_table(cls, table_name: str, conn: spec.Connection) -> bool:
+        return table_name in cls.get_tables_names(conn=conn)
+
+    @classmethod
     def get_tables_names(cls, conn: spec.Connection) -> typing.Sequence[str]:
         raise Exception('get_tables_names() for ' + cls.__name__)
 

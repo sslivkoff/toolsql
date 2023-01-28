@@ -15,6 +15,12 @@ def get_table_schemas(
     return dbms.get_table_schemas(conn=conn)
 
 
+def has_table(table_name: str, conn: spec.Connection) -> bool:
+    dialect = conn_utils.get_conn_dialect(conn)
+    dbms = dbms_utils.get_dbms_class(name=dialect)
+    return dbms.has_table(table_name=table_name, conn=conn)
+
+
 def get_table_names(conn: spec.Connection) -> typing.Sequence[str]:
     dialect = conn_utils.get_conn_dialect(conn)
     dbms = dbms_utils.get_dbms_class(name=dialect)

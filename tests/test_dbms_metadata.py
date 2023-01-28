@@ -22,6 +22,12 @@ def test_dbms_table_schema(sync_dbapi_db_config, helpers):
     helpers.assert_results_equal(actual_pokemon_schema, pokemon_schema)
 
 
-# def test_dbms_get_create_statement():
-#     raise NotImplementedError()
+def test_has_table(sync_dbapi_db_config, helpers):
+    with toolsql.connect(sync_dbapi_db_config) as conn:
+        has_table = toolsql.has_table('pokemon', conn=conn)
+        assert has_table
+
+        has_table = toolsql.has_table('pokemon_nope', conn=conn)
+        assert not has_table
+
 

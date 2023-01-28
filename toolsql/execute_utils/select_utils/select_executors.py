@@ -71,8 +71,8 @@ def select(
     **kwargs: Unpack[SelectKwargs],
 ) -> spec.SelectOutput:
 
-    sql = kwargs['sql']
-    parameters = kwargs['parameters']
+    sql = kwargs.get('sql')
+    parameters = kwargs.get('parameters')
     conn = kwargs['conn']
     # output_format = kwargs['output_format']
 
