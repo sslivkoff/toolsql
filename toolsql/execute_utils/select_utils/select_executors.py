@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import typing
+
 from toolsql import conn_utils
 from toolsql import dialect_utils
 from toolsql import driver_utils
@@ -8,16 +10,15 @@ from . import dbapi_selection
 from . import connectorx_selection
 
 
-import typing
-from typing_extensions import Literal
-from typing_extensions import TypedDict
-from typing_extensions import Unpack
+if typing.TYPE_CHECKING:
+    from typing_extensions import Literal
+    from typing_extensions import TypedDict
+    from typing_extensions import Unpack
 
-
-class SelectKwargs(TypedDict, total=False):
-    sql: str | None
-    parameters: spec.SqlParameters | None
-    conn: spec.Connection | str | spec.DBConfig
+    class SelectKwargs(TypedDict, total=False):
+        sql: str | None
+        parameters: spec.SqlParameters | None
+        conn: spec.Connection | str | spec.DBConfig
 
 
 @typing.overload
@@ -50,31 +51,19 @@ def select(
     ...
 
 
-# def select(
-#    *,
-#    #
-#    # query parameters
-#    sql: str | None = None,
-#    parameters: spec.SqlParameters | None = None,
-#    #
-#    # execution parameters
-#    conn: spec.Connection | str | spec.DBConfig,
-#    #
-#    # output parameters
-#    output_format: spec.QueryOutputFormat = 'dict',
-# ) -> spec.SelectOutput:
-
-
-def select(
+def select(  # type: ignore
     *,
+    #
+    # query parameters
+    sql: str | None = None,
+    parameters: spec.SqlParameters | None = None,
+    #
+    # execution parameters
+    conn: spec.Connection | str | spec.DBConfig,
+    #
+    # output parameters
     output_format: spec.QueryOutputFormat = 'dict',
-    **kwargs: Unpack[SelectKwargs],
 ) -> spec.SelectOutput:
-
-    sql = kwargs.get('sql')
-    parameters = kwargs.get('parameters')
-    conn = kwargs['conn']
-    # output_format = kwargs['output_format']
 
     # build query
     dialect = conn_utils.get_conn_dialect(conn)
