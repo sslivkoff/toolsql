@@ -66,15 +66,28 @@ class AbstractDbms:
     async def async_get_table_schema(
         cls, table_name: str, conn: spec.Connection
     ) -> spec.TableSchema:
-        return cls.get_table_schema(
-            table_name=table_name, conn=conn
-        )
+        return cls.get_table_schema(table_name=table_name, conn=conn)
 
     @classmethod
     async def async_get_table_create_statement(
         cls, table_name: str, *, conn: spec.Connection
     ) -> str:
-        return cls.get_table_create_statement(
-            table_name=table_name, conn=conn
-        )
+        return cls.get_table_create_statement(table_name=table_name, conn=conn)
+
+    #
+    # # helper
+    #
+
+    @classmethod
+    def _sort_single_multi_column_indices(
+        cls, index_columns: typing.Mapping[str, typing.Sequence[str]]
+    ) -> tuple[set[str], set[set[str]]]:
+        single_column_indices: set[str] = set()
+        multicolumn_indices: set[set[str]] = set()
+        for columns in index_columns.values():
+            if len(columns) == 1:
+                single_column_indices.add(next(iter(columns)))
+            else:
+                multicolumn_indices.add(set(columns))
+        return single_column_indices, multicolumn_indices
 

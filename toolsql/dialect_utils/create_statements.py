@@ -4,6 +4,7 @@ import typing
 
 from toolsql import schema_utils
 from toolsql import spec
+from . import statement_utils
 
 
 def build_create_table_statement(
@@ -36,10 +37,7 @@ def build_create_table_statement(
     )
 
     if single_line:
-        import re
-
-        # https://stackoverflow.com/a/1546245
-        sql = re.sub('[\n\t ]{2,}', ' ', sql).lstrip()
+        sql = statement_utils.statement_to_single_line(sql)
 
     return sql.rstrip()
 

@@ -8,19 +8,73 @@ from . import dbapi_selection
 from . import connectorx_selection
 
 
+import typing
+from typing_extensions import Literal
+from typing_extensions import TypedDict
+from typing_extensions import Unpack
+
+
+class SelectKwargs(TypedDict, total=False):
+    sql: str | None
+    parameters: spec.SqlParameters | None
+    conn: spec.Connection | str | spec.DBConfig
+
+
+@typing.overload
+def select(
+    *, output_format: Literal['dict'], **kwargs: Unpack[SelectKwargs]
+) -> spec.DictRows:
+    ...
+
+
+@typing.overload
+def select(
+    *, output_format: Literal['tuple'], **kwargs: Unpack[SelectKwargs]
+) -> spec.TupleRows:
+    ...
+
+
+@typing.overload
+def select(
+    **kwargs: Unpack[SelectKwargs],
+) -> spec.DictRows:
+    ...
+
+
+@typing.overload
 def select(
     *,
-    #
-    # query parameters
-    sql: str | None = None,
-    parameters: spec.SqlParameters | None = None,
-    #
-    # execution parameters
-    conn: spec.Connection | str | spec.DBConfig,
-    #
-    # output parameters
     output_format: spec.QueryOutputFormat = 'dict',
+    **kwargs: Unpack[SelectKwargs],
 ) -> spec.SelectOutput:
+    ...
+
+
+# def select(
+#    *,
+#    #
+#    # query parameters
+#    sql: str | None = None,
+#    parameters: spec.SqlParameters | None = None,
+#    #
+#    # execution parameters
+#    conn: spec.Connection | str | spec.DBConfig,
+#    #
+#    # output parameters
+#    output_format: spec.QueryOutputFormat = 'dict',
+# ) -> spec.SelectOutput:
+
+
+def select(
+    *,
+    output_format: spec.QueryOutputFormat = 'dict',
+    **kwargs: Unpack[SelectKwargs],
+) -> spec.SelectOutput:
+
+    sql = kwargs['sql']
+    parameters = kwargs['parameters']
+    conn = kwargs['conn']
+    # output_format = kwargs['output_format']
 
     # build query
     dialect = conn_utils.get_conn_dialect(conn)

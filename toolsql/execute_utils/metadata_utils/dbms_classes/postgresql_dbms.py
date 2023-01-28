@@ -17,7 +17,7 @@ class PostgresqlDbms(abstract_dbms.AbstractDbms):
         AND table_type='BASE TABLE';
         """
         result = execute_utils.select(sql=sql, conn=conn, output_format='tuple')
-        return [item[0] for item in result]  # type: ignore
+        return [item[0] for item in result]
 
     @classmethod
     def get_indices_names(cls, conn: spec.Connection) -> typing.Sequence[str]:
@@ -95,7 +95,7 @@ class PostgresqlDbms(abstract_dbms.AbstractDbms):
     @classmethod
     def _get_unique_columns(
         cls, table_name: str, conn: spec.Connection
-    ) -> set[str]:
+    ) -> tuple[set[str], set[set[str]]]:
         # https://stackoverflow.com/a/27752061
         sql = """
         SELECT * 
@@ -112,26 +112,19 @@ class PostgresqlDbms(abstract_dbms.AbstractDbms):
             sql=sql, conn=conn, output_format='dict'
         )
 
-        index_columns = {}
+        index_columns: dict[str, list[str]] = {}
         for item in raw_unique:
             index_name = item['constraint_name']
             column_name = item['column_name']
             index_columns.setdefault(index_name, [])
             index_columns[index_name].append(column_name)
 
-        single_column_indices = set()
-        multicolumn_indices = set()
-        for columns in index_columns.values():
-            if len(columns) == 1:
-                single_column_indices.add(next(iter(columns)))
-            else:
-                multicolumn_indices.add(columns)
-        return single_column_indices, multicolumn_indices
+        return cls._sort_single_multi_column_indices(index_columns)
 
     @classmethod
     def _get_indexed_columns(
         cls, table_name: str, conn: spec.Connection
-    ) -> tuple[set[str], typing.Sequence[set[str]]]:
+    ) -> tuple[set[str], set[set[str]]]:
 
         sql = """
         select
@@ -162,21 +155,14 @@ class PostgresqlDbms(abstract_dbms.AbstractDbms):
             output_format='dict',
         )
 
-        index_columns = {}
+        index_columns: dict[str, list[str]] = {}
         for item in indices:
             index_name = item['index_name']
             column_name = item['column_name']
             index_columns.setdefault(index_name, [])
             index_columns[index_name].append(column_name)
 
-        single_column_indices = set()
-        multicolumn_indices = set()
-        for columns in index_columns.values():
-            if len(columns) == 1:
-                single_column_indices.add(next(iter(columns)))
-            else:
-                multicolumn_indices.add(columns)
-        return single_column_indices, multicolumn_indices
+        return cls._sort_single_multi_column_indices(index_columns)
 
     @classmethod
     def get_table_create_statement(

@@ -23,6 +23,7 @@ python_version = "3.9"
 strict = true
 implicit_reexport = true
 files = ["toolsql"]
+enable_incomplete_feature = "Unpack"
 
 
 [tool.pytest.ini_options]

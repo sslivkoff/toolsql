@@ -12,7 +12,7 @@ class SqliteDbms(abstract_dbms.AbstractDbms):
     def get_tables_names(cls, conn: spec.Connection) -> typing.Sequence[str]:
         sql = """SELECT name FROM sqlite_schema WHERE type =='table'"""
         result = execute_utils.select(sql=sql, conn=conn, output_format='tuple')
-        return [item[0] for item in result]  # type: ignore
+        return [item[0] for item in result]
 
     @classmethod
     def get_table_schema(
@@ -28,9 +28,10 @@ class SqliteDbms(abstract_dbms.AbstractDbms):
         unique_single_columns, unique_multi_columns = cls._get_unique_columns(
             table_name, conn=conn
         )
-        indexed_single_columns, indexed_multi_columns = cls._get_indexed_columns(
-            table_name, conn=conn
-        )
+        (
+            indexed_single_columns,
+            indexed_multi_columns,
+        ) = cls._get_indexed_columns(table_name, conn=conn)
 
         columns: list[spec.ColumnSchema] = []
         for cid, name, type, not_null, default, primary in results:
@@ -48,9 +49,6 @@ class SqliteDbms(abstract_dbms.AbstractDbms):
                 'nullable': not not_null,
                 'default': default,
                 'primary': primary,
-                #
-                # todo
-                # 'index': name in column_indices,
                 'index': name in indexed_single_columns,
                 'unique': name in unique_single_columns,
             }
@@ -69,7 +67,7 @@ class SqliteDbms(abstract_dbms.AbstractDbms):
     @classmethod
     def _get_unique_columns(
         cls, table_name: str, conn: spec.Connection
-    ) -> tuple[set[str], typing.Sequence[set[str]]]:
+    ) -> tuple[set[str], set[set[str]]]:
 
         # https://stackoverflow.com/a/65845786
         unique_sql = """
@@ -77,14 +75,14 @@ class SqliteDbms(abstract_dbms.AbstractDbms):
           m.tbl_name AS table_name,
           il.name AS key_name,
           ii.name AS column_name
-        FROM 
-          sqlite_master AS m, 
-          pragma_index_list(m.name) AS il, 
-          pragma_index_info(il.name) AS ii 
-        WHERE 
-          m.type = 'table' AND 
+        FROM
+          sqlite_master AS m,
+          pragma_index_list(m.name) AS il,
+          pragma_index_info(il.name) AS ii
+        WHERE
+          m.type = 'table' AND
           m.tbl_name = '{table_name}' AND
-          il.origin = 'u' 
+          il.origin = 'u'
         ORDER BY table_name, key_name, ii.seqno
         """
         unique_sql = unique_sql.format(table_name=table_name)
@@ -95,19 +93,12 @@ class SqliteDbms(abstract_dbms.AbstractDbms):
             index_columns.setdefault(index_name, [])
             index_columns[index_name].append(column_name)
 
-        single_column_indices = set()
-        multicolumn_indices: set[set[str]] = set()
-        for columns in index_columns.values():
-            if len(columns) == 1:
-                single_column_indices.add(next(iter(columns)))
-            else:
-                multicolumn_indices.append(columns)
-        return single_column_indices, multicolumn_indices
+        return cls._sort_single_multi_column_indices(index_columns)
 
     @classmethod
     def _get_indexed_columns(
         cls, table_name: str, conn: spec.Connection
-    ) -> tuple[set[str], typing.Sequence[set[str]]]:
+    ) -> tuple[set[str], set[set[str]]]:
 
         # get index names
         sql = """
@@ -121,7 +112,7 @@ class SqliteDbms(abstract_dbms.AbstractDbms):
 
         # get index info
         column_indices = set()
-        multicolumn_indices: list[set[str]] = list()
+        multicolumn_indices: set[set[str]] = set()
         for index_name in index_names:
             sql = 'PRAGMA index_info({index_name})'.format(
                 index_name=index_name
@@ -134,7 +125,7 @@ class SqliteDbms(abstract_dbms.AbstractDbms):
             if len(results) == 1:
                 column_indices.add(results[0][2])
             else:
-                multicolumn_indices.append({result[2] for result in results})
+                multicolumn_indices.add({result[2] for result in results})
 
         return column_indices, multicolumn_indices
 
