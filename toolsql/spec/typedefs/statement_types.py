@@ -12,6 +12,8 @@ import psycopg
 import sqlite3
 
 
+OnConflictOption = Literal['ignore', 'update']
+
 QueryOutputFormat = Literal[
     'cursor',
     'dict',

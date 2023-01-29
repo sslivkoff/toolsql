@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import typing
+from typing_extensions import Literal
 from toolsql import spec
 
 
-def statement_to_single_line(sql: str) -> str:
-    import re
-
-    # https://stackoverflow.com/a/1546245
-    return re.sub('[\n\t ]{2,}', ' ', sql).strip()
+#
+# # validation
+#
 
 
 def is_column_name(column: str) -> bool:
@@ -23,6 +22,18 @@ def is_table_name(table_name: str) -> bool:
     return re.match(r'^[A-Za-z0-9_]+$', table_name) is not None
 
 
+#
+# # statement processing
+#
+
+
+def statement_to_single_line(sql: str) -> str:
+    import re
+
+    # https://stackoverflow.com/a/1546245
+    return re.sub('[\n\t ]{2,}', ' ', sql).strip()
+
+
 def get_dialect_placeholder(dialect: spec.Dialect) -> str:
     if dialect == 'postgresql':
         return '%s'
@@ -30,6 +41,11 @@ def get_dialect_placeholder(dialect: spec.Dialect) -> str:
         return '?'
     else:
         raise Exception('unknown dialect: ' + str(dialect))
+
+
+#
+# # statement creation
+#
 
 
 def _where_clause_to_str(
@@ -90,4 +106,52 @@ def _where_clause_to_str(
         return 'WHERE ' + ' AND '.join(subclauses), tuple(parameters)
     else:
         return '', tuple()
+
+
+def _wrap_json_columns(
+    *,
+    rows: spec.ExecuteManyParams | None = None,
+    dialect: Literal['sqlite', 'postgresql'],
+) -> spec.ExecuteManyParams | None:
+    if rows is not None:
+        new_rows: list[typing.Any] | None = None
+        for r, row in enumerate(rows):
+            new_row = None
+            if isinstance(row, (list, tuple)):
+                for c, cell in enumerate(row):
+                    if isinstance(cell, (dict, list, tuple)):
+                        if new_row is None:
+                            new_row = list(row)
+                        new_row[c] = _wrap_json_cell(cell, dialect)
+            elif isinstance(row, dict):
+                for key, value in row.items():
+                    if isinstance(value, (dict, list, tuple)):
+                        if new_row is None:
+                            new_row = row.copy()
+                        new_row[key] = _wrap_json_cell(value, dialect)
+            else:
+                raise Exception('unknown row')
+
+            if new_row is not None:
+                if new_rows is None:
+                    new_rows = list(rows)
+                new_rows[r] = new_row
+
+        if new_rows is not None:
+            rows = new_rows
+
+    return rows
+
+
+def _wrap_json_cell(item: typing.Any, dialect: spec.Dialect) -> typing.Any:
+    if dialect == 'postgresql':
+        from psycopg.types.json import Jsonb
+
+        return Jsonb(item)
+    elif dialect == 'sqlite':
+        import json
+
+        return json.dumps(item)
+    else:
+        raise Exception('unknown dialect: ' + str(dialect))
 
