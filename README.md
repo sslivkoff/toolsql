@@ -1,21 +1,26 @@
 # toolsql
 
+python wrappers around sql
+
+no attempt is made to abstract away any sql. toolsql should be thought of as nothing more than a set of python functions for building and executing sql
+
+
 ## goals
 - provider **minimal** wrapper around raw sql and around db-specific drivers
 - provide sync and async interfaces
 - support sqlite and postgresql
 - minimize startup import time
 - maximize read/write performance
-- provide tight integration with polars
-- direct integration with polars and pandas
+- provide tight integration with connectorx, polars, and pandas
 
 
 ## usage
-Two levels of abstraction:
+two levels of abstraction:
 1. raw sql
 2. python wrapper around common sql operations
 
-If python does not cover some functionality, make it easy to drop into SQL
+if python does not cover some functionality, make it easy to drop into SQL
+
 
 ## requirements
 - python 3.7 - 3.11
