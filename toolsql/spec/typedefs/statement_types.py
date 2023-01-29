@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import typing
 from typing_extensions import Literal
+from typing_extensions import TypedDict
+from typing_extensions import NotRequired
 
 import aiosqlite
 import pandas as pd
@@ -52,6 +54,16 @@ AsyncSelectOutput = typing.Union[
     pl.DataFrame,
     pd.DataFrame,
 ]
+
+
+class OrderByDict(TypedDict):
+    column: str
+    asc: NotRequired[bool]
+    desc: NotRequired[bool]
+
+
+OrderByItem = typing.Union[str, OrderByDict]
+OrderBy = typing.Union[OrderByItem, typing.Sequence[OrderByItem]]
 
 
 ExecuteParams = tuple[typing.Any]

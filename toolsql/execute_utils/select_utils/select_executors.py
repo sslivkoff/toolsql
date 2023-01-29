@@ -68,8 +68,8 @@ def select(  # type: ignore
     # build query
     dialect = conn_utils.get_conn_dialect(conn)
     sql, parameters = dialect_utils.build_select_query(
-        sql,
-        parameters,
+        sql=sql,
+        parameters=parameters,
         dialect=dialect,
     )
 
@@ -115,8 +115,8 @@ async def async_select(
         raise NotImplementedError('must specify sql')
     dialect = conn_utils.get_conn_dialect(conn)
     sql, parameters = dialect_utils.build_select_query(
-        sql,
-        parameters,
+        sql=sql,
+        parameters=parameters,
         dialect=dialect,
     )
 
