@@ -32,7 +32,7 @@ def _select_connectorx(
 async def _async_select_connectorx(
     *,
     sql: str | None = None,
-    conn: str,
+    conn: str | spec.DBConfig,
     output_format: spec.QueryOutputFormat,
 ) -> spec.RowOutput:
 

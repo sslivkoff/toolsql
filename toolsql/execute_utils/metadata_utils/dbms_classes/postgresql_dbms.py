@@ -16,7 +16,9 @@ class PostgresqlDbms(abstract_dbms.AbstractDbms):
         WHERE table_schema='public'
         AND table_type='BASE TABLE';
         """
-        result = execute_utils.select(sql=sql, conn=conn, output_format='tuple')
+        result = execute_utils.raw_select(
+            sql=sql, conn=conn, output_format='tuple'
+        )
         return [item[0] for item in result]
 
     @classmethod
@@ -42,7 +44,7 @@ class PostgresqlDbms(abstract_dbms.AbstractDbms):
         """.format(
             table_name=table_name
         )
-        raw_columns = execute_utils.select(
+        raw_columns = execute_utils.raw_select(
             sql=sql, conn=conn, output_format='dict'
         )
 
@@ -50,9 +52,10 @@ class PostgresqlDbms(abstract_dbms.AbstractDbms):
         unique_single_columns, unique_multi_columns = cls._get_unique_columns(
             table_name, conn=conn
         )
-        indexed_single_columns, indexed_multi_columns = cls._get_indexed_columns(
-            table_name, conn=conn
-        )
+        (
+            indexed_single_columns,
+            indexed_multi_columns,
+        ) = cls._get_indexed_columns(table_name, conn=conn)
         for raw_column in raw_columns:
             raw_column['primary'] = raw_column['name'] in primary_keys
 
@@ -87,7 +90,7 @@ class PostgresqlDbms(abstract_dbms.AbstractDbms):
             AND i.indisprimary""".format(
             table_name=table_name
         )
-        raw_pks = execute_utils.select(
+        raw_pks = execute_utils.raw_select(
             sql=primary_keys_sql, conn=conn, output_format='dict'
         )
         return {raw_pk['attname'] for raw_pk in raw_pks}
@@ -98,17 +101,17 @@ class PostgresqlDbms(abstract_dbms.AbstractDbms):
     ) -> tuple[set[str], set[set[str]]]:
         # https://stackoverflow.com/a/27752061
         sql = """
-        SELECT * 
-        FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
-            inner join INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE cu 
-                on cu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME 
-        where 
+        SELECT *
+        FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+            inner join INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE cu
+                on cu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+        WHERE
             tc.CONSTRAINT_TYPE = 'UNIQUE'
             and tc.TABLE_NAME = '{table_name}'
         """.format(
             table_name=table_name
         )
-        raw_unique = execute_utils.select(
+        raw_unique = execute_utils.raw_select(
             sql=sql, conn=conn, output_format='dict'
         )
 
@@ -127,29 +130,29 @@ class PostgresqlDbms(abstract_dbms.AbstractDbms):
     ) -> tuple[set[str], set[set[str]]]:
 
         sql = """
-        select
+        SELECT
             t.relname as table_name,
             i.relname as index_name,
             a.attname as column_name
-        from
+        FROM
             pg_class t,
             pg_class i,
             pg_index ix,
             pg_attribute a
-        where
+        WHERE
             t.oid = ix.indrelid
             and i.oid = ix.indexrelid
             and a.attrelid = t.oid
             and a.attnum = ANY(ix.indkey)
             and t.relkind = 'r'
             and t.relname = '{table_name}'
-        order by
+        ORDER BY
             t.relname,
             i.relname
         """.format(
             table_name=table_name
         )
-        indices = execute_utils.select(
+        indices = execute_utils.raw_select(
             sql=sql,
             conn=conn,
             output_format='dict',

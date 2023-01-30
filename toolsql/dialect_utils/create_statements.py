@@ -10,7 +10,7 @@ from . import statement_utils
 def build_create_table_statement(
     table: spec.TableSchema,
     *,
-    if_not_exists: bool = True,
+    if_not_exists: bool = False,
     single_line: bool = False,
     dialect: spec.Dialect,
 ) -> str:
@@ -66,7 +66,7 @@ def build_create_index_statement(
     *,
     column_names: typing.Sequence[str] | None = None,
     index_name: str | None = None,
-    if_not_exists: bool = True,
+    if_not_exists: bool = False,
     single_line: bool = False,
     dialect: spec.Dialect,
 ) -> str:
@@ -102,17 +102,25 @@ def build_create_index_statement(
         columns=', '.join(columns),
     )
 
+    if single_line:
+        sql = statement_utils.statement_to_single_line(sql)
+
     return sql
 
 
 def build_all_table_schema_create_statements(
     table_schema: spec.TableSchema,
+    *,
     dialect: spec.Dialect,
+    if_not_exists: bool = False,
+    single_line: bool = True,
 ) -> typing.Sequence[str]:
 
     create_table = build_create_table_statement(
         table_schema,
         dialect=dialect,
+        if_not_exists=if_not_exists,
+        single_line=single_line,
     )
 
     create_index_statements = [
@@ -120,6 +128,8 @@ def build_all_table_schema_create_statements(
             table_name=table_schema['name'],
             column_name=column['name'],
             dialect=dialect,
+            if_not_exists=if_not_exists,
+            single_line=single_line,
         )
         for column in table_schema['columns']
         if column['index']

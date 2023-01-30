@@ -16,9 +16,9 @@ if typing.TYPE_CHECKING:
     from typing_extensions import Unpack
 
     class SelectKwargs(TypedDict, total=False):
-        sql: str | None
-        parameters: spec.SqlParameters | None
         conn: spec.Connection | str | spec.DBConfig
+        sql: str
+        parameters: spec.ExecuteParams | None
 
 
 @typing.overload
@@ -53,27 +53,89 @@ def select(
 
 def select(  # type: ignore
     *,
-    #
-    # query parameters
-    sql: str | None = None,
-    parameters: spec.SqlParameters | None = None,
-    #
-    # execution parameters
     conn: spec.Connection | str | spec.DBConfig,
+    output_format: spec.QueryOutputFormat = 'dict',
     #
-    # output parameters
+    # query utils
+    table_name: str | None = None,
+    columns: typing.Sequence[str] | None = None,
+    where_equals: typing.Mapping[str, typing.Any] | None = None,
+    where_gt: typing.Mapping[str, typing.Any] | None = None,
+    where_gte: typing.Mapping[str, typing.Any] | None = None,
+    where_lt: typing.Mapping[str, typing.Any] | None = None,
+    where_lte: typing.Mapping[str, typing.Any] | None = None,
+    where_like: typing.Mapping[str, str] | None = None,
+    where_ilike: typing.Mapping[str, str] | None = None,
+    where_in: typing.Mapping[str, typing.Sequence[str]] | None = None,
+    order_by: spec.OrderBy | None = None,
+    limit: int | str | None = None,
+    offset: int | str | None = None,
+) -> spec.SelectOutput:
+
+    dialect = conn_utils.get_conn_dialect(conn)
+    sql, parameters = dialect_utils.build_select_query(
+        dialect=dialect,
+        table_name=table_name,
+        columns=columns,
+        where_equals=where_equals,
+        where_gt=where_gt,
+        where_gte=where_gte,
+        where_lt=where_lt,
+        where_lte=where_lte,
+        where_like=where_like,
+        where_ilike=where_ilike,
+        where_in=where_in,
+        order_by=order_by,
+        limit=limit,
+        offset=offset,
+    )
+
+    return raw_select(
+        sql=sql,
+        parameters=parameters,
+        conn=conn,
+        output_format=output_format,
+    )
+
+
+@typing.overload
+def raw_select(
+    *, output_format: Literal['dict'], **kwargs: Unpack[SelectKwargs]
+) -> spec.DictRows:
+    ...
+
+
+@typing.overload
+def raw_select(
+    *, output_format: Literal['tuple'], **kwargs: Unpack[SelectKwargs]
+) -> spec.TupleRows:
+    ...
+
+
+@typing.overload
+def raw_select(
+    **kwargs: Unpack[SelectKwargs],
+) -> spec.DictRows:
+    ...
+
+
+@typing.overload
+def raw_select(
+    *,
+    output_format: spec.QueryOutputFormat = 'dict',
+    **kwargs: Unpack[SelectKwargs],
+) -> spec.SelectOutput:
+    ...
+
+
+def raw_select(  # type: ignore
+    sql: str,
+    *,
+    parameters: spec.ExecuteParams | None,
+    conn: spec.Connection | str | spec.DBConfig,
     output_format: spec.QueryOutputFormat = 'dict',
 ) -> spec.SelectOutput:
 
-    # build query
-    dialect = conn_utils.get_conn_dialect(conn)
-    sql, parameters = dialect_utils.build_select_query(
-        sql=sql,
-        parameters=parameters,
-        dialect=dialect,
-    )
-
-    # execute query
     driver = driver_utils.get_driver_name(conn=conn)
     if driver == 'connectorx':
         if not isinstance(conn, (str, dict)):
@@ -97,30 +159,59 @@ def select(  # type: ignore
 
 async def async_select(
     *,
+    conn: spec.AsyncConnection | str,
+    output_format: spec.QueryOutputFormat = 'dict',
     #
     # query parameters
-    sql: str | None = None,
-    parameters: spec.SqlParameters | None = None,
-    #
-    # connection parameters
-    conn: spec.AsyncConnection | str,
-    #
-    # output parameters
-    single_row: bool = False,
+    table_name: str | None = None,
+    columns: typing.Sequence[str] | None = None,
+    where_equals: typing.Mapping[str, typing.Any] | None = None,
+    where_gt: typing.Mapping[str, typing.Any] | None = None,
+    where_gte: typing.Mapping[str, typing.Any] | None = None,
+    where_lt: typing.Mapping[str, typing.Any] | None = None,
+    where_lte: typing.Mapping[str, typing.Any] | None = None,
+    where_like: typing.Mapping[str, str] | None = None,
+    where_ilike: typing.Mapping[str, str] | None = None,
+    where_in: typing.Mapping[str, typing.Sequence[str]] | None = None,
+    order_by: spec.OrderBy | None = None,
+    limit: int | str | None = None,
+    offset: int | str | None = None,
+) -> spec.AsyncSelectOutput:
+
+    dialect = conn_utils.get_conn_dialect(conn)
+    sql, parameters = dialect_utils.build_select_query(
+        dialect=dialect,
+        table_name=table_name,
+        columns=columns,
+        where_equals=where_equals,
+        where_gt=where_gt,
+        where_gte=where_gte,
+        where_lt=where_lt,
+        where_lte=where_lte,
+        where_like=where_like,
+        where_ilike=where_ilike,
+        where_in=where_in,
+        order_by=order_by,
+        limit=limit,
+        offset=offset,
+    )
+
+    return await async_raw_select(
+        sql=sql,
+        parameters=parameters,
+        conn=conn,
+        output_format=output_format,
+    )
+
+
+async def async_raw_select(
+    sql: str,
+    *,
+    parameters: spec.ExecuteParams,
+    conn: spec.AsyncConnection | str | spec.DBConfig,
     output_format: spec.QueryOutputFormat = 'dict',
 ) -> spec.AsyncSelectOutput:
 
-    # build query
-    if sql is None:
-        raise NotImplementedError('must specify sql')
-    dialect = conn_utils.get_conn_dialect(conn)
-    sql, parameters = dialect_utils.build_select_query(
-        sql=sql,
-        parameters=parameters,
-        dialect=dialect,
-    )
-
-    # execute query
     driver = driver_utils.get_driver_name(conn=conn)
     if driver == 'connectorx':
         if not isinstance(conn, (str, dict)):
@@ -132,6 +223,8 @@ async def async_select(
         )
     else:
         if isinstance(conn, str):
+            raise Exception('conn not initialized')
+        if isinstance(conn, dict):
             raise Exception('conn not initialized')
         return await dbapi_selection._async_select_dbapi(
             sql=sql,

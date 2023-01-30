@@ -8,8 +8,6 @@ from . import statement_utils
 
 def build_delete_statement(
     *,
-    sql: str | None,
-    parameters: spec.SqlParameters | None,
     dialect: spec.Dialect,
     single_line: bool = True,
     #
@@ -25,40 +23,37 @@ def build_delete_statement(
     where_like: typing.Mapping[str, str] | None = None,
     where_ilike: typing.Mapping[str, str] | None = None,
     where_in: typing.Mapping[str, typing.Sequence[str]] | None = None,
-) -> tuple[str, spec.SqlParameters]:
+) -> tuple[str, spec.ExecuteParams]:
     """
     - sqlite: https://www.sqlite.org/lang_delete.html
     - postgresql: https://www.postgresql.org/docs/current/sql-delete.html
     """
 
-    if sql is not None:
-        if parameters is None:
-            parameters = tuple()
-        return sql, parameters
+    if table_name is None:
+        raise Exception('must specify table_name or raw sql')
+    if not statement_utils.is_table_name(table_name):
+        raise Exception('not a valid table name')
 
-    if sql is None:
-        if table_name is None:
-            raise Exception('must specify table_name or raw sql')
-        if not statement_utils.is_table_name(table_name):
-            raise Exception('not a valid table name')
+    where_clause, parameters = statement_utils._where_clause_to_str(
+        where_equals=where_equals,
+        where_gt=where_gt,
+        where_gte=where_gte,
+        where_lt=where_lt,
+        where_lte=where_lte,
+        where_like=where_like,
+        where_ilike=where_ilike,
+        where_in=where_in,
+        dialect=dialect,
+    )
 
-        where_clause, parameters = statement_utils._where_clause_to_str(
-            where_equals=where_equals,
-            where_gt=where_gt,
-            where_gte=where_gte,
-            where_lt=where_lt,
-            where_lte=where_lte,
-            where_like=where_like,
-            where_ilike=where_ilike,
-            where_in=where_in,
-            dialect=dialect,
-        )
+    sql = """
+    DELETE FROM
+        {table_name}
+    {where_clause}
+    """.format(table_name=table_name, where_clause=where_clause)
 
-        sql = """
-        DELETE FROM
-            {table_name}
-        {where_clause}
-        """.format(table_name=table_name, where_clause=where_clause)
+    if single_line:
+        sql = statement_utils.statement_to_single_line(sql)
 
-        return sql, parameters
+    return sql, parameters
 

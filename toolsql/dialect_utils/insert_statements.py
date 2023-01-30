@@ -9,7 +9,6 @@ from . import statement_utils
 
 def build_insert_statement(
     *,
-    sql: str | None = None,
     row: spec.ExecuteParams | None = None,
     rows: spec.ExecuteManyParams | None = None,
     table: str | None = None,
@@ -35,45 +34,41 @@ def build_insert_statement(
         dialect=dialect,
     )
 
-    if sql is not None:
-        return sql, rows
+    conflict_expression = _create_conflict_expression(
+        on_conflict=on_conflict,
+        dialect=dialect,
+        columns=columns,
+        rows=rows,
+    )
+
+    if columns is not None:
+        columns_expression = '(' + ','.join(columns) + ')'
     else:
+        columns_expression = ''
 
-        conflict_expression = _create_conflict_expression(
-            on_conflict=on_conflict,
-            dialect=dialect,
-            columns=columns,
-            rows=rows,
-        )
+    values_expression = _create_values_expression(
+        rows=rows,
+        columns=columns,
+        dialect=dialect,
+    )
 
-        if columns is not None:
-            columns_expression = '(' + ','.join(columns) + ')'
-        else:
-            columns_expression = ''
+    sql = """
+    INSERT INTO {table}
+    {columns_expression}
+    VALUES ({values_expression})
+    {conflict_expression}
+    """.format(
+        table=table,
+        columns_expression=columns_expression,
+        values_expression=values_expression,
+        conflict_expression=conflict_expression,
+    )
+    sql = sql.strip()
 
-        values_expression = _create_values_expression(
-            rows=rows,
-            columns=columns,
-            dialect=dialect,
-        )
+    if single_line:
+        sql = statement_utils.statement_to_single_line(sql)
 
-        sql = """
-        INSERT INTO {table}
-        {columns_expression}
-        VALUES ({values_expression})
-        {conflict_expression}
-        """.format(
-            table=table,
-            columns_expression=columns_expression,
-            values_expression=values_expression,
-            conflict_expression=conflict_expression,
-        )
-        sql = sql.strip()
-
-        if single_line:
-            sql = statement_utils.statement_to_single_line(sql)
-
-        return sql, rows
+    return sql, rows
 
 
 def _prepare_rows_for_insert(
@@ -112,14 +107,21 @@ def _create_values_expression(
 
     if rows is None or len(rows) == 0:
         return ''
+
     else:
+
         if isinstance(rows[0], dict):
+
+            if columns is None:
+                columns = list(rows[0].keys())
+
             if dialect == 'sqlite':
                 return ', '.join(':' + column for column in columns)
-            elif dialect == 'postgres':
+            elif dialect == 'postgresql':
                 return ', '.join('%(' + column + ')s' for column in columns)
             else:
                 raise Exception('')
+
         elif isinstance(rows[0], (list, tuple)):
             if dialect == 'sqlite':
                 return ', '.join(['?'] * len(rows[0]))
@@ -127,6 +129,9 @@ def _create_values_expression(
                 return ', '.join(['%s'] * len(rows[0]))
             else:
                 raise Exception('')
+
+        else:
+            raise Exception('invalid row format: ' + str(type(rows)))
 
 
 def _create_conflict_expression(
@@ -156,6 +161,7 @@ def _create_conflict_expression(
                     if isinstance(rows[0], dict):
                         columns = list(rows[0].keys())
                     else:
+                        # see https://stackoverflow.com/questions/40687267/how-to-update-all-columns-with-insert-on-conflict
                         raise Exception(
                             'must explicitly specify columns for postgresql upserts'
                         )

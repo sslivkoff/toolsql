@@ -10,7 +10,7 @@ from . import row_formats
 def _select_dbapi(
     *,
     sql: str,
-    parameters: spec.SqlParameters | None = None,
+    parameters: spec.ExecuteParams | None = None,
     conn: spec.Connection,
     output_format: spec.QueryOutputFormat = 'dict',
     driver: spec.DriverReference,
@@ -39,7 +39,7 @@ def _select_dbapi(
 async def _async_select_dbapi(
     *,
     sql: str,
-    parameters: spec.SqlParameters | None = None,
+    parameters: spec.ExecuteParams | None = None,
     conn: spec.AsyncConnection,
     output_format: spec.QueryOutputFormat = 'dict',
     driver: spec.DriverReference,

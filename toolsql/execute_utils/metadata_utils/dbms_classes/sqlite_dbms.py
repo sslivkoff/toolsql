@@ -11,7 +11,11 @@ class SqliteDbms(abstract_dbms.AbstractDbms):
     @classmethod
     def get_tables_names(cls, conn: spec.Connection) -> typing.Sequence[str]:
         sql = """SELECT name FROM sqlite_schema WHERE type =='table'"""
-        result = execute_utils.select(sql=sql, conn=conn, output_format='tuple')
+        result = execute_utils.raw_select(
+            sql=sql,
+            conn=conn,
+            output_format='tuple',
+        )
         return [item[0] for item in result]
 
     @classmethod

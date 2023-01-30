@@ -9,7 +9,6 @@ from toolsql import spec
 
 def insert(
     *,
-    sql: str | None = None,
     row: spec.ExecuteParams | None = None,
     rows: spec.ExecuteManyParams | None = None,
     table: str | None = None,
@@ -20,7 +19,6 @@ def insert(
     # build insert statement
     dialect = conn_utils.get_conn_dialect(conn)
     sql, parameters = dialect_utils.build_insert_statement(
-        sql=sql,
         row=row,
         rows=rows,
         table=table,
@@ -46,7 +44,6 @@ async def async_insert(
     # build insert statement
     dialect = conn_utils.get_conn_dialect(conn)
     sql, parameters = dialect_utils.build_insert_statement(
-        sql=sql,
         row=row,
         rows=rows,
         table=table,

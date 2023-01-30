@@ -116,13 +116,17 @@ def _wrap_json_columns(
     if rows is not None:
         new_rows: list[typing.Any] | None = None
         for r, row in enumerate(rows):
-            new_row = None
+            new_row: typing.MutableSequence[typing.Any] | typing.MutableMapping[
+                str, typing.Any
+            ] | None = None
             if isinstance(row, (list, tuple)):
-                for c, cell in enumerate(row):
-                    if isinstance(cell, (dict, list, tuple)):
-                        if new_row is None:
-                            new_row = list(row)
-                        new_row[c] = _wrap_json_cell(cell, dialect)
+                if any(isinstance(cell, (dict, list, tuple)) for cell in row):
+                    new_row = [
+                        cell
+                        if isinstance(cell, (dict, list, tuple))
+                        else _wrap_json_cell(cell, dialect)
+                        for cell in row
+                    ]
             elif isinstance(row, dict):
                 for key, value in row.items():
                     if isinstance(value, (dict, list, tuple)):

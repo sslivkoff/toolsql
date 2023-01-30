@@ -32,8 +32,6 @@ AsyncCursor = typing.Union[
     psycopg.AsyncClientCursor,
 ]
 
-SqlParameters = typing.Union[tuple[typing.Any, ...], dict[str, typing.Any]]
-
 DictRows = typing.Sequence[typing.Dict[str, typing.Any]]
 TupleRows = typing.Sequence[typing.Tuple[typing.Any, ...]]
 RowOutput = typing.Union[
@@ -68,6 +66,9 @@ OrderByItem = typing.Union[str, OrderByDict]
 OrderBy = typing.Union[OrderByItem, typing.Sequence[OrderByItem]]
 
 
-ExecuteParams = tuple[typing.Any]
-ExecuteManyParams = typing.Sequence[tuple[typing.Any]]
+ExecuteParams = typing.Union[
+    typing.Sequence[typing.Any],
+    typing.Mapping[str, typing.Any],
+]
+ExecuteManyParams = typing.Sequence[ExecuteParams]
 
