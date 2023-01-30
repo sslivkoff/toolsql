@@ -9,8 +9,8 @@ import aiosqlite
 import psycopg
 import sqlite3
 
-from toolsql.driver_utils.drivers import abstract_driver
-from toolsql.driver_utils.drivers import connectorx_driver
+from toolsql.drivers.driver_classes import abstract_driver
+from toolsql.drivers.driver_classes import connectorx_driver
 
 
 Dialect = Literal['sqlite', 'postgresql']

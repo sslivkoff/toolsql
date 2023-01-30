@@ -8,6 +8,7 @@ no attempt is made to abstract away any sql. toolsql should be thought of as not
 ## goals
 - provider **minimal** wrapper around raw sql and around db-specific drivers
 - provide sync and async interfaces
+- mypy type checks with `strict=True`
 - support sqlite and postgresql
 - minimize startup import time
 - maximize read/write performance

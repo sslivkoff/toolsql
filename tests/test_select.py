@@ -40,7 +40,7 @@ def test_sync_select(sync_read_conn_db_config, select_query, helpers):
     target_result = select_query['target_result']
 
     with toolsql.connect(sync_read_conn_db_config) as conn:
-        result = toolsql.select(sql=sql, conn=conn, output_format=output_format)
+        result = toolsql.raw_select(sql=sql, conn=conn, output_format=output_format)
 
     helpers.assert_results_equal(result=result, target_result=target_result)
 
@@ -55,7 +55,7 @@ def test_sync_driver_no_context(
     conn = toolsql.connect(sync_read_conn_db_config, as_context=False)
 
     try:
-        result = toolsql.select(sql=sql, conn=conn, output_format=output_format)
+        result = toolsql.raw_select(sql=sql, conn=conn, output_format=output_format)
     finally:
         conn.close()
 
@@ -67,7 +67,7 @@ def test_sync_driver_bare_conn(sync_read_bare_db_config, select_query, helpers):
     sql = select_query['sql']
     output_format = select_query['output_format']
     target_result = select_query['target_result']
-    result = toolsql.select(
+    result = toolsql.raw_select(
         sql=sql, conn=sync_read_bare_db_config, output_format=output_format
     )
     helpers.assert_results_equal(result=result, target_result=target_result)
@@ -82,7 +82,7 @@ async def test_async_select(async_read_conn_db_config, select_query, helpers):
     output_format = select_query['output_format']
     target_result = select_query['target_result']
     async with toolsql.async_connect(async_read_conn_db_config) as conn:
-        result = await toolsql.async_select(
+        result = await toolsql.async_raw_select(
             sql=sql, conn=conn, output_format=output_format
         )
 
@@ -100,7 +100,7 @@ async def test_async_select_no_context(
     ))
 
     try:
-        result = await toolsql.async_select(
+        result = await toolsql.async_raw_select(
             sql=sql, conn=conn, output_format=output_format
         )
     finally:
@@ -116,7 +116,7 @@ async def test_async_select_bare_conn(
     output_format = select_query['output_format']
     target_result = select_query['target_result']
 
-    result = await toolsql.async_select(
+    result = await toolsql.async_raw_select(
         sql=sql, conn=async_read_bare_db_config, output_format=output_format
     )
 

@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import typing
 
-if typing.TYPE_CHECKING:
-    from . import typedefs
-
-from typing_extensions import TypeGuard
 from . import typedata
+
+if typing.TYPE_CHECKING:
+    from typing_extensions import TypeGuard
+
+    from . import typedefs
 
 
 def is_sqlite_columntype(
