@@ -14,6 +14,8 @@ from . import create_statements
 def build_alter_table_rename_statement(
     old_table_name: str,
     new_table_name: str,
+    *,
+    dialect: spec.Dialect | None = None,
 ) -> str:
 
     if not statement_utils.is_table_name(old_table_name):
@@ -28,7 +30,11 @@ def build_alter_table_rename_statement(
 
 
 def build_alter_table_rename_column_statement(
-    table_name: str, old_column_name: str, new_column_name: str
+    table_name: str,
+    old_column_name: str,
+    new_column_name: str,
+    *,
+    dialect: spec.Dialect | None = None,
 ) -> str:
 
     if not statement_utils.is_table_name(table_name):
@@ -62,12 +68,16 @@ def build_alter_table_add_column_statement(
     return """
     ALTER TABLE {table_name}
     ADD COLUMN {column_str}
-    """.format(table_name=table_name, column_str=column_str)
+    """.format(
+        table_name=table_name, column_str=column_str
+    )
 
 
 def build_alter_table_drop_column_statement(
     table_name: str,
     column_name: str,
+    *,
+    dialect: spec.Dialect | None = None,
 ) -> str:
 
     if not statement_utils.is_table_name(table_name):

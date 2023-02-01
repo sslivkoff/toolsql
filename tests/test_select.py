@@ -8,23 +8,76 @@ import toolsql
 
 
 test_tables = conf_tables.get_test_tables()
-simple_table = test_tables['simple']
-schema = simple_table['schema']
-simple_columns = list(schema['columns'].keys())
+
+# simple
+simple = test_tables['simple']
+simple_columns = list(simple['schema']['columns'].keys())
+
+# pokemon
+pokemon = test_tables['pokemon']
+pokemon_columns = list(pokemon['schema']['columns'].keys())
+
+
 _select_queries = {
-    'SELECT * FROM simple': {
-        'tuple': simple_table['rows'],
-        'dict': [
-            dict(zip(simple_columns, datum)) for datum in simple_table['rows']
-        ],
-        'polars': pl.DataFrame(simple_table['rows'], columns=simple_columns),
-        'pandas': pd.DataFrame(simple_table['rows'], columns=simple_columns),
-    },
+    'SELECT * FROM simple': [
+        {'select_kwargs': {'output_format': 'tuple'}, 'output': simple['rows']},
+        {
+            'select_kwargs': {'output_format': 'dict'},
+            'output': [
+                dict(zip(simple_columns, datum)) for datum in simple['rows']
+            ],
+        },
+        {
+            'select_kwargs': {'output_format': 'polars'},
+            'output': pl.DataFrame(simple['rows'], columns=simple_columns),
+        },
+        {
+            'select_kwargs': {'output_format': 'pandas'},
+            'output': pd.DataFrame(simple['rows'], columns=simple_columns),
+        },
+    ],
+    # 'SELECT * FROM pokemon': [
+    #     {
+    #         'select_kwargs': {
+    #             'output_format': 'tuple',
+    #             'raw_column_types': {'all_types': 'JSON'},
+    #         },
+    #         'output': pokemon['rows'],
+    #     },
+    #     {
+    #         'select_kwargs': {
+    #             'output_format': 'dict',
+    #             'raw_column_types': {'all_types': 'JSON'},
+    #         },
+    #         'output': [
+    #             dict(zip(pokemon_columns, datum)) for datum in pokemon['rows']
+    #         ],
+    #     },
+    #     {
+    #         'select_kwargs': {
+    #             'output_format': 'polars',
+    #             'raw_column_types': {'all_types': 'JSON'},
+    #         },
+    #         'output': pl.DataFrame(pokemon['rows'], columns=pokemon_columns),
+    #     },
+    #     {
+    #         'select_kwargs': {
+    #             'output_format': 'pandas',
+    #             'raw_column_types': {'all_types': 'JSON'},
+    #         },
+    #         'output': pd.DataFrame(pokemon['rows'], columns=pokemon_columns),
+    #     },
+    # ],
 }
+
 select_queries = [
-    {'sql': sql, 'output_format': output_format, 'target_result': target_result}
+    {
+        'sql': sql,
+        'select_kwargs': output_set['select_kwargs'],
+        'target_result': output_set['output'],
+    }
     for sql in _select_queries.keys()
-    for output_format, target_result in _select_queries[sql].items()
+    for output_set in _select_queries[sql]
 ]
 
 
@@ -36,11 +89,11 @@ def select_query(request):
 def test_sync_select(sync_read_conn_db_config, select_query, helpers):
 
     sql = select_query['sql']
-    output_format = select_query['output_format']
+    select_kwargs = select_query['select_kwargs']
     target_result = select_query['target_result']
 
     with toolsql.connect(sync_read_conn_db_config) as conn:
-        result = toolsql.raw_select(sql=sql, conn=conn, output_format=output_format)
+        result = toolsql.raw_select(sql=sql, conn=conn, **select_kwargs)
 
     helpers.assert_results_equal(result=result, target_result=target_result)
 
@@ -50,12 +103,12 @@ def test_sync_driver_no_context(
 ):
 
     sql = select_query['sql']
-    output_format = select_query['output_format']
+    select_kwargs = select_query['select_kwargs']
     target_result = select_query['target_result']
     conn = toolsql.connect(sync_read_conn_db_config, as_context=False)
 
     try:
-        result = toolsql.raw_select(sql=sql, conn=conn, output_format=output_format)
+        result = toolsql.raw_select(sql=sql, conn=conn, **select_kwargs)
     finally:
         conn.close()
 
@@ -65,10 +118,10 @@ def test_sync_driver_no_context(
 def test_sync_driver_bare_conn(sync_read_bare_db_config, select_query, helpers):
 
     sql = select_query['sql']
-    output_format = select_query['output_format']
+    select_kwargs = select_query['select_kwargs']
     target_result = select_query['target_result']
     result = toolsql.raw_select(
-        sql=sql, conn=sync_read_bare_db_config, output_format=output_format
+        sql=sql, conn=sync_read_bare_db_config, **select_kwargs
     )
     helpers.assert_results_equal(result=result, target_result=target_result)
 
@@ -77,13 +130,14 @@ def test_sync_driver_bare_conn(sync_read_bare_db_config, select_query, helpers):
 # # async
 #
 
+
 async def test_async_select(async_read_conn_db_config, select_query, helpers):
     sql = select_query['sql']
-    output_format = select_query['output_format']
+    select_kwargs = select_query['select_kwargs']
     target_result = select_query['target_result']
     async with toolsql.async_connect(async_read_conn_db_config) as conn:
         result = await toolsql.async_raw_select(
-            sql=sql, conn=conn, output_format=output_format
+            sql=sql, conn=conn, **select_kwargs
         )
 
     helpers.assert_results_equal(result=result, target_result=target_result)
@@ -93,15 +147,15 @@ async def test_async_select_no_context(
     async_read_conn_db_config, select_query, helpers
 ):
     sql = select_query['sql']
-    output_format = select_query['output_format']
+    select_kwargs = select_query['select_kwargs']
     target_result = select_query['target_result']
-    conn = await (toolsql.async_connect(
-        async_read_conn_db_config, as_context=False
-    ))
+    conn = await (
+        toolsql.async_connect(async_read_conn_db_config, as_context=False)
+    )
 
     try:
         result = await toolsql.async_raw_select(
-            sql=sql, conn=conn, output_format=output_format
+            sql=sql, conn=conn, **select_kwargs
         )
     finally:
         await conn.close()
@@ -113,11 +167,11 @@ async def test_async_select_bare_conn(
     async_read_bare_db_config, select_query, helpers
 ):
     sql = select_query['sql']
-    output_format = select_query['output_format']
+    select_kwargs = select_query['select_kwargs']
     target_result = select_query['target_result']
 
     result = await toolsql.async_raw_select(
-        sql=sql, conn=async_read_bare_db_config, output_format=output_format
+        sql=sql, conn=async_read_bare_db_config, **select_kwargs
     )
 
     helpers.assert_results_equal(result=result, target_result=target_result)

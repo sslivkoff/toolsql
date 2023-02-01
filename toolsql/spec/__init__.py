@@ -1,8 +1,9 @@
-import typing
 
-if typing.TYPE_CHECKING:
-    from .typedefs import *
+import typing
 
 from .typedata import *
 from .typeguards import *
+
+if typing.TYPE_CHECKING:
+    from .typedefs import *
 

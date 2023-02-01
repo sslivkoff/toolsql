@@ -5,6 +5,7 @@ import typing
 from toolsql import drivers
 from toolsql import spec
 from toolsql import statements
+from ... import ddl_executors
 from . import dbapi_selection
 from . import connectorx_selection
 
@@ -16,8 +17,26 @@ if typing.TYPE_CHECKING:
 
     class SelectKwargs(TypedDict, total=False):
         conn: spec.Connection | str | spec.DBConfig
+        table_name: str
+        columns: typing.Sequence[str] | None
+        where_equals: typing.Mapping[str, typing.Any] | None
+        where_gt: typing.Mapping[str, typing.Any] | None
+        where_gte: typing.Mapping[str, typing.Any] | None
+        where_lt: typing.Mapping[str, typing.Any] | None
+        where_lte: typing.Mapping[str, typing.Any] | None
+        where_like: typing.Mapping[str, str] | None
+        where_ilike: typing.Mapping[str, str] | None
+        where_in: typing.Mapping[str, typing.Sequence[str]] | None
+        order_by: spec.OrderBy | None
+        limit: int | str | None
+        offset: int | str | None
+        cast: typing.Mapping[str, str] | None
+
+    class RawSelectKwargs(TypedDict, total=False):
+        conn: spec.Connection | str | spec.DBConfig
         sql: str
         parameters: spec.ExecuteParams | None
+        raw_column_types: typing.Mapping[str, str] | None
 
 
 @typing.overload
@@ -56,7 +75,7 @@ def select(  # type: ignore
     output_format: spec.QueryOutputFormat = 'dict',
     #
     # query utils
-    table_name: str | None = None,
+    table_name: str,
     columns: typing.Sequence[str] | None = None,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
@@ -69,7 +88,10 @@ def select(  # type: ignore
     order_by: spec.OrderBy | None = None,
     limit: int | str | None = None,
     offset: int | str | None = None,
+    cast: typing.Mapping[str, str] | None = None,
 ) -> spec.SelectOutput:
+
+    # conn = _resolve_select_conn_reference(conn)
 
     dialect = drivers.get_conn_dialect(conn)
     sql, parameters = statements.build_select_statement(
@@ -87,33 +109,57 @@ def select(  # type: ignore
         order_by=order_by,
         limit=limit,
         offset=offset,
+        cast=cast,
     )
+
+    # gather raw column types for sqlite JSON or connectorx json
+    if _need_raw_column_types(dialect=dialect, conn=conn):
+        raw_column_types = ddl_executors.get_table_raw_column_types(
+            table_name=table_name, conn=conn
+        )
+    else:
+        raw_column_types = None
 
     return raw_select(
         sql=sql,
         parameters=parameters,
         conn=conn,
         output_format=output_format,
+        raw_column_types=raw_column_types,
     )
+
+
+def _need_raw_column_types(
+    dialect: spec.Dialect, conn: spec.Connection | str | spec.DBConfig
+) -> bool:
+
+    if dialect == 'sqlite':
+        return True
+
+    driver = drivers.get_driver_class(conn=conn)
+    if dialect == 'postgresql' and driver.name == 'connectorx':
+        return True
+
+    return False
 
 
 @typing.overload
 def raw_select(
-    *, output_format: Literal['dict'], **kwargs: Unpack[SelectKwargs]
+    *, output_format: Literal['dict'], **kwargs: Unpack[RawSelectKwargs]
 ) -> spec.DictRows:
     ...
 
 
 @typing.overload
 def raw_select(
-    *, output_format: Literal['tuple'], **kwargs: Unpack[SelectKwargs]
+    *, output_format: Literal['tuple'], **kwargs: Unpack[RawSelectKwargs]
 ) -> spec.TupleRows:
     ...
 
 
 @typing.overload
 def raw_select(
-    **kwargs: Unpack[SelectKwargs],
+    **kwargs: Unpack[RawSelectKwargs],
 ) -> spec.DictRows:
     ...
 
@@ -122,7 +168,7 @@ def raw_select(
 def raw_select(
     *,
     output_format: spec.QueryOutputFormat = 'dict',
-    **kwargs: Unpack[SelectKwargs],
+    **kwargs: Unpack[RawSelectKwargs],
 ) -> spec.SelectOutput:
     ...
 
@@ -133,6 +179,7 @@ def raw_select(  # type: ignore
     parameters: spec.ExecuteParams | None = None,
     conn: spec.Connection | str | spec.DBConfig,
     output_format: spec.QueryOutputFormat = 'dict',
+    raw_column_types: typing.Mapping[str, str] | None = None,
 ) -> spec.SelectOutput:
 
     driver = drivers.get_driver_name(conn=conn)
@@ -153,6 +200,7 @@ def raw_select(  # type: ignore
             conn=conn,  # type: ignore
             output_format=output_format,
             driver=driver,
+            raw_column_types=raw_column_types,
         )
 
 
@@ -162,7 +210,7 @@ async def async_select(
     output_format: spec.QueryOutputFormat = 'dict',
     #
     # query parameters
-    table_name: str | None = None,
+    table_name: str,
     columns: typing.Sequence[str] | None = None,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
@@ -209,6 +257,7 @@ async def async_raw_select(
     parameters: spec.ExecuteParams | None = None,
     conn: spec.AsyncConnection | str | spec.DBConfig,
     output_format: spec.QueryOutputFormat = 'dict',
+    raw_column_types: typing.Mapping[str, str] | None = None,
 ) -> spec.AsyncSelectOutput:
 
     driver = drivers.get_driver_name(conn=conn)
@@ -231,5 +280,6 @@ async def async_raw_select(
             conn=conn,
             output_format=output_format,
             driver=driver,
+            raw_column_types=raw_column_types,
         )
 

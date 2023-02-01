@@ -11,7 +11,7 @@ def build_create_table_statement(
     table: spec.TableSchema,
     *,
     if_not_exists: bool = False,
-    single_line: bool = False,
+    single_line: bool = True,
     dialect: spec.Dialect,
 ) -> str:
     """
@@ -67,7 +67,7 @@ def build_create_index_statement(
     column_names: typing.Sequence[str] | None = None,
     index_name: str | None = None,
     if_not_exists: bool = False,
-    single_line: bool = False,
+    single_line: bool = True,
     dialect: spec.Dialect,
 ) -> str:
     """

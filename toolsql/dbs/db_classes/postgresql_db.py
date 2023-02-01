@@ -4,10 +4,10 @@ import typing
 
 from toolsql import executors
 from toolsql import spec
-from . import abstract_dbms
+from . import abstract_db
 
 
-class PostgresqlDbms(abstract_dbms.AbstractDbms):
+class PostgresqlDb(abstract_db.AbstractDb):
     @classmethod
     def get_tables_names(cls, conn: spec.Connection) -> typing.Sequence[str]:
         sql = """

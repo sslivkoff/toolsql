@@ -12,7 +12,7 @@ def build_select_statement(
     single_line: bool = True,
     #
     # predicates
-    table_name: str | None = None,
+    table_name: str,
     columns: typing.Sequence[str] | None = None,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
@@ -25,16 +25,17 @@ def build_select_statement(
     order_by: spec.OrderBy | None = None,
     limit: int | str | None = None,
     offset: int | str | None = None,
+    cast: typing.Mapping[str, str] | None = None,
 ) -> tuple[str, spec.ExecuteParams]:
     """
     - sqlite https://www.sqlite.org/lang_select.html
     - postgresql https://www.postgresql.org/docs/current/sql-select.html
     """
 
-    if table_name is None:
-        raise Exception('must specify table_name or raw sql')
     if not statement_utils.is_table_name(table_name):
         raise Exception('not a valid table name')
+
+    columns_str = _columns_to_str(columns, cast=cast)
 
     where_clause, parameters = statement_utils._where_clause_to_str(
         where_equals=where_equals,
@@ -58,7 +59,7 @@ def build_select_statement(
     {limit}
     {offset}
     """.format(
-        columns=_columns_to_str(columns),
+        columns=columns_str,
         table_name=table_name,
         where_clause=where_clause,
         order_by=_order_by_to_str(order_by),
@@ -72,14 +73,31 @@ def build_select_statement(
     return sql, parameters
 
 
-def _columns_to_str(columns: typing.Sequence[str] | None) -> str:
+def _columns_to_str(
+    columns: typing.Sequence[str] | None,
+    cast: typing.Mapping[str, str] | None,
+) -> str:
+
     if columns is None:
+        # return all columns
+        if cast is not None:
+            raise Exception('when casting columns, must specify columns')
         return '*'
+
     else:
+
         for column in columns:
             if not statement_utils.is_column_name(column):
                 raise Exception('not a valid column name: ' + str(column))
-        return ','.join(columns)
+
+        if cast is not None:
+            columns = [
+                'CAST(' + column + ' AS ' + cast[column] + ')' if column in cast
+                else column
+                for column in columns
+            ]
+
+        return ', '.join(columns)
 
 
 def _order_by_to_str(order_by: spec.OrderBy | None) -> str:

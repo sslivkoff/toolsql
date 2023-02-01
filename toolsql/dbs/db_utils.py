@@ -1,35 +1,35 @@
 from __future__ import annotations
 
 from toolsql import spec
-from .dbms_classes import abstract_dbms
+from .db_classes import abstract_db
 
 
-def get_dbms_class(
+def get_db_class(
     *,
     name: str | None = None,
     uri: str | None = None,
     db_config: spec.DBConfig | None = None,
-) -> type[abstract_dbms.AbstractDbms]:
+) -> type[abstract_db.AbstractDb]:
 
-    dbms = _get_dbms_name(
+    db = _get_db_name(
         name=name,
         uri=uri,
         db_config=db_config,
     )
 
-    if dbms == 'sqlite':
-        from .dbms_classes import sqlite_dbms
+    if db == 'sqlite':
+        from .db_classes import sqlite_db
 
-        return sqlite_dbms.SqliteDbms
-    elif dbms == 'postgresql':
-        from .dbms_classes import postgresql_dbms
+        return sqlite_db.SqliteDb
+    elif db == 'postgresql':
+        from .db_classes import postgresql_db
 
-        return postgresql_dbms.PostgresqlDbms
+        return postgresql_db.PostgresqlDb
     else:
-        raise Exception('unknown dbms: ' + str(dbms))
+        raise Exception('unknown db: ' + str(db))
 
 
-def _get_dbms_name(
+def _get_db_name(
     *,
     name: str | None = None,
     uri: str | None = None,
@@ -41,13 +41,13 @@ def _get_dbms_name(
     elif uri is not None:
         head, tail = uri.split('://')
         if '+' in head:
-            dbms = head.split('+')[0]
+            db = head.split('+')[0]
         else:
-            dbms = head
-        if dbms in ['postgresql', 'sqlite']:
-            return dbms
+            db = head
+        if db in ['postgresql', 'sqlite']:
+            return db
         else:
-            raise Exception('unknown dbms: ' + str(dbms))
+            raise Exception('unknown db: ' + str(db))
     elif db_config is not None:
         return db_config['dbms']
     else:

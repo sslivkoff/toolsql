@@ -5,7 +5,13 @@ import typing
 from toolsql import spec
 
 
-class AbstractDbms:
+class AbstractDb:
+    def __init__(self) -> None:
+        raise Exception(
+            'do not initialize '
+            + str(type(self))
+            + ', use class methods instead'
+        )
 
     #
     # # sync
@@ -19,6 +25,12 @@ class AbstractDbms:
             table_name: cls.get_table_schema(table_name, conn=conn)
             for table_name in cls.get_tables_names(conn=conn)
         }
+
+    @classmethod
+    def get_table_raw_column_types(
+        cls, table_name: str, conn: spec.Connection | str | spec.DBConfig
+    ) -> typing.Mapping[str, str]:
+        raise Exception('get_table_raw_column_types() for ' + cls.__name__)
 
     @classmethod
     def has_table(cls, table_name: str, conn: spec.Connection) -> bool:

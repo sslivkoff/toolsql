@@ -3,10 +3,12 @@ from __future__ import annotations
 from toolsql import spec
 
 
-def build_drop_statement(
+def build_drop_table_statement(
     table: str | spec.TableSchema,
     *,
     if_exists: bool = True,
+    dialect: spec.Dialect | None = None,
+    single_line: bool = True,
 ) -> str:
     """
     - sqlite: https://www.sqlite.org/lang_droptable.html

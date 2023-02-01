@@ -15,6 +15,6 @@ def drop_table(
     if not confirm:
         raise Exception('to drop table use confirm=True')
 
-    sql = statements.build_drop_statement(table, if_exists=if_exists)
+    sql = statements.build_drop_table_statement(table, if_exists=if_exists)
     conn.execute(sql)
 

@@ -4,10 +4,10 @@ import typing
 
 from toolsql import executors
 from toolsql import spec
-from . import abstract_dbms
+from . import abstract_db
 
 
-class SqliteDbms(abstract_dbms.AbstractDbms):
+class SqliteDb(abstract_db.AbstractDb):
     @classmethod
     def get_tables_names(cls, conn: spec.Connection) -> typing.Sequence[str]:
         sql = """SELECT name FROM sqlite_schema WHERE type =='table'"""
@@ -17,6 +17,16 @@ class SqliteDbms(abstract_dbms.AbstractDbms):
             output_format='tuple',
         )
         return [item[0] for item in result]
+
+    @classmethod
+    def get_table_raw_column_types(
+        cls, table_name: str, conn: spec.Connection | str | spec.DBConfig
+    ) -> typing.Mapping[str, str]:
+        sql = 'SELECT name, type FROM pragma_table_info("{table_name}")'.format(
+            table_name=table_name
+        )
+        result = executors.raw_select(sql=sql, conn=conn, output_format='tuple')
+        return dict(result)  # type: ignore
 
     @classmethod
     def get_table_schema(
