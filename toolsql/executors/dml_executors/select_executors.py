@@ -5,9 +5,7 @@ import typing
 from toolsql import drivers
 from toolsql import spec
 from toolsql import statements
-from ... import ddl_executors
-from . import dbapi_selection
-from . import connectorx_selection
+from .. import ddl_executors
 
 
 if typing.TYPE_CHECKING:
@@ -182,26 +180,14 @@ def raw_select(  # type: ignore
     raw_column_types: typing.Mapping[str, str] | None = None,
 ) -> spec.SelectOutput:
 
-    driver = drivers.get_driver_name(conn=conn)
-    if driver == 'connectorx':
-        if not isinstance(conn, (str, dict)):
-            raise Exception('connectorx must use str or DBConfig for conn')
-        return connectorx_selection._select_connectorx(
-            sql=sql,
-            conn=conn,
-            output_format=output_format,
-        )
-    else:
-        if isinstance(conn, (str, dict)):
-            raise Exception('conn not initialized')
-        return dbapi_selection._select_dbapi(
-            sql=sql,
-            parameters=parameters,
-            conn=conn,  # type: ignore
-            output_format=output_format,
-            driver=driver,
-            raw_column_types=raw_column_types,
-        )
+    driver = drivers.get_driver_class(conn=conn)
+    return driver._select(
+        sql=sql,
+        conn=conn,
+        parameters=parameters,
+        output_format=output_format,
+        raw_column_types=raw_column_types,
+    )
 
 
 async def async_select(
@@ -260,26 +246,12 @@ async def async_raw_select(
     raw_column_types: typing.Mapping[str, str] | None = None,
 ) -> spec.AsyncSelectOutput:
 
-    driver = drivers.get_driver_name(conn=conn)
-    if driver == 'connectorx':
-        if not isinstance(conn, (str, dict)):
-            raise Exception('connectorx must use str or DBConfig for conn')
-        return await connectorx_selection._async_select_connectorx(
-            sql=sql,
-            conn=conn,
-            output_format=output_format,
-        )
-    else:
-        if isinstance(conn, str):
-            raise Exception('conn not initialized')
-        if isinstance(conn, dict):
-            raise Exception('conn not initialized')
-        return await dbapi_selection._async_select_dbapi(
-            sql=sql,
-            parameters=parameters,
-            conn=conn,
-            output_format=output_format,
-            driver=driver,
-            raw_column_types=raw_column_types,
-        )
+    driver = drivers.get_driver_class(conn=conn)
+    return await driver._async_select(
+        sql=sql,
+        parameters=parameters,
+        conn=conn,
+        output_format=output_format,
+        raw_column_types=raw_column_types,
+    )
 

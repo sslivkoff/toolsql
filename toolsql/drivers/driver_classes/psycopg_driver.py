@@ -6,7 +6,7 @@ import psycopg
 
 from toolsql import spec
 from .. import conn_utils
-from . import abstract_driver
+from . import dbapi_driver
 
 
 class PsycopgAsyncConnWrapper:
@@ -43,7 +43,7 @@ class PsycopgAsyncConnWrapper:
         return closure().__await__()
 
 
-class PsycopgDriver(abstract_driver.AbstractDriver):
+class PsycopgDriver(dbapi_driver.DbapiDriver):
     name = 'psycopg'
 
     @classmethod

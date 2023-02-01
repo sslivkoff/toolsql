@@ -3,10 +3,10 @@ from __future__ import annotations
 import aiosqlite
 
 from toolsql import spec
-from . import abstract_driver
+from . import dbapi_driver
 
 
-class AiosqliteDriver(abstract_driver.AbstractDriver):
+class AiosqliteDriver(dbapi_driver.DbapiDriver):
     name = 'aiosqlite'
 
     @classmethod

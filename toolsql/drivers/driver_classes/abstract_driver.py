@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import typing
+
 from toolsql import spec
 
 
@@ -100,4 +102,32 @@ class AbstractDriver:
     ) -> None:
         async with conn.cursor() as cursor:  # type: ignore
             await cursor.executemany(sql, parameters)
+
+    #
+    # # select
+    #
+
+    @classmethod
+    def _select(
+        cls,
+        *,
+        sql: str,
+        parameters: spec.ExecuteParams | None = None,
+        conn: spec.Connection | str | spec.DBConfig,
+        output_format: spec.QueryOutputFormat,
+        raw_column_types: typing.Mapping[str, str] | None = None,
+    ) -> spec.SelectOutput:
+        raise NotImplementedError('_select() for ' + str(cls.__name__))
+
+    @classmethod
+    async def _async_select(
+        cls,
+        *,
+        sql: str,
+        parameters: spec.ExecuteParams | None = None,
+        conn: spec.AsyncConnection | str | spec.DBConfig,
+        output_format: spec.QueryOutputFormat,
+        raw_column_types: typing.Mapping[str, str] | None = None,
+    ) -> spec.AsyncSelectOutput:
+        raise NotImplementedError('_async_select() for ' + str(cls.__name__))
 

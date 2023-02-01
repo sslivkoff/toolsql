@@ -5,6 +5,8 @@ import typing
 if typing.TYPE_CHECKING:
     import psycopg
 
+from toolsql import drivers
+from toolsql import formats
 from toolsql import spec
 
 from . import abstract_driver
@@ -128,4 +130,77 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         conn: spec.AsyncConnection,
     ) -> None:
         raise Exception('connectorx cannot use execute() or executemany()')
+
+    #
+    # # select
+    #
+
+    @classmethod
+    def _select(
+        cls,
+        *,
+        sql: str | None = None,
+        parameters: spec.ExecuteParams | None = None,
+        conn: spec.Connection | str | spec.DBConfig,
+        output_format: spec.QueryOutputFormat,
+        raw_column_types: typing.Mapping[str, str] | None = None,
+    ) -> spec.SelectOutput:
+
+        import connectorx  # type: ignore
+
+        if output_format == 'cursor':
+            raise Exception('connectorx does not use cursors')
+        elif output_format == 'pandas':
+            result_format = 'pandas'
+        else:
+            result_format = 'polars'
+
+        if parameters is not None:
+            raise Exception('cannot use parameters with connectorx')
+
+        if not isinstance(conn, str):
+            if isinstance(conn, dict):
+                conn = drivers.get_db_uri(conn)
+            else:
+                raise Exception('unknown conn format: ' + str(type(conn)))
+
+        result = connectorx.read_sql(conn, sql, return_type=result_format)
+        return formats.format_row_dataframe(result, output_format=output_format)
+
+    @classmethod
+    async def _async_select(
+        cls,
+        *,
+        sql: str | None = None,
+        parameters: spec.ExecuteParams | None = None,
+        conn: spec.AsyncConnection | str | spec.DBConfig,
+        output_format: spec.QueryOutputFormat,
+        raw_column_types: typing.Mapping[str, str] | None = None,
+    ) -> spec.AsyncSelectOutput:
+
+        # see https://github.com/sfu-db/connector-x/discussions/368
+        # see https://stackoverflow.com/a/69165563
+        import asyncio
+
+        if isinstance(conn, str) or isinstance(conn, dict):
+
+            return await asyncio.get_running_loop().run_in_executor(
+                None,
+                lambda: cls._select(  # type: ignore
+                    conn=conn,  # type: ignore
+                    sql=sql,
+                    output_format=output_format,
+                    raw_column_types=raw_column_types,
+                ),
+            )
+            # return await asyncio.to_thread(
+            #     lambda: _select_connectorx(
+            #         conn=conn,
+            #         sql=sql,
+            #         output_format=output_format,
+            #     )
+            # )
+
+        else:
+            raise Exception()
 

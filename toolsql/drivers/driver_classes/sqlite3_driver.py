@@ -3,10 +3,10 @@ from __future__ import annotations
 import sqlite3
 
 from toolsql import spec
-from . import abstract_driver
+from . import dbapi_driver
 
 
-class Sqlite3Driver(abstract_driver.AbstractDriver):
+class Sqlite3Driver(dbapi_driver.DbapiDriver):
     name = 'sqlite3'
 
     @classmethod
