@@ -7,8 +7,8 @@ from toolsql import statements
 
 def alter_table_rename(
     *,
-    old_table_name: str,
-    new_table_name: str,
+    old_table: str,
+    new_table: str,
     conn: spec.Connection,
     confirm: bool = False,
 ) -> None:
@@ -17,8 +17,8 @@ def alter_table_rename(
         raise Exception('must use confirm=True to modify table')
 
     sql = statements.build_alter_table_rename_statement(
-        old_table_name=old_table_name,
-        new_table_name=new_table_name,
+        old_table=old_table,
+        new_table=new_table,
     )
 
     # execute query
@@ -27,7 +27,7 @@ def alter_table_rename(
 
 
 def alter_table_rename_column(
-    table_name: str,
+    table: str | spec.TableSchema,
     old_column_name: str,
     new_column_name: str,
     conn: spec.Connection,
@@ -38,7 +38,7 @@ def alter_table_rename_column(
         raise Exception('must use confirm=True to modify table')
 
     sql = statements.build_alter_table_rename_column_statement(
-        table_name=table_name,
+        table=table,
         old_column_name=old_column_name,
         new_column_name=new_column_name,
     )
@@ -50,7 +50,7 @@ def alter_table_rename_column(
 
 def alter_table_add_column(
     *,
-    table_name: str,
+    table: str | spec.TableSchema,
     column: spec.ColumnSchema,
     conn: spec.Connection,
     confirm: bool = False,
@@ -61,7 +61,7 @@ def alter_table_add_column(
 
     dialect = drivers.get_conn_dialect(conn)
     sql = statements.build_alter_table_add_column_statement(
-        table_name=table_name,
+        table=table,
         column=column,
         dialect=dialect,
     )
@@ -73,7 +73,7 @@ def alter_table_add_column(
 
 def alter_table_drop_column(
     *,
-    table_name: str,
+    table: str | spec.TableSchema,
     column_name: str,
     conn: spec.Connection,
     confirm: bool = False,
@@ -83,7 +83,7 @@ def alter_table_drop_column(
         raise Exception('must use confirm=True to modify table')
 
     sql = statements.build_alter_table_drop_column_statement(
-        table_name=table_name,
+        table=table,
         column_name=column_name,
     )
 

@@ -10,7 +10,7 @@ def build_update_statement(
     *,
     dialect: spec.Dialect,
     single_line: bool = True,
-    table_name: str | None = None,
+    table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
     values: spec.ExecuteParams,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
@@ -27,10 +27,7 @@ def build_update_statement(
     - postgres: https://www.postgresql.org/docs/current/sql-update.html
     """
 
-    if table_name is None:
-        raise Exception('must specify table_name or raw sql')
-    if not statement_utils.is_table_name(table_name):
-        raise Exception('not a valid table name')
+    table_name = statement_utils.get_table_name(table)
 
     # value set clause
     columns, value_parameters = _get_columns_and_parameters(

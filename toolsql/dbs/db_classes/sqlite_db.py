@@ -4,6 +4,7 @@ import typing
 
 from toolsql import executors
 from toolsql import spec
+from toolsql import statements
 from . import abstract_db
 
 
@@ -20,18 +21,22 @@ class SqliteDb(abstract_db.AbstractDb):
 
     @classmethod
     def get_table_raw_column_types(
-        cls, table_name: str, conn: spec.Connection | str | spec.DBConfig
+        cls,
+        table: str | spec.TableSchema,
+        conn: spec.Connection | str | spec.DBConfig,
     ) -> typing.Mapping[str, str]:
         sql = 'SELECT name, type FROM pragma_table_info("{table_name}")'.format(
-            table_name=table_name
+            table_name=statements.get_table_name(table)
         )
         result = executors.raw_select(sql=sql, conn=conn, output_format='tuple')
         return dict(result)  # type: ignore
 
     @classmethod
     def get_table_schema(
-        cls, table_name: str, conn: spec.Connection
+        cls, table: str | spec.TableSchema, conn: spec.Connection
     ) -> spec.TableSchema:
+
+        table_name = statements.get_table_name(table)
 
         if isinstance(conn, str):
             raise Exception('conn not initialized')
@@ -142,55 +147,4 @@ class SqliteDb(abstract_db.AbstractDb):
                 multicolumn_indices.add({result[2] for result in results})
 
         return column_indices, multicolumn_indices
-
-    @classmethod
-    def get_table_create_statement(
-        cls, table_name: str, *, conn: spec.Connection
-    ) -> str:
-        sql = """
-        SELECT sql FROM sqlite_schema
-        WHERE type='table' AND table_name = '{table_name}'
-        """
-
-        if isinstance(conn, str):
-            raise Exception('conn not initialized')
-
-        sql = sql.format(table_name=table_name)
-        cursor = conn.execute(sql)
-        result = cursor.fetchall()
-        if len(result) == 1:
-            output = result[0][0]
-            if isinstance(output, str):
-                return output
-            else:
-                raise Exception('wrong output type')
-        elif len(result) == 0:
-            raise Exception('table not found')
-        else:
-            raise Exception('too many results found')
-
-    @classmethod
-    def get_index_create_statement(
-        cls, index_name: str, table_name: str, *, conn: spec.Connection
-    ) -> str:
-        """roll into get_table_create_statement()"""
-
-        raise NotImplementedError()
-
-        # sql = """
-        # SELECT sql FROM sqlite_schema
-        # WHERE
-        #     type='index'
-        #     AND table_name = '{table_name}'
-        #     AND index_name = '{name}'
-        # """
-        # sql = sql.format(table_name=table_name, index_name=index_name)
-        # cursor = conn.execute(sql)
-        # result = cursor.fetchall()
-        # if len(result) == 1:
-        #     return result[0][0]
-        # elif len(result) == 0:
-        #     raise Exception('table not found')
-        # else:
-        #     raise Exception('too many results found')
 

@@ -16,17 +16,17 @@ def get_table_schemas(
 
 
 def get_table_raw_column_types(
-    table_name: str, conn: spec.Connection | str | spec.DBConfig
+    table: str | spec.TableSchema, conn: spec.Connection | str | spec.DBConfig
 ) -> typing.Mapping[str, str]:
     dialect = drivers.get_conn_dialect(conn)
     db = dbs.get_db_class(name=dialect)
-    return db.get_table_raw_column_types(table_name=table_name, conn=conn)
+    return db.get_table_raw_column_types(table=table, conn=conn)
 
 
-def has_table(table_name: str, conn: spec.Connection) -> bool:
+def has_table(table: str | spec.TableSchema, conn: spec.Connection) -> bool:
     dialect = drivers.get_conn_dialect(conn)
     db = dbs.get_db_class(name=dialect)
-    return db.has_table(table_name=table_name, conn=conn)
+    return db.has_table(table=table, conn=conn)
 
 
 def get_table_names(conn: spec.Connection) -> typing.Sequence[str]:
@@ -42,17 +42,9 @@ def get_indices_names(conn: spec.Connection) -> typing.Sequence[str]:
 
 
 def get_table_schema(
-    table_name: str, conn: spec.Connection
+    table: str | spec.TableSchema, conn: spec.Connection
 ) -> spec.TableSchema:
     dialect = drivers.get_conn_dialect(conn)
     db = dbs.get_db_class(name=dialect)
-    return db.get_table_schema(table_name=table_name, conn=conn)
-
-
-def get_table_create_statement(
-    table_name: str, *, conn: spec.Connection
-) -> str:
-    dialect = drivers.get_conn_dialect(conn)
-    db = dbs.get_db_class(name=dialect)
-    return db.get_table_create_statement(table_name=table_name, conn=conn)
+    return db.get_table_schema(table=table, conn=conn)
 

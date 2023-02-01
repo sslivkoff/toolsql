@@ -12,7 +12,7 @@ def build_select_statement(
     single_line: bool = True,
     #
     # predicates
-    table_name: str,
+    table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
@@ -32,8 +32,7 @@ def build_select_statement(
     - postgresql https://www.postgresql.org/docs/current/sql-select.html
     """
 
-    if not statement_utils.is_table_name(table_name):
-        raise Exception('not a valid table name')
+    table_name = statement_utils.get_table_name(table)
 
     columns_str = _columns_to_str(columns, cast=cast)
 

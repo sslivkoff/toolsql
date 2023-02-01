@@ -4,6 +4,7 @@ import typing
 
 from toolsql import executors
 from toolsql import spec
+from toolsql import statements
 from . import abstract_db
 
 
@@ -28,8 +29,10 @@ class PostgresqlDb(abstract_db.AbstractDb):
 
     @classmethod
     def get_table_schema(
-        cls, table_name: str, conn: spec.Connection
+        cls, table: str | spec.TableSchema, conn: spec.Connection
     ) -> spec.TableSchema:
+
+        table_name = statements.get_table_name(table)
 
         # https://dba.stackexchange.com/a/22368
         sql = """
@@ -41,9 +44,7 @@ class PostgresqlDb(abstract_db.AbstractDb):
         FROM information_schema.columns
         WHERE table_name = '{table_name}'
         ORDER BY ordinal_position
-        """.format(
-            table_name=table_name
-        )
+        """.format(table_name=table_name)
         raw_columns = executors.raw_select(
             sql=sql, conn=conn, output_format='dict'
         )
@@ -166,10 +167,4 @@ class PostgresqlDb(abstract_db.AbstractDb):
             index_columns[index_name].append(column_name)
 
         return cls._sort_single_multi_column_indices(index_columns)
-
-    @classmethod
-    def get_table_create_statement(
-        cls, table_name: str, *, conn: spec.Connection
-    ) -> str:
-        raise Exception('get_table_create_statement() for ' + cls.__name__)
 

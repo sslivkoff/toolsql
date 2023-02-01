@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing
 
 from toolsql import spec
+from toolsql import statements
 
 
 class AbstractDb:
@@ -28,12 +29,17 @@ class AbstractDb:
 
     @classmethod
     def get_table_raw_column_types(
-        cls, table_name: str, conn: spec.Connection | str | spec.DBConfig
+        cls,
+        table: str | spec.TableSchema,
+        conn: spec.Connection | str | spec.DBConfig,
     ) -> typing.Mapping[str, str]:
         raise Exception('get_table_raw_column_types() for ' + cls.__name__)
 
     @classmethod
-    def has_table(cls, table_name: str, conn: spec.Connection) -> bool:
+    def has_table(
+        cls, table: str | spec.TableSchema, conn: spec.Connection
+    ) -> bool:
+        table_name = statements.get_table_name(table)
         return table_name in cls.get_tables_names(conn=conn)
 
     @classmethod
@@ -46,13 +52,13 @@ class AbstractDb:
 
     @classmethod
     def get_table_schema(
-        cls, table_name: str, conn: spec.Connection
+        cls, table: str | spec.TableSchema, conn: spec.Connection
     ) -> spec.TableSchema:
         raise Exception('get_table_schema() for ' + cls.__name__)
 
     @classmethod
     def get_table_create_statement(
-        cls, table_name: str, *, conn: spec.Connection
+        cls, table: str | spec.TableSchema, *, conn: spec.Connection
     ) -> str:
         raise Exception('get_table_create_statement() for ' + cls.__name__)
 
@@ -80,15 +86,9 @@ class AbstractDb:
 
     @classmethod
     async def async_get_table_schema(
-        cls, table_name: str, conn: spec.Connection
+        cls, table: str | spec.TableSchema, conn: spec.Connection
     ) -> spec.TableSchema:
-        return cls.get_table_schema(table_name=table_name, conn=conn)
-
-    @classmethod
-    async def async_get_table_create_statement(
-        cls, table_name: str, *, conn: spec.Connection
-    ) -> str:
-        return cls.get_table_create_statement(table_name=table_name, conn=conn)
+        return cls.get_table_schema(table=table, conn=conn)
 
     #
     # # helper

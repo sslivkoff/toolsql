@@ -3,8 +3,8 @@ from __future__ import annotations
 import typing
 
 from toolsql import drivers
+from toolsql import formats
 from toolsql import spec
-from . import row_formats
 
 
 def _select_dbapi(
@@ -30,7 +30,7 @@ def _select_dbapi(
 
     driver = drivers.get_driver_class(driver)
 
-    rows = row_formats._convert_json_columns(
+    rows = formats.decode_json_columns(
         rows=rows,
         driver=driver,
         raw_column_types=raw_column_types,
@@ -41,7 +41,7 @@ def _select_dbapi(
         return rows
     else:
         names = driver.get_cursor_output_names(cursor)
-        return row_formats.format_row_tuples(
+        return formats.format_row_tuples(
             rows=rows, names=names, output_format=output_format
         )
 
@@ -62,7 +62,7 @@ async def _async_select_dbapi(
 
     driver = drivers.get_driver_class(driver)
     rows: typing.Sequence[tuple[typing.Any, ...]] = await cursor.fetchall()
-    rows = row_formats._convert_json_columns(
+    rows = formats.decode_json_columns(
         rows=rows,
         driver=driver,
         raw_column_types=raw_column_types,
@@ -72,7 +72,7 @@ async def _async_select_dbapi(
         return rows
     else:
         names = driver.get_cursor_output_names(cursor)
-        return row_formats.format_row_tuples(
+        return formats.format_row_tuples(
             rows=rows, names=names, output_format=output_format
         )
 

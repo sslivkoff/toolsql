@@ -10,7 +10,7 @@ from toolsql import statements
 def update(
     *,
     conn: spec.Connection,
-    table_name: str | None = None,
+    table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
     values: spec.ExecuteParams,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
@@ -26,7 +26,7 @@ def update(
     dialect = drivers.get_conn_dialect(conn)
     sql, parameters = statements.build_update_statement(
         dialect=dialect,
-        table_name=table_name,
+        table=table,
         columns=columns,
         values=values,
         where_equals=where_equals,
@@ -47,7 +47,7 @@ def update(
 async def async_update(
     *,
     conn: spec.AsyncConnection,
-    table_name: str | None = None,
+    table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
     values: spec.ExecuteParams,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
@@ -63,7 +63,7 @@ async def async_update(
     dialect = drivers.get_conn_dialect(conn)
     sql, parameters = statements.build_update_statement(
         dialect=dialect,
-        table_name=table_name,
+        table=table,
         columns=columns,
         values=values,
         where_equals=where_equals,

@@ -17,7 +17,7 @@ if typing.TYPE_CHECKING:
 
     class SelectKwargs(TypedDict, total=False):
         conn: spec.Connection | str | spec.DBConfig
-        table_name: str
+        table: str | spec.TableSchema
         columns: typing.Sequence[str] | None
         where_equals: typing.Mapping[str, typing.Any] | None
         where_gt: typing.Mapping[str, typing.Any] | None
@@ -75,7 +75,7 @@ def select(  # type: ignore
     output_format: spec.QueryOutputFormat = 'dict',
     #
     # query utils
-    table_name: str,
+    table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
@@ -96,7 +96,7 @@ def select(  # type: ignore
     dialect = drivers.get_conn_dialect(conn)
     sql, parameters = statements.build_select_statement(
         dialect=dialect,
-        table_name=table_name,
+        table=table,
         columns=columns,
         where_equals=where_equals,
         where_gt=where_gt,
@@ -115,7 +115,7 @@ def select(  # type: ignore
     # gather raw column types for sqlite JSON or connectorx json
     if _need_raw_column_types(dialect=dialect, conn=conn):
         raw_column_types = ddl_executors.get_table_raw_column_types(
-            table_name=table_name, conn=conn
+            table=table, conn=conn
         )
     else:
         raw_column_types = None
@@ -210,7 +210,7 @@ async def async_select(
     output_format: spec.QueryOutputFormat = 'dict',
     #
     # query parameters
-    table_name: str,
+    table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
@@ -228,7 +228,7 @@ async def async_select(
     dialect = drivers.get_conn_dialect(conn)
     sql, parameters = statements.build_select_statement(
         dialect=dialect,
-        table_name=table_name,
+        table=table,
         columns=columns,
         where_equals=where_equals,
         where_gt=where_gt,

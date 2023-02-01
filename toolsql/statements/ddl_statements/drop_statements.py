@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from toolsql import spec
 
+from .. import statement_utils
+
 
 def build_drop_table_statement(
     table: str | spec.TableSchema,
@@ -15,12 +17,7 @@ def build_drop_table_statement(
     - postgresql: https://www.postgresql.org/docs/current/sql-droptable.html
     """
 
-    if isinstance(table, str):
-        table_name = table
-    elif isinstance(table, dict):
-        table_name = table['name']
-    else:
-        raise Exception('unknown table specification: ' + str(type(table)))
+    table_name = statement_utils.get_table_name(table)
 
     return """DROP TABLE {if_exists}{table_name}""".format(
         table_name=table_name,

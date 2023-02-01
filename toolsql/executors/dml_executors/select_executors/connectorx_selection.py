@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from toolsql import drivers
+from toolsql import formats
 from toolsql import spec
-from . import row_formats
 
 
 def _select_connectorx(
@@ -26,7 +26,7 @@ def _select_connectorx(
             raise Exception('unknown conn format: ' + str(type(conn)))
 
     result = connectorx.read_sql(conn, sql, return_type=result_format)
-    return row_formats.format_row_dataframe(result, output_format=output_format)
+    return formats.format_row_dataframe(result, output_format=output_format)
 
 
 async def _async_select_connectorx(

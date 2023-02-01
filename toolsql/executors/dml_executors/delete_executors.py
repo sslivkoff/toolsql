@@ -9,7 +9,7 @@ from toolsql import statements
 def delete(
     *,
     conn: spec.Connection,
-    table_name: str | None = None,
+    table: str | spec.TableSchema,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
     where_gte: typing.Mapping[str, typing.Any] | None = None,
@@ -23,7 +23,7 @@ def delete(
     dialect = drivers.get_conn_dialect(conn)
     sql, parameters = statements.build_delete_statement(
         dialect=dialect,
-        table_name=table_name,
+        table=table,
         where_equals=where_equals,
         where_gt=where_gt,
         where_gte=where_gte,
@@ -42,7 +42,7 @@ def delete(
 async def async_delete(
     *,
     conn: spec.AsyncConnection,
-    table_name: str | None = None,
+    table: str | spec.TableSchema,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
     where_gte: typing.Mapping[str, typing.Any] | None = None,
@@ -56,7 +56,7 @@ async def async_delete(
     dialect = drivers.get_conn_dialect(conn)
     sql, parameters = statements.build_delete_statement(
         dialect=dialect,
-        table_name=table_name,
+        table=table,
         where_equals=where_equals,
         where_gt=where_gt,
         where_gte=where_gte,

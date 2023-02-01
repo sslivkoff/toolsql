@@ -11,7 +11,7 @@ def insert(
     *,
     row: spec.ExecuteParams | None = None,
     rows: spec.ExecuteManyParams | None = None,
-    table_name: str | None = None,
+    table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
     conn: spec.Connection,
 ) -> None:
@@ -21,7 +21,7 @@ def insert(
     sql, parameters = statements.build_insert_statement(
         row=row,
         rows=rows,
-        table_name=table_name,
+        table=table,
         columns=columns,
         dialect=dialect,
     )
@@ -36,7 +36,7 @@ async def async_insert(
     sql: str | None = None,
     row: spec.ExecuteParams | None = None,
     rows: spec.ExecuteManyParams | None = None,
-    table_name: str | None = None,
+    table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
     conn: spec.AsyncConnection,
 ) -> None:
@@ -46,7 +46,7 @@ async def async_insert(
     sql, parameters = statements.build_insert_statement(
         row=row,
         rows=rows,
-        table_name=table_name,
+        table=table,
         columns=columns,
         dialect=dialect,
     )

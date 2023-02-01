@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing
 from typing_extensions import Literal
 
+from toolsql import formats
 from toolsql import spec
 from .. import statement_utils
 
@@ -11,7 +12,7 @@ def build_insert_statement(
     *,
     row: spec.ExecuteParams | None = None,
     rows: spec.ExecuteManyParams | None = None,
-    table_name: str | None = None,
+    table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
     dialect: Literal['sqlite', 'postgresql'],
     single_line: bool = True,
@@ -21,6 +22,8 @@ def build_insert_statement(
     - sqlite: https://www.sqlite.org/lang_insert.html
     - postgresql: https://www.postgresql.org/docs/current/sql-insert.html
     """
+
+    table_name = statement_utils.get_table_name(table)
 
     rows = _prepare_rows_for_insert(
         row=row,
@@ -84,10 +87,7 @@ def _prepare_rows_for_insert(
 
     # encode json columns
     if rows is not None:
-        rows = statement_utils._wrap_json_columns(
-            rows=rows,
-            dialect=dialect,
-        )
+        rows = formats.encode_json_columns(rows=rows, dialect=dialect)
 
     return rows
 

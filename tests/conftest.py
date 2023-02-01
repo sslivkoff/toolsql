@@ -115,7 +115,7 @@ def setup_teardown():
             toolsql.create_table(table=table['schema'], conn=conn, confirm=True)
     with sqlite3.connect(conf_db_configs.test_sqlite_path) as conn:
         for table_name, table in test_tables.items():
-            toolsql.insert(rows=table['rows'], table_name=table_name, conn=conn)
+            toolsql.insert(rows=table['rows'], table=table_name, conn=conn)
 
     # setup postgres tables
     with psycopg.connect(conn_str) as conn:
@@ -123,7 +123,7 @@ def setup_teardown():
             toolsql.create_table(table=table['schema'], conn=conn, confirm=True)
     with psycopg.connect(conn_str) as conn:
         for table_name, table in test_tables.items():
-            toolsql.insert(rows=table['rows'], table_name=table_name, conn=conn)
+            toolsql.insert(rows=table['rows'], table=table_name, conn=conn)
 
     # transition to teardown
     yield
