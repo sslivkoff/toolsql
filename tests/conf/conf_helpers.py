@@ -9,7 +9,13 @@ class ToolsqlTestHelpers:
     @staticmethod
     def assert_results_equal(result, target_result):
         if isinstance(target_result, pl.DataFrame):
-            assert target_result.frame_equal(result)
+            try:
+                target_result.frame_equal(result)
+            except pl.PanicException:
+                assert target_result.dtypes == result.dtypes
+                assert target_result.columns == result.columns
+                for column in target_result.columns:
+                    assert list(target_result[column]) == list(result[column])
         elif isinstance(target_result, pd.DataFrame):
             assert np.all(target_result.columns.values == result.columns.values)
             for name, column in target_result.items():

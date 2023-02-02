@@ -33,7 +33,11 @@ class AbstractDb:
         table: str | spec.TableSchema,
         conn: spec.Connection | str | spec.DBConfig,
     ) -> typing.Mapping[str, str]:
-        raise Exception('get_table_raw_column_types() for ' + cls.__name__)
+        table_schema = cls.get_table_schema(table=table, conn=conn)
+        return {
+            column_spec['name']: column_spec['type']
+            for column_spec in table_schema['columns']
+        }
 
     @classmethod
     def has_table(

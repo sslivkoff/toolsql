@@ -155,7 +155,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         else:
             result_format = 'polars'
 
-        if parameters is not None:
+        if parameters is not None and len(parameters) > 0:
             raise Exception('cannot use parameters with connectorx')
 
         if not isinstance(conn, str):
@@ -165,6 +165,12 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
                 raise Exception('unknown conn format: ' + str(type(conn)))
 
         result = connectorx.read_sql(conn, sql, return_type=result_format)
+        result = formats.decode_json_columns(
+            rows=result,
+            driver=cls,
+            raw_column_types=raw_column_types,
+            cursor=None,
+        )
         return formats.format_row_dataframe(result, output_format=output_format)
 
     @classmethod

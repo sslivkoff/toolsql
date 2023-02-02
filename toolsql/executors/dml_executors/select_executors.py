@@ -89,9 +89,17 @@ def select(  # type: ignore
     cast: typing.Mapping[str, str] | None = None,
 ) -> spec.SelectOutput:
 
-    # conn = _resolve_select_conn_reference(conn)
-
+    # gather raw column types for sqlite JSON or connectorx json
     dialect = drivers.get_conn_dialect(conn)
+    columns, raw_column_types, cast = _handle_json_columns(
+        dialect=dialect,
+        table=table,
+        columns=columns,
+        conn=conn,
+        cast=cast,
+    )
+
+    # create query
     sql, parameters = statements.build_select_statement(
         dialect=dialect,
         table=table,
@@ -110,14 +118,6 @@ def select(  # type: ignore
         cast=cast,
     )
 
-    # gather raw column types for sqlite JSON or connectorx json
-    if _need_raw_column_types(dialect=dialect, conn=conn):
-        raw_column_types = ddl_executors.get_table_raw_column_types(
-            table=table, conn=conn
-        )
-    else:
-        raw_column_types = None
-
     return raw_select(
         sql=sql,
         parameters=parameters,
@@ -127,18 +127,48 @@ def select(  # type: ignore
     )
 
 
-def _need_raw_column_types(
-    dialect: spec.Dialect, conn: spec.Connection | str | spec.DBConfig
-) -> bool:
+def _handle_json_columns(
+    dialect: spec.Dialect,
+    table: str | spec.TableSchema,
+    conn: spec.Connection,
+    cast: typing.Mapping[str, str] | None = None,
+    columns: typing.Sequence[str] | None = None,
+) -> tuple[
+    typing.Sequence[str] | None,
+    typing.Mapping[str, str] | None,
+    typing.Mapping[str, str] | None,
+]:
 
+    # for sqlite, gather raw column types, used for decoding later
     if dialect == 'sqlite':
-        return True
+        raw_column_types = ddl_executors.get_table_raw_column_types(
+            table=table, conn=conn
+        )
+        return columns, raw_column_types, cast
 
+    # for postgres x connectorx, cast columns as text, used for decoding later
     driver = drivers.get_driver_class(conn=conn)
     if dialect == 'postgresql' and driver.name == 'connectorx':
-        return True
+        raw_column_types = ddl_executors.get_table_raw_column_types(
+            table=table, conn=conn
+        )
+        if drivers.get_driver_name(conn=conn) == 'connectorx':
+            if cast is not None:
+                cast = cast.copy()
+            else:
+                cast = {}
+            for column_name, column_type in raw_column_types.items():
+                if column_type == 'JSONB':
+                    if column_name in cast:
+                        raise Exception(
+                            'cannot cast JSON column: ' + str(column_name)
+                        )
+                    cast[column_name] = 'TEXT'
+        if columns is None:
+            columns = list(raw_column_types.keys())
+        return columns, raw_column_types, cast
 
-    return False
+    return columns, None, cast
 
 
 @typing.overload

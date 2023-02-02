@@ -30,7 +30,16 @@ def format_row_tuples(
     elif output_format == 'polars':
         import polars as pl
 
-        return pl.DataFrame([tuple(row) for row in rows], columns=names)
+        test_df = pl.DataFrame(rows[:1], columns=names)
+        dtypes = [
+            dtype if not isinstance(dtype, (pl.List, pl.Struct)) else pl.Object
+            for dtype in test_df.dtypes
+        ]
+        return pl.DataFrame(
+            [tuple(row) for row in rows], columns=list(zip(names, dtypes))
+        )
+
+        # return pl.DataFrame([tuple(row) for row in rows], columns=names)
     elif output_format == 'pandas':
         import pandas as pd
 

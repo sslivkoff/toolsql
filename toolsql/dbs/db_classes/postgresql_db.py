@@ -37,7 +37,7 @@ class PostgresqlDb(abstract_db.AbstractDb):
         # https://dba.stackexchange.com/a/22368
         sql = """
         SELECT
-            column_name as name,
+            column_name::TEXT as name,
             column_default as default,
             UPPER(data_type) as type,
             is_nullable::boolean as nullable
@@ -78,7 +78,7 @@ class PostgresqlDb(abstract_db.AbstractDb):
         # https://wiki.postgresql.org/wiki/Retrieve_primary_key_columns
         primary_keys_sql = """
         SELECT
-            a.attname,
+            a.attname::TEXT,
             format_type(a.atttypid, a.atttypmod) AS data_type
         FROM
             pg_index i
@@ -102,7 +102,7 @@ class PostgresqlDb(abstract_db.AbstractDb):
     ) -> tuple[set[str], set[set[str]]]:
         # https://stackoverflow.com/a/27752061
         sql = """
-        SELECT *
+        SELECT cu.constraint_name::TEXT, column_name::TEXT
         FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
             inner join INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE cu
                 on cu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
@@ -132,9 +132,9 @@ class PostgresqlDb(abstract_db.AbstractDb):
 
         sql = """
         SELECT
-            t.relname as table_name,
-            i.relname as index_name,
-            a.attname as column_name
+            t.relname::TEXT as table_name,
+            i.relname::TEXT as index_name,
+            a.attname::TEXT as column_name
         FROM
             pg_class t,
             pg_class i,

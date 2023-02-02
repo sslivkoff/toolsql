@@ -79,7 +79,7 @@ def _columns_to_str(
 
     if columns is None:
         # return all columns
-        if cast is not None:
+        if cast is not None and len(cast) > 0:
             raise Exception('when casting columns, must specify columns')
         return '*'
 
