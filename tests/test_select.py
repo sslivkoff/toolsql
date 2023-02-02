@@ -314,3 +314,16 @@ def test_parameterized_sync_select(
 
     helpers.assert_results_equal(result=result, target_result=target_result)
 
+
+async def test_async_parameterized_sync_select(
+    async_dbapi_db_config, parameterized_select_query, helpers
+):
+
+    select_kwargs = parameterized_select_query['select_kwargs']
+    target_result = parameterized_select_query['target_result']
+
+    async with toolsql.async_connect(async_dbapi_db_config) as conn:
+        result = await toolsql.async_select(conn=conn, **select_kwargs)
+
+    helpers.assert_results_equal(result=result, target_result=target_result)
+

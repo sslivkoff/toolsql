@@ -88,9 +88,9 @@ class AbstractDriver:
 
         async with conn.cursor() as cursor:  # type: ignore
             if parameters is None:
-                await cursor.async_execute(sql)
+                await cursor.execute(sql)
             else:
-                await cursor.async_execute(sql, parameters)
+                await cursor.execute(sql, parameters)
 
     @classmethod
     async def async_executemany(

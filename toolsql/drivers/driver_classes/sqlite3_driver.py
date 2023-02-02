@@ -54,3 +54,24 @@ class Sqlite3Driver(dbapi_driver.DbapiDriver):
         finally:
             cursor.close()
 
+    @classmethod
+    def execute(
+        cls,
+        *,
+        sql: str,
+        parameters: spec.ExecuteParams | None,
+        conn: spec.Connection,
+    ) -> None:
+
+        if not isinstance(conn, sqlite3.dbapi2.Connection):
+            raise Exception('not a sqlite conn')
+
+        cursor = conn.cursor()
+        try:
+            if parameters is None:
+                cursor.execute(sql)
+            else:
+                cursor.execute(sql, parameters)
+        finally:
+            cursor.close()
+

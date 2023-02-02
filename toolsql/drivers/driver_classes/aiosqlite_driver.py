@@ -32,3 +32,20 @@ class AiosqliteDriver(dbapi_driver.DbapiDriver):
             raise Exception('not an aiosqlite cursor')
         return tuple(item[0] for item in cursor.description)
 
+    @classmethod
+    async def async_execute(
+        cls,
+        *,
+        sql: str,
+        parameters: spec.ExecuteParams | None = None,
+        conn: spec.AsyncConnection,
+    ) -> None:
+
+        if not isinstance(conn, aiosqlite.Connection):
+            raise Exception('not an aiosqlite conn')
+
+        if parameters is None:
+            await conn.execute(sql)
+        else:
+            await conn.execute(sql, parameters)
+

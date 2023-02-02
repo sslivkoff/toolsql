@@ -133,10 +133,11 @@ def setup_teardown():
 
 
 @pytest.fixture()
-def fresh_pokemon_table(sync_read_db_config):
-    table = conf_tables.pokemon_table()
-    table['schema']['name'] = str(uuid.uuid4())
-    return table, sync_read_db_config
+def fresh_pokemon_table():
+    table = conf_tables.get_pokemon_table()
+    table['schema']['name'] = 'pokemon_' + str(uuid.uuid4()).replace('-', '_')
+    table['schema'] = toolsql.normalize_shorthand_table_schema(table['schema'])
+    return table
 
 
 #
