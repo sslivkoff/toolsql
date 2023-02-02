@@ -23,6 +23,14 @@ def get_table_raw_column_types(
     return db.get_table_raw_column_types(table=table, conn=conn)
 
 
+async def async_get_table_raw_column_types(
+    table: str | spec.TableSchema, conn: spec.AsyncConnection | str | spec.DBConfig
+) -> typing.Mapping[str, str]:
+    dialect = drivers.get_conn_dialect(conn)
+    db = dbs.get_db_class(name=dialect)
+    return await db.async_get_table_raw_column_types(table=table, conn=conn)
+
+
 def has_table(table: str | spec.TableSchema, conn: spec.Connection) -> bool:
     dialect = drivers.get_conn_dialect(conn)
     db = dbs.get_db_class(name=dialect)

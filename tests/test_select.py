@@ -69,10 +69,153 @@ select_queries = [
     },
 ]
 
+parameterized_select_queries = [
+    #
+    # where equals
+    {
+        'select_kwargs': {
+            'table': 'pokemon',
+            'output_format': 'polars',
+            'where_equals': {'primary_type': 'GROUND'},
+            'order_by': 'id',
+        },
+        'target_result': polars_pokemon.filter(
+            polars_pokemon['primary_type'] == 'GROUND'
+        ),
+    },
+    {
+        'select_kwargs': {
+            'table': 'pokemon',
+            'output_format': 'polars',
+            'where_equals': {'name': 'Nidoran♀'},
+            'order_by': 'id',
+        },
+        'target_result': polars_pokemon.filter(
+            polars_pokemon['name'] == 'Nidoran♀'
+        ),
+    },
+    {
+        'select_kwargs': {
+            'table': 'pokemon',
+            'output_format': 'polars',
+            'where_equals': {'height': 0.7},
+            'order_by': 'id',
+        },
+        'target_result': polars_pokemon.filter(polars_pokemon['height'] == 0.7),
+    },
+    #
+    # where lt
+    {
+        'select_kwargs': {
+            'table': 'pokemon',
+            'output_format': 'polars',
+            'where_lt': {'height': 0.7},
+            'order_by': 'id',
+        },
+        'target_result': polars_pokemon.filter(pl.col('height') < 0.7),
+    },
+    #
+    # where lte
+    {
+        'select_kwargs': {
+            'table': 'pokemon',
+            'output_format': 'polars',
+            'where_lte': {'height': 0.7},
+            'order_by': 'id',
+        },
+        'target_result': polars_pokemon.filter(pl.col('height') <= 0.7),
+    },
+    #
+    # where gt
+    {
+        'select_kwargs': {
+            'table': 'pokemon',
+            'output_format': 'polars',
+            'where_gt': {'height': 0.7},
+            'order_by': 'id',
+        },
+        'target_result': polars_pokemon.filter(pl.col('height') > 0.7),
+    },
+    #
+    # where gte
+    {
+        'select_kwargs': {
+            'table': 'pokemon',
+            'output_format': 'polars',
+            'where_gte': {'height': 0.7},
+            'order_by': 'id',
+        },
+        'target_result': polars_pokemon.filter(pl.col('height') >= 0.7),
+    },
+    #
+    # where like
+    # {
+    #     'select_kwargs': {
+    #         'table': 'pokemon',
+    #         'output_format': 'polars',
+    #         'where_like': {'name': 'Char%'},
+    #         'order_by': 'id',
+    #     },
+    #     'target_result': polars_pokemon.filter(
+    #         pl.col('name').str.contains(r'Char')
+    #     ),
+    # },
+    # {
+    #     'select_kwargs': {
+    #         'table': 'pokemon',
+    #         'output_format': 'polars',
+    #         'where_like': {'name': 'char%'},
+    #         'order_by': 'id',
+    #     },
+    #     'target_result': polars_pokemon[0:0],
+    # },
+    #
+    # where ilike
+    {
+        'select_kwargs': {
+            'table': 'pokemon',
+            'output_format': 'polars',
+            'where_ilike': {'name': 'char%'},
+            'order_by': 'id',
+        },
+        'target_result': polars_pokemon.filter(
+            pl.col('name').str.contains(r'(?i)^char')
+        ),
+    },
+    #
+    # where in
+    {
+        'select_kwargs': {
+            'table': 'pokemon',
+            'output_format': 'polars',
+            'where_in': {'primary_type': ['GROUND', 'ELECTRIC']},
+            'order_by': 'id',
+        },
+        'target_result': polars_pokemon.filter(
+            pl.col('primary_type').is_in(['GROUND', 'ELECTRIC'])
+        ),
+    },
+]
+
+
+#
+# # fixtures
+#
+
 
 @pytest.fixture(params=select_queries)
 def select_query(request):
     return request.param
+
+
+@pytest.fixture(params=parameterized_select_queries)
+def parameterized_select_query(request):
+    return request.param
+
+
+#
+# # basic select tests
+#
 
 
 def test_sync_select(sync_read_conn_db_config, select_query, helpers):
@@ -106,9 +249,7 @@ def test_sync_driver_bare_conn(sync_read_bare_db_config, select_query, helpers):
 
     select_kwargs = select_query['select_kwargs']
     target_result = select_query['target_result']
-    result = toolsql.select(
-        conn=sync_read_bare_db_config, **select_kwargs
-    )
+    result = toolsql.select(conn=sync_read_bare_db_config, **select_kwargs)
     helpers.assert_results_equal(result=result, target_result=target_result)
 
 
@@ -117,48 +258,59 @@ def test_sync_driver_bare_conn(sync_read_bare_db_config, select_query, helpers):
 #
 
 
-# async def test_async_select(async_read_conn_db_config, select_query, helpers):
-#     sql = select_query['sql']
-#     select_kwargs = select_query['select_kwargs']
-#     target_result = select_query['target_result']
-#     async with toolsql.async_connect(async_read_conn_db_config) as conn:
-#         result = await toolsql.async_raw_select(
-#             sql=sql, conn=conn, **select_kwargs
-#         )
+async def test_async_select(async_read_conn_db_config, select_query, helpers):
+    select_kwargs = select_query['select_kwargs']
+    target_result = select_query['target_result']
+    async with toolsql.async_connect(async_read_conn_db_config) as conn:
+        result = await toolsql.async_select(conn=conn, **select_kwargs)
 
-#     helpers.assert_results_equal(result=result, target_result=target_result)
+    helpers.assert_results_equal(result=result, target_result=target_result)
 
 
-# async def test_async_select_no_context(
-#    async_read_conn_db_config, select_query, helpers
-# ):
-#    sql = select_query['sql']
-#    select_kwargs = select_query['select_kwargs']
-#    target_result = select_query['target_result']
-#    conn = await (
-#        toolsql.async_connect(async_read_conn_db_config, as_context=False)
-#    )
+async def test_async_select_no_context(
+    async_read_conn_db_config, select_query, helpers
+):
+    select_kwargs = select_query['select_kwargs']
+    target_result = select_query['target_result']
+    conn = await (
+        toolsql.async_connect(async_read_conn_db_config, as_context=False)
+    )
 
-#    try:
-#        result = await toolsql.async_raw_select(
-#            sql=sql, conn=conn, **select_kwargs
-#        )
-#    finally:
-#        await conn.close()
+    try:
+        result = await toolsql.async_select(conn=conn, **select_kwargs)
+    finally:
+        await conn.close()
 
-#    helpers.assert_results_equal(result=result, target_result=target_result)
+    helpers.assert_results_equal(result=result, target_result=target_result)
 
 
-# async def test_async_select_bare_conn(
-#    async_read_bare_db_config, select_query, helpers
-# ):
-#    sql = select_query['sql']
-#    select_kwargs = select_query['select_kwargs']
-#    target_result = select_query['target_result']
+async def test_async_select_bare_conn(
+    async_read_bare_db_config, select_query, helpers
+):
+    select_kwargs = select_query['select_kwargs']
+    target_result = select_query['target_result']
 
-#    result = await toolsql.async_raw_select(
-#        sql=sql, conn=async_read_bare_db_config, **select_kwargs
-#    )
+    result = await toolsql.async_select(
+        conn=async_read_bare_db_config, **select_kwargs
+    )
 
-#    helpers.assert_results_equal(result=result, target_result=target_result)
+    helpers.assert_results_equal(result=result, target_result=target_result)
+
+
+#
+# # parameterized queries
+#
+
+
+def test_parameterized_sync_select(
+    sync_dbapi_db_config, parameterized_select_query, helpers
+):
+
+    select_kwargs = parameterized_select_query['select_kwargs']
+    target_result = parameterized_select_query['target_result']
+
+    with toolsql.connect(sync_dbapi_db_config) as conn:
+        result = toolsql.select(conn=conn, **select_kwargs)
+
+    helpers.assert_results_equal(result=result, target_result=target_result)
 

@@ -36,10 +36,11 @@ def format_row_tuples(
             for dtype in test_df.dtypes
         ]
         return pl.DataFrame(
-            [tuple(row) for row in rows], columns=list(zip(names, dtypes))
+            [tuple(row) for row in rows],
+            columns=list(zip(names, dtypes)),
+            orient='row',
         )
 
-        # return pl.DataFrame([tuple(row) for row in rows], columns=names)
     elif output_format == 'pandas':
         import pandas as pd
 

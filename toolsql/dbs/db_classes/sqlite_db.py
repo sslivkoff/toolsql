@@ -32,16 +32,30 @@ class SqliteDb(abstract_db.AbstractDb):
         return dict(result)  # type: ignore
 
     @classmethod
+    async def async_get_table_raw_column_types(
+        cls,
+        table: str | spec.TableSchema,
+        conn: spec.AsyncConnection | str | spec.DBConfig,
+    ) -> typing.Mapping[str, str]:
+        sql = 'SELECT name, type FROM pragma_table_info("{table_name}")'.format(
+            table_name=statements.get_table_name(table)
+        )
+        result = await executors.async_raw_select(sql=sql, conn=conn, output_format='tuple')
+        return dict(result)  # type: ignore
+
+    @classmethod
     def get_table_schema(
-        cls, table: str | spec.TableSchema, conn: spec.Connection
+        cls, table: str | spec.TableSchema, conn: spec.Connection | str | spec.DBConfig
     ) -> spec.TableSchema:
 
         table_name = statements.get_table_name(table)
 
         if isinstance(conn, str):
             raise Exception('conn not initialized')
+        if isinstance(conn, dict):
+            raise Exception('conn not initialized')
 
-        sql = 'PRAGMA table_info({table_name})'.format(table_name=table_name)
+        sql = 'SELECT * FROM pragma_table_info("{table_name}")'.format(table_name=table_name)
         cursor = conn.execute(sql)
         results = cursor.fetchall()
         unique_single_columns, unique_multi_columns = cls._get_unique_columns(

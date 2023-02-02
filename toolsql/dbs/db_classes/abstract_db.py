@@ -56,7 +56,9 @@ class AbstractDb:
 
     @classmethod
     def get_table_schema(
-        cls, table: str | spec.TableSchema, conn: spec.Connection
+        cls,
+        table: str | spec.TableSchema,
+        conn: spec.Connection | str | spec.DBConfig,
     ) -> spec.TableSchema:
         raise Exception('get_table_schema() for ' + cls.__name__)
 
@@ -77,6 +79,18 @@ class AbstractDb:
         return cls.get_table_schemas(conn=conn)
 
     @classmethod
+    async def async_get_table_raw_column_types(
+        cls,
+        table: str | spec.TableSchema,
+        conn: spec.AsyncConnection | str | spec.DBConfig,
+    ) -> typing.Mapping[str, str]:
+        table_schema = await cls.async_get_table_schema(table=table, conn=conn)
+        return {
+            column_spec['name']: column_spec['type']
+            for column_spec in table_schema['columns']
+        }
+
+    @classmethod
     async def async_get_tables_names(
         cls, conn: spec.Connection
     ) -> typing.Sequence[str]:
@@ -90,9 +104,11 @@ class AbstractDb:
 
     @classmethod
     async def async_get_table_schema(
-        cls, table: str | spec.TableSchema, conn: spec.Connection
+        cls,
+        table: str | spec.TableSchema,
+        conn: spec.AsyncConnection | str | spec.DBConfig,
     ) -> spec.TableSchema:
-        return cls.get_table_schema(table=table, conn=conn)
+        raise Exception('async_get_table_schema() for ' + cls.__name__)
 
     #
     # # helper

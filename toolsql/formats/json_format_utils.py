@@ -3,10 +3,23 @@ from __future__ import annotations
 import typing
 
 if typing.TYPE_CHECKING:
+    from typing import TypeVar
     from typing_extensions import Literal
 
     import pandas as pd
     import polars as pl
+
+    T = TypeVar(
+        'T',
+        typing.Sequence[tuple[typing.Any, ...]],
+        pl.DataFrame,
+        pd.DataFrame,
+    )
+    S = TypeVar(
+        'S',
+        pl.DataFrame,
+        pd.DataFrame,
+    )
 
 from toolsql import spec
 
@@ -65,11 +78,11 @@ def encode_json_cell(item: typing.Any, dialect: spec.Dialect) -> typing.Any:
 
 def decode_json_columns(
     *,
-    rows: typing.Sequence[tuple[typing.Any, ...]] | pl.DataFrame | pd.DataFrame,
+    rows: T,
     driver: spec.DriverClass,
     raw_column_types: typing.Mapping[str, str] | None = None,
     cursor: spec.Cursor | spec.AsyncCursor | None,
-) -> typing.Sequence[tuple[typing.Any, ...]]:
+) -> T:
 
     if isinstance(rows, (tuple, list)):
         if cursor is None:
@@ -80,12 +93,17 @@ def decode_json_columns(
             raw_column_types=raw_column_types,
             cursor=cursor,
         )
-    elif spec.is_polars_dataframe(rows) or spec.is_pandas_dataframe(rows):
-        return _decode_json_columns_dataframe(
+    elif spec.is_polars_dataframe(rows):
+        return _decode_json_columns_polars(  # type: ignore
             rows=rows,
             driver=driver,
             raw_column_types=raw_column_types,
-            cursor=cursor,
+        )
+    elif spec.is_pandas_dataframe(rows):
+        return _decode_json_columns_pandas(  # type: ignore
+            rows=rows,
+            driver=driver,
+            raw_column_types=raw_column_types,
         )
     else:
         raise Exception('invalid rows format: ' + str(type(rows)))
@@ -135,33 +153,40 @@ def _decode_json_columns_sequence(
     return rows
 
 
-def _decode_json_columns_dataframe(
+def _decode_json_columns_pandas(
     *,
-    rows: pl.DataFrame | pd.DataFrame,
+    rows: pd.DataFrame,
     driver: spec.DriverClass,
     raw_column_types: typing.Mapping[str, str] | None = None,
-    cursor: spec.Cursor | spec.AsyncCursor,
-) -> pd.DataFrame | pd.DataFrame:
+) -> pd.DataFrame:
 
     if raw_column_types is None:
         return rows
 
     import json
 
-    if spec.is_pandas_dataframe(rows):
-        for column_name, column_type in raw_column_types.items():
-            if column_type in ['JSON', 'JSONB']:
-                rows[column_name] = rows[column_name].map(json.loads)
+    for column_name, column_type in raw_column_types.items():
+        if column_type in ['JSON', 'JSONB']:
+            rows[column_name] = rows[column_name].map(json.loads)
+    return rows
+
+
+def _decode_json_columns_polars(
+    *,
+    rows: pl.DataFrame,
+    driver: spec.DriverClass,
+    raw_column_types: typing.Mapping[str, str] | None = None,
+) -> pl.DataFrame:
+    if raw_column_types is None:
         return rows
 
-    elif spec.is_polars_dataframe(rows):
-        for column_name, column_type in raw_column_types.items():
-            if column_type in ['JSON', 'JSONB']:
-                rows = rows.with_column(
-                    rows[column_name].apply(json.loads, return_dtype=object)
-                )
-        return rows
+    import json
+    import polars as pl
 
-    else:
-        raise Exception('invalid dataframe type: ' + str(type(rows)))
+    for column_name, column_type in raw_column_types.items():
+        if column_type in ['JSON', 'JSONB']:
+            rows = rows.with_column(
+                rows[column_name].apply(json.loads, return_dtype=pl.Object)
+            )
+    return rows
 

@@ -36,6 +36,29 @@ if typing.TYPE_CHECKING:
         parameters: spec.ExecuteParams | None
         raw_column_types: typing.Mapping[str, str] | None
 
+    class AsyncSelectKwargs(TypedDict, total=False):
+        conn: spec.AsyncConnection | str | spec.DBConfig
+        table: str | spec.TableSchema
+        columns: typing.Sequence[str] | None
+        where_equals: typing.Mapping[str, typing.Any] | None
+        where_gt: typing.Mapping[str, typing.Any] | None
+        where_gte: typing.Mapping[str, typing.Any] | None
+        where_lt: typing.Mapping[str, typing.Any] | None
+        where_lte: typing.Mapping[str, typing.Any] | None
+        where_like: typing.Mapping[str, str] | None
+        where_ilike: typing.Mapping[str, str] | None
+        where_in: typing.Mapping[str, typing.Sequence[str]] | None
+        order_by: spec.OrderBy | None
+        limit: int | str | None
+        offset: int | str | None
+        cast: typing.Mapping[str, str] | None
+
+    class AsyncRawSelectKwargs(TypedDict, total=False):
+        conn: spec.AsyncConnection | str | spec.DBConfig
+        sql: str
+        parameters: spec.ExecuteParams | None
+        raw_column_types: typing.Mapping[str, str] | None
+
 
 @typing.overload
 def select(
@@ -130,7 +153,7 @@ def select(  # type: ignore
 def _handle_json_columns(
     dialect: spec.Dialect,
     table: str | spec.TableSchema,
-    conn: spec.Connection,
+    conn: spec.Connection | str | spec.DBConfig,
     cast: typing.Mapping[str, str] | None = None,
     columns: typing.Sequence[str] | None = None,
 ) -> tuple[
@@ -154,7 +177,7 @@ def _handle_json_columns(
         )
         if drivers.get_driver_name(conn=conn) == 'connectorx':
             if cast is not None:
-                cast = cast.copy()
+                cast = dict(cast)
             else:
                 cast = {}
             for column_name, column_type in raw_column_types.items():
@@ -220,9 +243,39 @@ def raw_select(  # type: ignore
     )
 
 
+@typing.overload
+async def async_select(
+    *, output_format: Literal['dict'], **kwargs: Unpack[AsyncSelectKwargs]
+) -> spec.DictRows:
+    ...
+
+
+@typing.overload
+async def async_select(
+    *, output_format: Literal['tuple'], **kwargs: Unpack[AsyncSelectKwargs]
+) -> spec.TupleRows:
+    ...
+
+
+@typing.overload
+async def async_select(
+    **kwargs: Unpack[AsyncSelectKwargs],
+) -> spec.DictRows:
+    ...
+
+
+@typing.overload
 async def async_select(
     *,
-    conn: spec.AsyncConnection | str,
+    output_format: spec.QueryOutputFormat = 'dict',
+    **kwargs: Unpack[AsyncSelectKwargs],
+) -> spec.AsyncSelectOutput:
+    ...
+
+
+async def async_select(  # type: ignore
+    *,
+    conn: spec.AsyncConnection | str | spec.DBConfig,
     output_format: spec.QueryOutputFormat = 'dict',
     #
     # query parameters
@@ -239,9 +292,17 @@ async def async_select(
     order_by: spec.OrderBy | None = None,
     limit: int | str | None = None,
     offset: int | str | None = None,
+    cast: typing.Mapping[str, str] | None = None,
 ) -> spec.AsyncSelectOutput:
 
     dialect = drivers.get_conn_dialect(conn)
+    columns, raw_column_types, cast = await _async_handle_json_columns(
+        dialect=dialect,
+        table=table,
+        columns=columns,
+        conn=conn,
+        cast=cast,
+    )
     sql, parameters = statements.build_select_statement(
         dialect=dialect,
         table=table,
@@ -257,6 +318,7 @@ async def async_select(
         order_by=order_by,
         limit=limit,
         offset=offset,
+        cast=cast,
     )
 
     return await async_raw_select(
@@ -264,10 +326,86 @@ async def async_select(
         parameters=parameters,
         conn=conn,
         output_format=output_format,
+        raw_column_types=raw_column_types,
     )
 
 
+async def _async_handle_json_columns(
+    dialect: spec.Dialect,
+    table: str | spec.TableSchema,
+    conn: spec.AsyncConnection | str | spec.DBConfig,
+    cast: typing.Mapping[str, str] | None = None,
+    columns: typing.Sequence[str] | None = None,
+) -> tuple[
+    typing.Sequence[str] | None,
+    typing.Mapping[str, str] | None,
+    typing.Mapping[str, str] | None,
+]:
+
+    # for sqlite, gather raw column types, used for decoding later
+    if dialect == 'sqlite':
+        raw_column_types = await ddl_executors.async_get_table_raw_column_types(
+            table=table, conn=conn
+        )
+        return columns, raw_column_types, cast
+
+    # for postgres x connectorx, cast columns as text, used for decoding later
+    driver = drivers.get_driver_class(conn=conn)
+    if dialect == 'postgresql' and driver.name == 'connectorx':
+        raw_column_types = await ddl_executors.async_get_table_raw_column_types(
+            table=table, conn=conn
+        )
+        if drivers.get_driver_name(conn=conn) == 'connectorx':
+            if cast is not None:
+                new_cast: typing.MutableMapping[str, str] = dict(cast)
+            else:
+                new_cast = {}
+            for column_name, column_type in raw_column_types.items():
+                if column_type == 'JSONB':
+                    if column_name in new_cast:
+                        raise Exception(
+                            'cannot cast JSON column: ' + str(column_name)
+                        )
+                    new_cast[column_name] = 'TEXT'
+            cast = new_cast
+        if columns is None:
+            columns = list(raw_column_types.keys())
+        return columns, raw_column_types, cast
+
+    return columns, None, cast
+
+
+@typing.overload
 async def async_raw_select(
+    *, output_format: Literal['dict'], **kwargs: Unpack[AsyncRawSelectKwargs]
+) -> spec.DictRows:
+    ...
+
+
+@typing.overload
+async def async_raw_select(
+    *, output_format: Literal['tuple'], **kwargs: Unpack[AsyncRawSelectKwargs]
+) -> spec.TupleRows:
+    ...
+
+
+@typing.overload
+async def async_raw_select(
+    **kwargs: Unpack[AsyncRawSelectKwargs],
+) -> spec.DictRows:
+    ...
+
+
+@typing.overload
+async def async_raw_select(
+    *,
+    output_format: spec.QueryOutputFormat = 'dict',
+    **kwargs: Unpack[AsyncRawSelectKwargs],
+) -> spec.AsyncSelectOutput:
+    ...
+
+
+async def async_raw_select(  # type: ignore
     sql: str,
     *,
     parameters: spec.ExecuteParams | None = None,
