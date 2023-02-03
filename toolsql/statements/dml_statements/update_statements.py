@@ -57,8 +57,7 @@ def build_update_statement(
         {table_name}
     SET
         {value_set}
-    WHERE
-        {where_clause}
+    {where_clause}
     """.format(
         table_name=table_name,
         value_set=value_set,
