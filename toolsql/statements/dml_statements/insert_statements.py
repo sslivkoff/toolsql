@@ -36,6 +36,7 @@ def build_insert_statement(
         dialect=dialect,
         columns=columns,
         rows=rows,
+        table=table,
     )
 
     if columns is not None:
@@ -131,29 +132,35 @@ def _create_values_expression(
 def _create_conflict_expression(
     *,
     on_conflict: spec.OnConflictOption | None = None,
-    dialect: Literal['sqlite', 'postgresql'],
+    dialect: spec.Dialect,
     columns: typing.Sequence[str] | None,
     rows: spec.ExecuteManyParams | None,
+    table: str | spec.TableSchema,
 ) -> str:
+
+    # dialect = 'postgresql'
+
     if on_conflict is None:
         return ''
     elif on_conflict == 'ignore':
         if dialect == 'sqlite':
-            return 'ON CONFLICT IGNORE'
+            return 'ON CONFLICT DO NOTHING'
         elif dialect == 'postgresql':
             return 'ON CONFLICT DO NOTHING'
         else:
             raise Exception('unknown dialect: ' + str(dialect))
     elif on_conflict == 'update':
-        if dialect == 'sqlite':
-            return 'ON CONFLICT REPLACE'
-        elif dialect == 'postgresql':
+        if dialect in ['sqlite', 'postgresql']:
+
+            # build list of columns ot update
             if columns is None:
                 if rows is None or len(rows) == 0:
                     return ''
                 else:
                     if isinstance(rows[0], dict):
                         columns = list(rows[0].keys())
+                    elif isinstance(table, dict):
+                        columns = [column['name'] for column in table['columns']]
                     else:
                         # see https://stackoverflow.com/questions/40687267/how-to-update-all-columns-with-insert-on-conflict
                         raise Exception(
@@ -165,7 +172,32 @@ def _create_conflict_expression(
             column_updates = [
                 column + ' = EXCLUDED.' + column for column in columns
             ]
-            return 'ON CONFLICT DO UPDATE SET ' + ', '.join(column_updates)
+            column_updates_str = ', '.join(column_updates)
+
+            # build constraint list
+            if dialect == 'postgresql':
+                if isinstance(table, dict):
+                    unique_columns = [
+                        column_schema['name']
+                        for column_schema in table['columns']
+                        if column_schema['primary'] or column_schema['unique']
+                    ]
+                else:
+                    raise Exception(
+                        'must explicitly specify columns for postgresql upserts'
+                    )
+                if len(unique_columns) == 0:
+                    constraints = ''
+                else:
+                    constraints = '(' + ','.join(unique_columns) + ')'
+            else:
+                constraints = ''
+
+            return 'ON CONFLICT {constraints} DO UPDATE SET {column_updates}'.format(
+                constraints=constraints,
+                column_updates=column_updates_str,
+            )
+
         else:
             raise Exception('unknown dialect: ' + str(dialect))
     else:

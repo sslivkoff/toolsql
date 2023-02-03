@@ -3,7 +3,11 @@ from __future__ import annotations
 from toolsql import spec
 
 
-def create_db_config(db_config: spec.DBConfig, *, sync: bool | None):
+def create_db_config(
+    db_config: spec.DBConfig,
+    *,
+    sync: bool | None,
+) -> spec.DBConfig:
     """create new db_config"""
 
     db_config = db_config.copy()

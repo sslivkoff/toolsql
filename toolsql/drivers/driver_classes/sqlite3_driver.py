@@ -59,7 +59,7 @@ class Sqlite3Driver(dbapi_driver.DbapiDriver):
         cls,
         *,
         sql: str,
-        parameters: spec.ExecuteParams | None,
+        parameters: spec.ExecuteParams | None = None,
         conn: spec.Connection,
     ) -> None:
 

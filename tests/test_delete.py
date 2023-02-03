@@ -1,7 +1,3 @@
-"""
-basic logic:
-"""
-
 import conf.conf_tables as conf_tables
 
 import polars as pl

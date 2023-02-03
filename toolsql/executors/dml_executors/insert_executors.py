@@ -14,6 +14,7 @@ def insert(
     table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
     conn: spec.Connection,
+    on_conflict: spec.OnConflictOption | None = None,
 ) -> None:
 
     # build insert statement
@@ -24,6 +25,7 @@ def insert(
         table=table,
         columns=columns,
         dialect=dialect,
+        on_conflict=on_conflict,
     )
 
     # execute query
@@ -39,6 +41,7 @@ async def async_insert(
     table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
     conn: spec.AsyncConnection,
+    on_conflict: spec.OnConflictOption | None = None,
 ) -> None:
 
     # build insert statement
@@ -49,6 +52,7 @@ async def async_insert(
         table=table,
         columns=columns,
         dialect=dialect,
+        on_conflict=on_conflict,
     )
 
     # execute query
