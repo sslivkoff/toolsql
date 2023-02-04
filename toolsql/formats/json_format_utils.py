@@ -127,7 +127,7 @@ def _decode_json_columns_sequence(
             json_indices = [
                 column_names.index(column_name)
                 for column_name, columntype in raw_column_types.items()
-                if columntype == 'JSON'
+                if columntype == 'JSON' and column_name in column_names
             ]
         elif isinstance(raw_column_types, (list, tuple)):
             json_indices = [
@@ -184,7 +184,7 @@ def _decode_json_columns_polars(
     import polars as pl
 
     for column_name, column_type in raw_column_types.items():
-        if column_type in ['JSON', 'JSONB']:
+        if column_type in ['JSON', 'JSONB'] and column_name in rows.columns:
             rows = rows.with_column(
                 rows[column_name].apply(json.loads, return_dtype=pl.Object)
             )

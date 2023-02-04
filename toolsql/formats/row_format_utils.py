@@ -18,6 +18,43 @@ def format_row_tuples(
     if output_format == 'tuple':
         return rows
 
+    elif output_format in [
+        'single_tuple',
+        'single_tuple_or_none',
+        'single_cell',
+        'single_cell_or_none',
+    ]:
+        if len(rows) > 1:
+            raise Exception('more than one row returned')
+        elif len(rows) == 0:
+            if output_format in ['single_tuple_or_none', 'single_row_or_none']:
+                return None
+            else:
+                raise Exception('no row found')
+        else:
+            if output_format in ['single_tuple', 'single_tuple_or_none']:
+                return rows[0]
+            elif output_format in ['single_cell', 'single_cell_or_none']:
+                if len(rows[0]) == 0:
+                    raise Exception('no column in row')
+                elif len(rows[0]) == 1:
+                    return rows[0][0]
+                else:
+                    raise Exception('too many columns in row')
+            else:
+                raise Exception('too many rows in result')
+
+    elif output_format == 'single_column':
+        if len(rows) == 0:
+            return []
+        else:
+            if len(rows[0]) == 0:
+                raise Exception('no columns returned')
+            elif len(rows[0]) > 1:
+                raise Exception('more than 1 column returned')
+            else:
+                return tuple(row[0] for row in rows)
+
     if names is None:
         if len(rows) == 0:
             output: spec.DictRows = []
@@ -27,6 +64,18 @@ def format_row_tuples(
 
     if output_format == 'dict':
         return [dict(zip(names, row)) for row in rows]
+
+    elif output_format in ['single_dict', 'single_dict_or_none']:
+        if len(rows) > 1:
+            raise Exception('too many rows in result')
+        elif len(rows) == 0:
+            if output_format == 'single_dict_or_none':
+                return None
+            else:
+                raise Exception('no row in result')
+        else:
+            return dict(zip(names, rows[0]))
+
     elif output_format == 'polars':
         import polars as pl
 
@@ -72,10 +121,46 @@ def format_row_dataframe(
         else:
             raise Exception('improper format')
     elif output_format == 'tuple':
-        return list(zip(*rows.to_dict().values()))
+        # return list(zip(*rows.to_dict().values()))
+        return rows.rows()
     elif output_format == 'dict':
         as_dicts: spec.DictRows = rows.to_dicts()
         return as_dicts
+    elif output_format in [
+        'single_tuple',
+        'single_tuple_or_none',
+        'single_dict',
+        'single_dict_or_none',
+        'single_cell',
+        'single_cell_or_none',
+    ]:
+        if len(rows) == 0:
+            if output_format in [
+                'single_tuple_or_none',
+                'single_dict_or_none',
+                'single_cell_or_none',
+            ]:
+                return None
+            else:
+                raise Exception('not enough rows returned')
+        elif len(rows) > 1:
+            raise Exception('too many rows returned')
+        else:
+            if output_format in ['single_tuple', 'single_tuple_or_none']:
+                return rows.row(0)
+            elif output_format in ['single_dict', 'single_dict_or_none']:
+                return rows.to_dicts()[0]
+            elif output_format in ['single_cell', 'single_cell_or_none']:
+                if len(rows.columns) != 1:
+                    raise Exception('improper shape of output for single_cell')
+                return rows.row(0)[0]
+            else:
+                raise Exception('unknown output format')
+    elif output_format == 'single_column':
+        if len(rows.columns) != 1:
+            raise Exception('improper number of columns for single_column')
+        else:
+            return tuple(rows[rows.columns[0]])
     else:
-        raise Exception('unknown output format')
+        raise Exception('unknown output format: ' + str(output_format))
 

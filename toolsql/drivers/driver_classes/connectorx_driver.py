@@ -192,7 +192,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
 
             return await asyncio.get_running_loop().run_in_executor(
                 None,
-                lambda: cls._select(  # type: ignore
+                lambda: cls._select(
                     conn=conn,  # type: ignore
                     sql=sql,
                     output_format=output_format,

@@ -17,6 +17,9 @@ if typing.TYPE_CHECKING:
         conn: spec.Connection | str | spec.DBConfig
         table: str | spec.TableSchema
         columns: typing.Sequence[str] | None
+        distinct: bool
+        count: bool | str | typing.Sequence[str]
+        count_distinct: bool | str | typing.Sequence[str]
         where_equals: typing.Mapping[str, typing.Any] | None
         where_gt: typing.Mapping[str, typing.Any] | None
         where_gte: typing.Mapping[str, typing.Any] | None
@@ -40,6 +43,9 @@ if typing.TYPE_CHECKING:
         conn: spec.AsyncConnection | str | spec.DBConfig
         table: str | spec.TableSchema
         columns: typing.Sequence[str] | None
+        distinct: bool
+        count: bool | str | typing.Sequence[str]
+        count_distinct: bool | str | typing.Sequence[str]
         where_equals: typing.Mapping[str, typing.Any] | None
         where_gt: typing.Mapping[str, typing.Any] | None
         where_gte: typing.Mapping[str, typing.Any] | None
@@ -76,6 +82,69 @@ def select(
 
 @typing.overload
 def select(
+    *,
+    output_format: Literal['single_tuple'],
+    **kwargs: Unpack[SelectKwargs],
+) -> spec.TupleRow:
+    ...
+
+
+@typing.overload
+def select(
+    *,
+    output_format: Literal['single_tuple_or_none'],
+    **kwargs: Unpack[SelectKwargs],
+) -> spec.TupleRow | None:
+    ...
+
+
+@typing.overload
+def select(
+    *,
+    output_format: Literal['single_dict'],
+    **kwargs: Unpack[SelectKwargs],
+) -> spec.DictRow:
+    ...
+
+
+@typing.overload
+def select(
+    *,
+    output_format: Literal['single_dict_or_none'],
+    **kwargs: Unpack[SelectKwargs],
+) -> spec.DictRow | None:
+    ...
+
+
+@typing.overload
+def select(
+    *,
+    output_format: Literal['single_cell'],
+    **kwargs: Unpack[SelectKwargs],
+) -> spec.Cell:
+    ...
+
+
+@typing.overload
+def select(
+    *,
+    output_format: Literal['single_cell_or_none'],
+    **kwargs: Unpack[SelectKwargs],
+) -> spec.Cell | None:
+    ...
+
+
+@typing.overload
+def select(
+    *,
+    output_format: Literal['single_column'],
+    **kwargs: Unpack[SelectKwargs],
+) -> spec.TupleColumn:
+    ...
+
+
+@typing.overload
+def select(
     **kwargs: Unpack[SelectKwargs],
 ) -> spec.DictRows:
     ...
@@ -98,6 +167,9 @@ def select(  # type: ignore
     # query utils
     table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
+    distinct: bool = False,
+    count: bool | str | typing.Sequence[str] = False,
+    count_distinct: bool | str | typing.Sequence[str] = False,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
     where_gte: typing.Mapping[str, typing.Any] | None = None,
@@ -120,6 +192,8 @@ def select(  # type: ignore
         columns=columns,
         conn=conn,
         cast=cast,
+        count=count,
+        count_distinct=count_distinct,
     )
 
     # create query
@@ -127,6 +201,9 @@ def select(  # type: ignore
         dialect=dialect,
         table=table,
         columns=columns,
+        distinct=distinct,
+        count=count,
+        count_distinct=count_distinct,
         where_equals=where_equals,
         where_gt=where_gt,
         where_gte=where_gte,
@@ -151,11 +228,14 @@ def select(  # type: ignore
 
 
 def _handle_json_columns(
+    *,
     dialect: spec.Dialect,
     table: str | spec.TableSchema,
     conn: spec.Connection | str | spec.DBConfig,
     cast: typing.Mapping[str, str] | None = None,
     columns: typing.Sequence[str] | None = None,
+    count: bool | str | typing.Sequence[str],
+    count_distinct: bool | str | typing.Sequence[str],
 ) -> tuple[
     typing.Sequence[str] | None,
     typing.Mapping[str, str] | None,
@@ -175,21 +255,23 @@ def _handle_json_columns(
         raw_column_types = ddl_executors.get_table_raw_column_types(
             table=table, conn=conn
         )
-        if drivers.get_driver_name(conn=conn) == 'connectorx':
-            if cast is not None:
-                cast = dict(cast)
-            else:
-                cast = {}
-            for column_name, column_type in raw_column_types.items():
-                if column_type == 'JSONB':
-                    if column_name in cast:
-                        raise Exception(
-                            'cannot cast JSON column: ' + str(column_name)
-                        )
-                    cast[column_name] = 'TEXT'
-        if columns is None:
+        if bool(count) or bool(count_distinct):
+            return columns, raw_column_types, cast
+        else:
+            if drivers.get_driver_name(conn=conn) == 'connectorx':
+                if cast is not None:
+                    cast = dict(cast)
+                else:
+                    cast = {}
+                for column_name, column_type in raw_column_types.items():
+                    if column_type == 'JSONB':
+                        if column_name in cast:
+                            raise Exception(
+                                'cannot cast JSON column: ' + str(column_name)
+                            )
+                        cast[column_name] = 'TEXT'
             columns = list(raw_column_types.keys())
-        return columns, raw_column_types, cast
+            return columns, raw_column_types, cast
 
     return columns, None, cast
 
@@ -205,6 +287,69 @@ def raw_select(
 def raw_select(
     *, output_format: Literal['tuple'], **kwargs: Unpack[RawSelectKwargs]
 ) -> spec.TupleRows:
+    ...
+
+
+@typing.overload
+def raw_select(
+    *,
+    output_format: Literal['single_tuple'],
+    **kwargs: Unpack[RawSelectKwargs],
+) -> spec.TupleRow:
+    ...
+
+
+@typing.overload
+def raw_select(
+    *,
+    output_format: Literal['single_tuple_or_none'],
+    **kwargs: Unpack[RawSelectKwargs],
+) -> spec.TupleRow | None:
+    ...
+
+
+@typing.overload
+def raw_select(
+    *,
+    output_format: Literal['single_dict'],
+    **kwargs: Unpack[RawSelectKwargs],
+) -> spec.DictRow:
+    ...
+
+
+@typing.overload
+def raw_select(
+    *,
+    output_format: Literal['single_dict_or_none'],
+    **kwargs: Unpack[RawSelectKwargs],
+) -> spec.DictRow | None:
+    ...
+
+
+@typing.overload
+def raw_select(
+    *,
+    output_format: Literal['single_cell'],
+    **kwargs: Unpack[RawSelectKwargs],
+) -> spec.Cell:
+    ...
+
+
+@typing.overload
+def raw_select(
+    *,
+    output_format: Literal['single_cell_or_none'],
+    **kwargs: Unpack[RawSelectKwargs],
+) -> spec.Cell | None:
+    ...
+
+
+@typing.overload
+def raw_select(
+    *,
+    output_format: Literal['single_column'],
+    **kwargs: Unpack[RawSelectKwargs],
+) -> spec.TupleColumn:
     ...
 
 
@@ -259,6 +404,69 @@ async def async_select(
 
 @typing.overload
 async def async_select(
+    *,
+    output_format: Literal['single_tuple'],
+    **kwargs: Unpack[AsyncSelectKwargs],
+) -> spec.TupleRow:
+    ...
+
+
+@typing.overload
+async def async_select(
+    *,
+    output_format: Literal['single_tuple_or_none'],
+    **kwargs: Unpack[AsyncSelectKwargs],
+) -> spec.TupleRow | None:
+    ...
+
+
+@typing.overload
+async def async_select(
+    *,
+    output_format: Literal['single_dict'],
+    **kwargs: Unpack[AsyncSelectKwargs],
+) -> spec.DictRow:
+    ...
+
+
+@typing.overload
+async def async_select(
+    *,
+    output_format: Literal['single_dict_or_none'],
+    **kwargs: Unpack[AsyncSelectKwargs],
+) -> spec.DictRow | None:
+    ...
+
+
+@typing.overload
+async def async_select(
+    *,
+    output_format: Literal['single_cell'],
+    **kwargs: Unpack[AsyncSelectKwargs],
+) -> spec.Cell:
+    ...
+
+
+@typing.overload
+async def async_select(
+    *,
+    output_format: Literal['single_cell_or_none'],
+    **kwargs: Unpack[AsyncSelectKwargs],
+) -> spec.Cell | None:
+    ...
+
+
+@typing.overload
+async def async_select(
+    *,
+    output_format: Literal['single_column'],
+    **kwargs: Unpack[AsyncSelectKwargs],
+) -> spec.TupleColumn:
+    ...
+
+
+@typing.overload
+async def async_select(
     **kwargs: Unpack[AsyncSelectKwargs],
 ) -> spec.DictRows:
     ...
@@ -281,6 +489,9 @@ async def async_select(  # type: ignore
     # query parameters
     table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
+    distinct: bool = False,
+    count: bool | str | typing.Sequence[str] = False,
+    count_distinct: bool | str | typing.Sequence[str] = False,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
     where_gte: typing.Mapping[str, typing.Any] | None = None,
@@ -302,11 +513,16 @@ async def async_select(  # type: ignore
         columns=columns,
         conn=conn,
         cast=cast,
+        count=count,
+        count_distinct=count_distinct,
     )
     sql, parameters = statements.build_select_statement(
         dialect=dialect,
         table=table,
         columns=columns,
+        distinct=distinct,
+        count=count,
+        count_distinct=count_distinct,
         where_equals=where_equals,
         where_gt=where_gt,
         where_gte=where_gte,
@@ -331,11 +547,14 @@ async def async_select(  # type: ignore
 
 
 async def _async_handle_json_columns(
+    *,
     dialect: spec.Dialect,
     table: str | spec.TableSchema,
     conn: spec.AsyncConnection | str | spec.DBConfig,
     cast: typing.Mapping[str, str] | None = None,
     columns: typing.Sequence[str] | None = None,
+    count: bool | str | typing.Sequence[str],
+    count_distinct: bool | str | typing.Sequence[str],
 ) -> tuple[
     typing.Sequence[str] | None,
     typing.Mapping[str, str] | None,
@@ -355,22 +574,39 @@ async def _async_handle_json_columns(
         raw_column_types = await ddl_executors.async_get_table_raw_column_types(
             table=table, conn=conn
         )
-        if drivers.get_driver_name(conn=conn) == 'connectorx':
-            if cast is not None:
-                new_cast: typing.MutableMapping[str, str] = dict(cast)
-            else:
-                new_cast = {}
-            for column_name, column_type in raw_column_types.items():
-                if column_type == 'JSONB':
-                    if column_name in new_cast:
-                        raise Exception(
-                            'cannot cast JSON column: ' + str(column_name)
-                        )
-                    new_cast[column_name] = 'TEXT'
-            cast = new_cast
-        if columns is None:
+        if bool(count) or bool(count_distinct):
+            return columns, raw_column_types, cast
+        else:
+            if drivers.get_driver_name(conn=conn) == 'connectorx':
+                if cast is not None:
+                    cast = dict(cast)
+                else:
+                    cast = {}
+                for column_name, column_type in raw_column_types.items():
+                    if column_type == 'JSONB':
+                        if column_name in cast:
+                            raise Exception(
+                                'cannot cast JSON column: ' + str(column_name)
+                            )
+                        cast[column_name] = 'TEXT'
             columns = list(raw_column_types.keys())
-        return columns, raw_column_types, cast
+            return columns, raw_column_types, cast
+        # if drivers.get_driver_name(conn=conn) == 'connectorx':
+        #     if cast is not None:
+        #         new_cast: typing.MutableMapping[str, str] = dict(cast)
+        #     else:
+        #         new_cast = {}
+        #     for column_name, column_type in raw_column_types.items():
+        #         if column_type == 'JSONB':
+        #             if column_name in new_cast:
+        #                 raise Exception(
+        #                     'cannot cast JSON column: ' + str(column_name)
+        #                 )
+        #             new_cast[column_name] = 'TEXT'
+        #     cast = new_cast
+        # if columns is None:
+        #     columns = list(raw_column_types.keys())
+        # return columns, raw_column_types, cast
 
     return columns, None, cast
 
@@ -386,6 +622,69 @@ async def async_raw_select(
 async def async_raw_select(
     *, output_format: Literal['tuple'], **kwargs: Unpack[AsyncRawSelectKwargs]
 ) -> spec.TupleRows:
+    ...
+
+
+@typing.overload
+async def async_raw_select(
+    *,
+    output_format: Literal['single_tuple'],
+    **kwargs: Unpack[AsyncRawSelectKwargs],
+) -> spec.TupleRow:
+    ...
+
+
+@typing.overload
+async def async_raw_select(
+    *,
+    output_format: Literal['single_tuple_or_none'],
+    **kwargs: Unpack[AsyncRawSelectKwargs],
+) -> spec.TupleRow | None:
+    ...
+
+
+@typing.overload
+async def async_raw_select(
+    *,
+    output_format: Literal['single_dict'],
+    **kwargs: Unpack[AsyncRawSelectKwargs],
+) -> spec.DictRow:
+    ...
+
+
+@typing.overload
+async def async_raw_select(
+    *,
+    output_format: Literal['single_dict_or_none'],
+    **kwargs: Unpack[AsyncRawSelectKwargs],
+) -> spec.DictRow | None:
+    ...
+
+
+@typing.overload
+async def async_raw_select(
+    *,
+    output_format: Literal['single_cell'],
+    **kwargs: Unpack[AsyncRawSelectKwargs],
+) -> spec.Cell:
+    ...
+
+
+@typing.overload
+async def async_raw_select(
+    *,
+    output_format: Literal['single_cell_or_none'],
+    **kwargs: Unpack[AsyncRawSelectKwargs],
+) -> spec.Cell | None:
+    ...
+
+
+@typing.overload
+async def async_raw_select(
+    *,
+    output_format: Literal['single_columns'],
+    **kwargs: Unpack[AsyncRawSelectKwargs],
+) -> spec.TupleColumn:
     ...
 
 

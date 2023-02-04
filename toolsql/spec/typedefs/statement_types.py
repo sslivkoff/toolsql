@@ -20,6 +20,13 @@ QueryOutputFormat = Literal[
     'tuple',
     'polars',
     'pandas',
+    'single_tuple',  # reqiure output is single row, return row as tuple
+    'single_tuple_or_none',  # like single_tuple, but None if no results
+    'single_dict',  # require output is single row, return row as dict
+    'single_dict_or_none',  # like single_dict, but None if no results
+    'single_cell',  # require output is single row and single column, return it
+    'single_cell_or_none',  # like single_cell, but None if no results
+    'single_column',
 ]
 Cursor = typing.Union[
     sqlite3.Cursor,
@@ -32,27 +39,46 @@ AsyncCursor = typing.Union[
     psycopg.AsyncClientCursor,
 ]
 
-DictRows = typing.Sequence[typing.Dict[str, typing.Any]]
-TupleRows = typing.Sequence[typing.Tuple[typing.Any, ...]]
+TupleRow = typing.Tuple[typing.Any, ...]
+TupleRows = typing.Sequence[TupleRow]
+DictRow = typing.Dict[str, typing.Any]
+DictRows = typing.Sequence[DictRow]
+Cell = typing.Any
+TupleColumn = typing.Tuple[typing.Any, ...]
 RowOutput = typing.Union[
-    DictRows,
+    TupleRow,
     TupleRows,
+    DictRow,
+    DictRows,
+    Cell,
+    TupleColumn,
     pl.DataFrame,
     pd.DataFrame,
+    None,
 ]
 SelectOutput = typing.Union[
     Cursor,
-    DictRows,
+    TupleRow,
     TupleRows,
+    DictRow,
+    DictRows,
+    Cell,
+    TupleColumn,
     pl.DataFrame,
     pd.DataFrame,
+    None,
 ]
 AsyncSelectOutput = typing.Union[
     AsyncCursor,
-    DictRows,
+    TupleRow,
     TupleRows,
+    DictRow,
+    DictRows,
+    Cell,
+    TupleColumn,
     pl.DataFrame,
     pd.DataFrame,
+    None,
 ]
 
 

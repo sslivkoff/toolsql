@@ -14,6 +14,9 @@ def build_select_statement(
     # predicates
     table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
+    distinct: bool = False,
+    count: bool | str | typing.Sequence[str] = False,
+    count_distinct: bool | str | typing.Sequence[str] = False,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
     where_gte: typing.Mapping[str, typing.Any] | None = None,
@@ -34,7 +37,13 @@ def build_select_statement(
 
     table_name = statement_utils.get_table_name(table)
 
-    columns_str = _columns_to_str(columns, cast=cast)
+    columns_str = _columns_to_str(
+        columns=columns,
+        distinct=distinct,
+        count=count,
+        count_distinct=count_distinct,
+        cast=cast,
+    )
 
     where_clause, parameters = statement_utils._where_clause_to_str(
         where_equals=where_equals,
@@ -74,29 +83,82 @@ def build_select_statement(
 
 def _columns_to_str(
     columns: typing.Sequence[str] | None,
+    distinct: bool,
+    count: bool | str | typing.Sequence[str],
+    count_distinct: bool | str | typing.Sequence[str],
     cast: typing.Mapping[str, str] | None,
 ) -> str:
 
+    used_columns: list[str] = []
+
+    # add counts
+    if count is not None:
+        used_columns.extend(_count_to_columns(count, distinct=False))
+    if count_distinct:
+        used_columns.extend(_count_to_columns(count_distinct, distinct=True))
+
+    # add other columns
     if columns is None:
         # return all columns
         if cast is not None and len(cast) > 0:
             raise Exception('when casting columns, must specify columns')
-        return '*'
+        columns = []
 
     else:
 
         for column in columns:
             if not statement_utils.is_column_name(column):
                 raise Exception('not a valid column name: ' + str(column))
+        used_columns.extend(columns)
 
         if cast is not None:
-            columns = [
-                'CAST(' + column + ' AS ' + cast[column] + ')' if column in cast
+            used_columns = [
+                'CAST(' + column + ' AS ' + cast[column] + ')'
+                if column in cast
                 else column
-                for column in columns
+                for column in used_columns
             ]
 
-        return ', '.join(columns)
+    if len(used_columns) > 0:
+        output = ', '.join(used_columns)
+    else:
+        output = '*'
+
+    if distinct:
+        output = 'DISTINCT ' + output
+
+    return output
+
+
+def _count_to_columns(
+    count: bool | str | typing.Sequence[str],
+    distinct: bool,
+) -> typing.Sequence[str]:
+
+    if distinct:
+        prefix = 'COUNT(DISTINCT '
+    else:
+        prefix = 'COUNT('
+
+    columns = []
+    if isinstance(count, bool):
+        if count:
+            columns.append(prefix + '*) as count')
+    elif isinstance(count, str):
+        if statement_utils.is_column_name(count):
+            columns.append(prefix + count + ') as count_' + count)
+        else:
+            raise Exception('not a valid column name')
+    elif isinstance(count, (list, tuple)):
+        for subcount in count:
+            if statement_utils.is_column_name(subcount):
+                columns.append(prefix + subcount + ') as count_' + count)
+            else:
+                raise Exception('not a valid column name')
+    else:
+        raise Exception('invalid count format: ' + str(type(count)))
+
+    return columns
 
 
 def _order_by_to_str(order_by: spec.OrderBy | None) -> str:
