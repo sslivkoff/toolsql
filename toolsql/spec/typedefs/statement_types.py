@@ -12,8 +12,6 @@ import psycopg
 import sqlite3
 
 
-OnConflictOption = Literal['ignore', 'update']
-
 QueryOutputFormat = Literal[
     'cursor',
     'dict',
@@ -38,6 +36,10 @@ AsyncCursor = typing.Union[
     psycopg.AsyncServerCursor,
     psycopg.AsyncClientCursor,
 ]
+
+#
+# # output params
+#
 
 TupleRow = typing.Tuple[typing.Any, ...]
 TupleRows = typing.Sequence[TupleRow]
@@ -82,6 +84,11 @@ AsyncSelectOutput = typing.Union[
 ]
 
 
+#
+# # input params
+#
+
+
 class OrderByDict(TypedDict):
     column: str
     asc: NotRequired[bool]
@@ -91,10 +98,23 @@ class OrderByDict(TypedDict):
 OrderByItem = typing.Union[str, OrderByDict]
 OrderBy = typing.Union[OrderByItem, typing.Sequence[OrderByItem]]
 
+OnConflictOption = Literal['ignore', 'update']
 
 ExecuteParams = typing.Union[
     typing.Sequence[typing.Any],
     typing.Mapping[str, typing.Any],
 ]
 ExecuteManyParams = typing.Sequence[ExecuteParams]
+
+
+class WhereGroup(TypedDict, total=False):
+    where_equals: typing.Mapping[str, typing.Any] | None
+    where_gt: typing.Mapping[str, typing.Any] | None
+    where_gte: typing.Mapping[str, typing.Any] | None
+    where_lt: typing.Mapping[str, typing.Any] | None
+    where_lte: typing.Mapping[str, typing.Any] | None
+    where_like: typing.Mapping[str, str] | None
+    where_ilike: typing.Mapping[str, str] | None
+    where_in: typing.Mapping[str, typing.Sequence[str]] | None
+    where_or: typing.Sequence[WhereGroup] | None
 

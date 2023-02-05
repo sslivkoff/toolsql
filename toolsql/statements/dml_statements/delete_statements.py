@@ -23,6 +23,7 @@ def build_delete_statement(
     where_like: typing.Mapping[str, str] | None = None,
     where_ilike: typing.Mapping[str, str] | None = None,
     where_in: typing.Mapping[str, typing.Sequence[str]] | None = None,
+    where_or: typing.Sequence[spec.WhereGroup] | None = None,
 ) -> tuple[str, spec.ExecuteParams]:
     """
     - sqlite: https://www.sqlite.org/lang_delete.html
@@ -40,6 +41,7 @@ def build_delete_statement(
         where_like=where_like,
         where_ilike=where_ilike,
         where_in=where_in,
+        where_or=where_or,
         dialect=dialect,
     )
 

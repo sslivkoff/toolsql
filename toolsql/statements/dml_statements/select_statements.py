@@ -25,6 +25,7 @@ def build_select_statement(
     where_like: typing.Mapping[str, str] | None = None,
     where_ilike: typing.Mapping[str, str] | None = None,
     where_in: typing.Mapping[str, typing.Sequence[str]] | None = None,
+    where_or: typing.Sequence[spec.WhereGroup] | None = None,
     order_by: spec.OrderBy | None = None,
     limit: int | str | None = None,
     offset: int | str | None = None,
@@ -54,6 +55,7 @@ def build_select_statement(
         where_like=where_like,
         where_ilike=where_ilike,
         where_in=where_in,
+        where_or=where_or,
         dialect=dialect,
     )
 

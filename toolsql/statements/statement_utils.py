@@ -75,7 +75,42 @@ def _where_clause_to_str(
     where_like: typing.Mapping[str, str] | None,
     where_ilike: typing.Mapping[str, str] | None,
     where_in: typing.Mapping[str, typing.Sequence[str]] | None,
+    where_or: typing.Sequence[spec.WhereGroup] | None,
 ) -> tuple[str, tuple[typing.Any, ...]]:
+
+    subclauses, parameters = _where_filters_to_str(
+        dialect=dialect,
+        where_equals=where_equals,
+        where_gt=where_gt,
+        where_gte=where_gte,
+        where_lt=where_lt,
+        where_lte=where_lte,
+        where_like=where_like,
+        where_ilike=where_ilike,
+        where_in=where_in,
+        where_or=where_or,
+    )
+
+    # finalize
+    if len(subclauses) > 0:
+        return 'WHERE ' + ' AND '.join(subclauses), tuple(parameters)
+    else:
+        return '', tuple()
+
+
+def _where_filters_to_str(
+    *,
+    dialect: spec.Dialect,
+    where_equals: typing.Mapping[str, typing.Any] | None = None,
+    where_gt: typing.Mapping[str, typing.Any] | None = None,
+    where_gte: typing.Mapping[str, typing.Any] | None = None,
+    where_lt: typing.Mapping[str, typing.Any] | None = None,
+    where_lte: typing.Mapping[str, typing.Any] | None = None,
+    where_like: typing.Mapping[str, str] | None = None,
+    where_ilike: typing.Mapping[str, str] | None = None,
+    where_in: typing.Mapping[str, typing.Sequence[str]] | None = None,
+    where_or: typing.Sequence[spec.WhereGroup] | None = None,
+) -> tuple[list[str], list[typing.Any]]:
 
     placeholder = get_dialect_placeholder(dialect)
     subclauses = []
@@ -117,9 +152,15 @@ def _where_clause_to_str(
             for subitem in column_value:
                 parameters.append(subitem)
 
-    # finalize
-    if len(subclauses) > 0:
-        return 'WHERE ' + ' AND '.join(subclauses), tuple(parameters)
-    else:
-        return '', tuple()
+    if where_or is not None and len(where_or) > 0:
+        subsubclauses = []
+        for sub_where_or in where_or:
+            subsubclause, subparameters = _where_filters_to_str(
+                dialect=dialect, **sub_where_or
+            )
+            subsubclauses.append(' AND '.join(subsubclause))
+            parameters.extend(subparameters)
+        subclauses.append('(' + ' OR '.join(subsubclauses) + ')')
+
+    return subclauses, parameters
 

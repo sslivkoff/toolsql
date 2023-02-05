@@ -28,6 +28,7 @@ if typing.TYPE_CHECKING:
         where_like: typing.Mapping[str, str] | None
         where_ilike: typing.Mapping[str, str] | None
         where_in: typing.Mapping[str, typing.Sequence[str]] | None
+        where_or: typing.Sequence[spec.WhereGroup] | None
         order_by: spec.OrderBy | None
         limit: int | str | None
         offset: int | str | None
@@ -54,6 +55,7 @@ if typing.TYPE_CHECKING:
         where_like: typing.Mapping[str, str] | None
         where_ilike: typing.Mapping[str, str] | None
         where_in: typing.Mapping[str, typing.Sequence[str]] | None
+        where_or: typing.Sequence[spec.WhereGroup] | None
         order_by: spec.OrderBy | None
         limit: int | str | None
         offset: int | str | None
@@ -178,6 +180,7 @@ def select(  # type: ignore
     where_like: typing.Mapping[str, str] | None = None,
     where_ilike: typing.Mapping[str, str] | None = None,
     where_in: typing.Mapping[str, typing.Sequence[str]] | None = None,
+    where_or: typing.Sequence[spec.WhereGroup] | None = None,
     order_by: spec.OrderBy | None = None,
     limit: int | str | None = None,
     offset: int | str | None = None,
@@ -212,6 +215,7 @@ def select(  # type: ignore
         where_like=where_like,
         where_ilike=where_ilike,
         where_in=where_in,
+        where_or=where_or,
         order_by=order_by,
         limit=limit,
         offset=offset,
@@ -500,6 +504,7 @@ async def async_select(  # type: ignore
     where_like: typing.Mapping[str, str] | None = None,
     where_ilike: typing.Mapping[str, str] | None = None,
     where_in: typing.Mapping[str, typing.Sequence[str]] | None = None,
+    where_or: typing.Sequence[spec.WhereGroup] | None = None,
     order_by: spec.OrderBy | None = None,
     limit: int | str | None = None,
     offset: int | str | None = None,
@@ -531,6 +536,7 @@ async def async_select(  # type: ignore
         where_like=where_like,
         where_ilike=where_ilike,
         where_in=where_in,
+        where_or=where_or,
         order_by=order_by,
         limit=limit,
         offset=offset,

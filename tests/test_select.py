@@ -195,6 +195,22 @@ parameterized_select_queries = [
             pl.col('primary_type').is_in(['GROUND', 'ELECTRIC'])
         ),
     },
+    #
+    # where or
+    {
+        'select_kwargs': {
+            'table': 'pokemon',
+            'output_format': 'polars',
+            'order_by': 'id',
+            'where_or': [
+                {'where_lte': {'total_stats': 200}},
+                {'where_gte': {'total_stats': 500}},
+            ],
+        },
+        'target_result': polars_pokemon.filter(
+            (pl.col('total_stats') <= 200) | (pl.col('total_stats') >= 500)
+        ),
+    },
 ]
 
 
