@@ -15,8 +15,6 @@ def build_select_statement(
     table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
     distinct: bool = False,
-    count: bool | str | typing.Sequence[str] = False,
-    count_distinct: bool | str | typing.Sequence[str] = False,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
     where_gte: typing.Mapping[str, typing.Any] | None = None,
@@ -41,8 +39,6 @@ def build_select_statement(
     columns_str = _columns_to_str(
         columns=columns,
         distinct=distinct,
-        count=count,
-        count_distinct=count_distinct,
         cast=cast,
     )
 
@@ -86,18 +82,10 @@ def build_select_statement(
 def _columns_to_str(
     columns: typing.Sequence[str] | None,
     distinct: bool,
-    count: bool | str | typing.Sequence[str],
-    count_distinct: bool | str | typing.Sequence[str],
     cast: typing.Mapping[str, str] | None,
 ) -> str:
 
     used_columns: list[str] = []
-
-    # add counts
-    if count is not None:
-        used_columns.extend(_count_to_columns(count, distinct=False))
-    if count_distinct:
-        used_columns.extend(_count_to_columns(count_distinct, distinct=True))
 
     # add other columns
     if columns is None:
@@ -109,7 +97,7 @@ def _columns_to_str(
     else:
 
         for column in columns:
-            if not statement_utils.is_column_name(column):
+            if not statement_utils.is_column_expression(column):
                 raise Exception('not a valid column name: ' + str(column))
         used_columns.extend(columns)
 
@@ -130,37 +118,6 @@ def _columns_to_str(
         output = 'DISTINCT ' + output
 
     return output
-
-
-def _count_to_columns(
-    count: bool | str | typing.Sequence[str],
-    distinct: bool,
-) -> typing.Sequence[str]:
-
-    if distinct:
-        prefix = 'COUNT(DISTINCT '
-    else:
-        prefix = 'COUNT('
-
-    columns = []
-    if isinstance(count, bool):
-        if count:
-            columns.append(prefix + '*) as count')
-    elif isinstance(count, str):
-        if statement_utils.is_column_name(count):
-            columns.append(prefix + count + ') as count_' + count)
-        else:
-            raise Exception('not a valid column name')
-    elif isinstance(count, (list, tuple)):
-        for subcount in count:
-            if statement_utils.is_column_name(subcount):
-                columns.append(prefix + subcount + ') as count_' + count)
-            else:
-                raise Exception('not a valid column name')
-    else:
-        raise Exception('invalid count format: ' + str(type(count)))
-
-    return columns
 
 
 def _order_by_to_str(order_by: spec.OrderBy | None) -> str:

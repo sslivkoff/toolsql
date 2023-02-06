@@ -18,8 +18,6 @@ if typing.TYPE_CHECKING:
         table: str | spec.TableSchema
         columns: typing.Sequence[str] | None
         distinct: bool
-        count: bool | str | typing.Sequence[str]
-        count_distinct: bool | str | typing.Sequence[str]
         where_equals: typing.Mapping[str, typing.Any] | None
         where_gt: typing.Mapping[str, typing.Any] | None
         where_gte: typing.Mapping[str, typing.Any] | None
@@ -45,8 +43,6 @@ if typing.TYPE_CHECKING:
         table: str | spec.TableSchema
         columns: typing.Sequence[str] | None
         distinct: bool
-        count: bool | str | typing.Sequence[str]
-        count_distinct: bool | str | typing.Sequence[str]
         where_equals: typing.Mapping[str, typing.Any] | None
         where_gt: typing.Mapping[str, typing.Any] | None
         where_gte: typing.Mapping[str, typing.Any] | None
@@ -170,8 +166,6 @@ def select(  # type: ignore
     table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
     distinct: bool = False,
-    count: bool | str | typing.Sequence[str] = False,
-    count_distinct: bool | str | typing.Sequence[str] = False,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
     where_gte: typing.Mapping[str, typing.Any] | None = None,
@@ -195,8 +189,6 @@ def select(  # type: ignore
         columns=columns,
         conn=conn,
         cast=cast,
-        count=count,
-        count_distinct=count_distinct,
     )
 
     # create query
@@ -205,8 +197,6 @@ def select(  # type: ignore
         table=table,
         columns=columns,
         distinct=distinct,
-        count=count,
-        count_distinct=count_distinct,
         where_equals=where_equals,
         where_gt=where_gt,
         where_gte=where_gte,
@@ -238,8 +228,6 @@ def _handle_json_columns(
     conn: spec.Connection | str | spec.DBConfig,
     cast: typing.Mapping[str, str] | None = None,
     columns: typing.Sequence[str] | None = None,
-    count: bool | str | typing.Sequence[str],
-    count_distinct: bool | str | typing.Sequence[str],
 ) -> tuple[
     typing.Sequence[str] | None,
     typing.Mapping[str, str] | None,
@@ -256,12 +244,11 @@ def _handle_json_columns(
     # for postgres x connectorx, cast columns as text, used for decoding later
     driver = drivers.get_driver_class(conn=conn)
     if dialect == 'postgresql' and driver.name == 'connectorx':
-        raw_column_types = ddl_executors.get_table_raw_column_types(
-            table=table, conn=conn
-        )
-        if bool(count) or bool(count_distinct):
-            return columns, raw_column_types, cast
-        else:
+
+        if columns is None:
+            raw_column_types = ddl_executors.get_table_raw_column_types(
+                table=table, conn=conn
+            )
             if drivers.get_driver_name(conn=conn) == 'connectorx':
                 if cast is not None:
                     cast = dict(cast)
@@ -494,8 +481,6 @@ async def async_select(  # type: ignore
     table: str | spec.TableSchema,
     columns: typing.Sequence[str] | None = None,
     distinct: bool = False,
-    count: bool | str | typing.Sequence[str] = False,
-    count_distinct: bool | str | typing.Sequence[str] = False,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
     where_gte: typing.Mapping[str, typing.Any] | None = None,
@@ -518,16 +503,12 @@ async def async_select(  # type: ignore
         columns=columns,
         conn=conn,
         cast=cast,
-        count=count,
-        count_distinct=count_distinct,
     )
     sql, parameters = statements.build_select_statement(
         dialect=dialect,
         table=table,
         columns=columns,
         distinct=distinct,
-        count=count,
-        count_distinct=count_distinct,
         where_equals=where_equals,
         where_gt=where_gt,
         where_gte=where_gte,
@@ -559,8 +540,6 @@ async def _async_handle_json_columns(
     conn: spec.AsyncConnection | str | spec.DBConfig,
     cast: typing.Mapping[str, str] | None = None,
     columns: typing.Sequence[str] | None = None,
-    count: bool | str | typing.Sequence[str],
-    count_distinct: bool | str | typing.Sequence[str],
 ) -> tuple[
     typing.Sequence[str] | None,
     typing.Mapping[str, str] | None,
@@ -577,12 +556,11 @@ async def _async_handle_json_columns(
     # for postgres x connectorx, cast columns as text, used for decoding later
     driver = drivers.get_driver_class(conn=conn)
     if dialect == 'postgresql' and driver.name == 'connectorx':
-        raw_column_types = await ddl_executors.async_get_table_raw_column_types(
-            table=table, conn=conn
-        )
-        if bool(count) or bool(count_distinct):
-            return columns, raw_column_types, cast
-        else:
+
+        if columns is None:
+            raw_column_types = await ddl_executors.async_get_table_raw_column_types(
+                table=table, conn=conn
+            )
             if drivers.get_driver_name(conn=conn) == 'connectorx':
                 if cast is not None:
                     cast = dict(cast)
@@ -597,22 +575,6 @@ async def _async_handle_json_columns(
                         cast[column_name] = 'TEXT'
             columns = list(raw_column_types.keys())
             return columns, raw_column_types, cast
-        # if drivers.get_driver_name(conn=conn) == 'connectorx':
-        #     if cast is not None:
-        #         new_cast: typing.MutableMapping[str, str] = dict(cast)
-        #     else:
-        #         new_cast = {}
-        #     for column_name, column_type in raw_column_types.items():
-        #         if column_type == 'JSONB':
-        #             if column_name in new_cast:
-        #                 raise Exception(
-        #                     'cannot cast JSON column: ' + str(column_name)
-        #                 )
-        #             new_cast[column_name] = 'TEXT'
-        #     cast = new_cast
-        # if columns is None:
-        #     columns = list(raw_column_types.keys())
-        # return columns, raw_column_types, cast
 
     return columns, None, cast
 

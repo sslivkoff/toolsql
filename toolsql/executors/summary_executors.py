@@ -22,7 +22,7 @@ def get_table_row_count(
     result: int = dml_executors.select(
         table=table,
         conn=conn,
-        count=True,
+        columns=['COUNT(*)'],
         output_format='single_cell',
     )
     return result
@@ -37,7 +37,7 @@ async def async_get_table_row_count(
     result: int = await dml_executors.async_select(
         table=table,
         conn=conn,
-        count=True,
+        columns=['COUNT(*)'],
         output_format='single_cell',
     )
     return result

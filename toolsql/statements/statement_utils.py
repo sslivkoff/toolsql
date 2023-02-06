@@ -16,6 +16,34 @@ def is_column_name(column: str) -> bool:
     return re.match(r'^[A-Za-z0-9_]+$', column) is not None
 
 
+def is_column_expression(column: str) -> bool:
+    """
+    currently checks for:
+    - plain column names
+    - capitalized aggregation functions (COUNT, MIN, MAX, AVG, SUM)
+    """
+    if is_column_name(column):
+        return True
+    elif column == 'COUNT(*)':
+        return True
+    else:
+        for item in [
+            'COUNT(',
+            'COUNT(DISTINCT ',
+            'MIN(',
+            'MAX(',
+            'AVG(',
+            'SUM(',
+        ]:
+            if not column.startswith(item) or column[-1] != ')':
+                continue
+            column_name = column[len(item) : -1]
+            if is_column_name(column_name):
+                return True
+        else:
+            return False
+
+
 def is_table_name(table_name: str) -> bool:
     import re
 
