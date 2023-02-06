@@ -22,8 +22,8 @@ QueryOutputFormat = Literal[
     'single_tuple_or_none',  # like single_tuple, but None if no results
     'single_dict',  # require output is single row, return row as dict
     'single_dict_or_none',  # like single_dict, but None if no results
-    'single_cell',  # require output is single row and single column, return it
-    'single_cell_or_none',  # like single_cell, but None if no results
+    'cell',  # require output is single row and single column, return it
+    'cell_or_none',  # like cell, but None if no results
     'single_column',
 ]
 Cursor = typing.Union[

@@ -117,7 +117,7 @@ def select(
 @typing.overload
 def select(
     *,
-    output_format: Literal['single_cell'],
+    output_format: Literal['cell'],
     **kwargs: Unpack[SelectKwargs],
 ) -> spec.Cell:
     ...
@@ -126,7 +126,7 @@ def select(
 @typing.overload
 def select(
     *,
-    output_format: Literal['single_cell_or_none'],
+    output_format: Literal['cell_or_none'],
     **kwargs: Unpack[SelectKwargs],
 ) -> spec.Cell | None:
     ...
@@ -320,7 +320,7 @@ def raw_select(
 @typing.overload
 def raw_select(
     *,
-    output_format: Literal['single_cell'],
+    output_format: Literal['cell'],
     **kwargs: Unpack[RawSelectKwargs],
 ) -> spec.Cell:
     ...
@@ -329,7 +329,7 @@ def raw_select(
 @typing.overload
 def raw_select(
     *,
-    output_format: Literal['single_cell_or_none'],
+    output_format: Literal['cell_or_none'],
     **kwargs: Unpack[RawSelectKwargs],
 ) -> spec.Cell | None:
     ...
@@ -432,7 +432,7 @@ async def async_select(
 @typing.overload
 async def async_select(
     *,
-    output_format: Literal['single_cell'],
+    output_format: Literal['cell'],
     **kwargs: Unpack[AsyncSelectKwargs],
 ) -> spec.Cell:
     ...
@@ -441,7 +441,7 @@ async def async_select(
 @typing.overload
 async def async_select(
     *,
-    output_format: Literal['single_cell_or_none'],
+    output_format: Literal['cell_or_none'],
     **kwargs: Unpack[AsyncSelectKwargs],
 ) -> spec.Cell | None:
     ...
@@ -632,7 +632,7 @@ async def async_raw_select(
 @typing.overload
 async def async_raw_select(
     *,
-    output_format: Literal['single_cell'],
+    output_format: Literal['cell'],
     **kwargs: Unpack[AsyncRawSelectKwargs],
 ) -> spec.Cell:
     ...
@@ -641,7 +641,7 @@ async def async_raw_select(
 @typing.overload
 async def async_raw_select(
     *,
-    output_format: Literal['single_cell_or_none'],
+    output_format: Literal['cell_or_none'],
     **kwargs: Unpack[AsyncRawSelectKwargs],
 ) -> spec.Cell | None:
     ...

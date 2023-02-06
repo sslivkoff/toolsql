@@ -23,7 +23,7 @@ def get_table_row_count(
         table=table,
         conn=conn,
         columns=['COUNT(*)'],
-        output_format='single_cell',
+        output_format='cell',
     )
     return result
 
@@ -38,7 +38,7 @@ async def async_get_table_row_count(
         table=table,
         conn=conn,
         columns=['COUNT(*)'],
-        output_format='single_cell',
+        output_format='cell',
     )
     return result
 
@@ -57,7 +57,7 @@ def get_table_nbytes(
     dialect = drivers.get_conn_dialect(conn=conn)
     sql = statements.build_get_table_nbytes_statement(table, dialect=dialect)
     result: int = dml_executors.raw_select(
-        sql=sql, conn=conn, output_format='single_cell'
+        sql=sql, conn=conn, output_format='cell'
     )
     return result
 
@@ -71,7 +71,7 @@ async def async_get_table_nbytes(
     dialect = drivers.get_conn_dialect(conn=conn)
     sql = statements.build_get_table_nbytes_statement(table, dialect=dialect)
     result: int = await dml_executors.async_raw_select(
-        sql=sql, conn=conn, output_format='single_cell'
+        sql=sql, conn=conn, output_format='cell'
     )
     return result
 

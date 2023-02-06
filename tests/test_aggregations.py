@@ -25,7 +25,7 @@ aggregation_queries = [
         'select_kwargs': {
             'columns': ['COUNT(*)'],
             'table': 'pokemon',
-            'output_format': 'single_cell',
+            'output_format': 'cell',
         },
         'target_result': len(pokemon['total_stats']),
     },
@@ -33,7 +33,7 @@ aggregation_queries = [
         'select_kwargs': {
             'columns': ['COUNT(DISTINCT primary_type)'],
             'table': 'pokemon',
-            'output_format': 'single_cell',
+            'output_format': 'cell',
         },
         'target_result': len(set(pokemon['primary_type'])),
     },
@@ -41,7 +41,7 @@ aggregation_queries = [
         'select_kwargs': {
             'columns': ['MIN(total_stats)'],
             'table': 'pokemon',
-            'output_format': 'single_cell',
+            'output_format': 'cell',
         },
         'target_result': pokemon['total_stats'].min(),
     },
@@ -49,7 +49,7 @@ aggregation_queries = [
         'select_kwargs': {
             'columns': ['MAX(total_stats)'],
             'table': 'pokemon',
-            'output_format': 'single_cell',
+            'output_format': 'cell',
         },
         'target_result': pokemon['total_stats'].max(),
     },
@@ -57,7 +57,7 @@ aggregation_queries = [
         'select_kwargs': {
             'columns': ['SUM(total_stats)'],
             'table': 'pokemon',
-            'output_format': 'single_cell',
+            'output_format': 'cell',
         },
         'target_result': pokemon['total_stats'].sum(),
     },
@@ -65,7 +65,7 @@ aggregation_queries = [
         'select_kwargs': {
             'columns': ['AVG(total_stats)'],
             'table': 'pokemon',
-            'output_format': 'single_cell',
+            'output_format': 'cell',
         },
         'target_result': pokemon['total_stats'].mean(),
     },

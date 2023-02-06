@@ -21,8 +21,8 @@ def format_row_tuples(
     elif output_format in [
         'single_tuple',
         'single_tuple_or_none',
-        'single_cell',
-        'single_cell_or_none',
+        'cell',
+        'cell_or_none',
     ]:
         if len(rows) > 1:
             raise Exception('more than one row returned')
@@ -34,7 +34,7 @@ def format_row_tuples(
         else:
             if output_format in ['single_tuple', 'single_tuple_or_none']:
                 return rows[0]
-            elif output_format in ['single_cell', 'single_cell_or_none']:
+            elif output_format in ['cell', 'cell_or_none']:
                 if len(rows[0]) == 0:
                     raise Exception('no column in row')
                 elif len(rows[0]) == 1:
@@ -131,14 +131,14 @@ def format_row_dataframe(
         'single_tuple_or_none',
         'single_dict',
         'single_dict_or_none',
-        'single_cell',
-        'single_cell_or_none',
+        'cell',
+        'cell_or_none',
     ]:
         if len(rows) == 0:
             if output_format in [
                 'single_tuple_or_none',
                 'single_dict_or_none',
-                'single_cell_or_none',
+                'cell_or_none',
             ]:
                 return None
             else:
@@ -150,9 +150,9 @@ def format_row_dataframe(
                 return rows.row(0)
             elif output_format in ['single_dict', 'single_dict_or_none']:
                 return rows.to_dicts()[0]
-            elif output_format in ['single_cell', 'single_cell_or_none']:
+            elif output_format in ['cell', 'cell_or_none']:
                 if len(rows.columns) != 1:
-                    raise Exception('improper shape of output for single_cell')
+                    raise Exception('improper shape of output for cell')
                 return rows.row(0)[0]
             else:
                 raise Exception('unknown output format')
