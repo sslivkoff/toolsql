@@ -13,7 +13,7 @@ def build_select_statement(
     #
     # predicates
     table: str | spec.TableSchema,
-    columns: typing.Sequence[str] | None = None,
+    columns: typing.Sequence[str] | typing.Mapping[str, str] | None = None,
     distinct: bool = False,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
@@ -80,7 +80,7 @@ def build_select_statement(
 
 
 def _columns_to_str(
-    columns: typing.Sequence[str] | None,
+    columns: typing.Sequence[str] | typing.Mapping[str, str] | None,
     distinct: bool,
     cast: typing.Mapping[str, str] | None,
 ) -> str:
@@ -96,10 +96,26 @@ def _columns_to_str(
 
     else:
 
+        if isinstance(columns, dict):
+            aliases = columns
+            columns = list(columns.keys())
+            if cast is not None:
+                raise NotImplementedError('cast with aliases')
+        else:
+            aliases = None
+
         for column in columns:
             if not statement_utils.is_column_expression(column):
                 raise Exception('not a valid column name: ' + str(column))
         used_columns.extend(columns)
+
+        if aliases is not None:
+            used_columns = [
+                column + ' AS ' + aliases[column]
+                if column in aliases
+                else column
+                for column in used_columns
+            ]
 
         if cast is not None:
             used_columns = [

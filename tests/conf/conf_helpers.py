@@ -7,7 +7,7 @@ class ToolsqlTestHelpers:
     """adapting helper pattern from https://stackoverflow.com/a/42156088"""
 
     @staticmethod
-    def assert_results_equal(result, target_result):
+    def assert_results_equal(result, target_result, check_names=True):
         if isinstance(target_result, pl.DataFrame):
             try:
                 assert target_result.frame_equal(result)
@@ -36,6 +36,13 @@ class ToolsqlTestHelpers:
                 ToolsqlTestHelpers.assert_results_equal(
                     value, target_value
                 )
+        elif isinstance(target_result, pl.Series):
+            assert type(result) == type(target_result)
+            assert len(result) == len(target_result)
+            if check_names:
+                assert result.series_equal(target_result)
+            else:
+                np.all(result.to_numpy() == target_result.to_numpy())
         else:
             assert result == target_result
 
