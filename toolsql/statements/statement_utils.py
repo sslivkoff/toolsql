@@ -9,6 +9,17 @@ from toolsql import spec
 # # validation
 #
 
+def is_cast_type(cast_type: str) -> bool:
+    import re
+
+    return re.match(r'^[A-Za-z0-9_]+$', cast_type) is not None
+
+
+def is_table_name(table_name: str) -> bool:
+    import re
+
+    return re.match(r'^[A-Za-z0-9_]+$', table_name) is not None
+
 
 def is_column_name(column: str) -> bool:
     import re
@@ -43,11 +54,6 @@ def is_column_expression(column: str) -> bool:
         else:
             return False
 
-
-def is_table_name(table_name: str) -> bool:
-    import re
-
-    return re.match(r'^[A-Za-z0-9_]+$', table_name) is not None
 
 
 def get_table_name(table: str | spec.TableSchema) -> str:

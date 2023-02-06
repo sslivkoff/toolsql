@@ -99,6 +99,9 @@ def _columns_to_str(
         if isinstance(columns, dict):
             aliases = columns
             columns = list(columns.keys())
+            for value in aliases.values():
+                if not statement_utils.is_column_name(value):
+                    raise Exception('not a valid column name')
             if cast is not None:
                 raise NotImplementedError('cast with aliases')
         else:
@@ -118,6 +121,9 @@ def _columns_to_str(
             ]
 
         if cast is not None:
+            for value in cast.values():
+                if not statement_utils.is_cast_type(value):
+                    raise Exception('not a valid cast type')
             used_columns = [
                 'CAST(' + column + ' AS ' + cast[column] + ')'
                 if column in cast
