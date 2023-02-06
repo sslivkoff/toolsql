@@ -17,6 +17,7 @@ def build_insert_statement(
     dialect: Literal['sqlite', 'postgresql'],
     single_line: bool = True,
     on_conflict: spec.OnConflictOption | None = None,
+    upsert: bool | None = None,
 ) -> tuple[str, spec.ExecuteManyParams | None]:
     """
     - sqlite: https://www.sqlite.org/lang_insert.html
@@ -33,6 +34,7 @@ def build_insert_statement(
 
     conflict_expression = _create_conflict_expression(
         on_conflict=on_conflict,
+        upsert=upsert,
         dialect=dialect,
         columns=columns,
         rows=rows,
@@ -135,10 +137,19 @@ def _create_conflict_expression(
     dialect: spec.Dialect,
     columns: typing.Sequence[str] | None,
     rows: spec.ExecuteManyParams | None,
+    upsert: bool | None,
     table: str | spec.TableSchema,
 ) -> str:
 
     # dialect = 'postgresql'
+
+    if upsert is not None:
+        if on_conflict is not None:
+            raise Exception('cannot specify both insert and on_conflict')
+        if upsert:
+            on_conflict = 'update'
+        else:
+            on_conflict = None
 
     if on_conflict is None:
         return ''

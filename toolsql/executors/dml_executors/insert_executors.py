@@ -15,6 +15,7 @@ def insert(
     columns: typing.Sequence[str] | None = None,
     conn: spec.Connection,
     on_conflict: spec.OnConflictOption | None = None,
+    upsert: bool | None = None,
 ) -> None:
 
     # build insert statement
@@ -26,6 +27,7 @@ def insert(
         columns=columns,
         dialect=dialect,
         on_conflict=on_conflict,
+        upsert=upsert,
     )
 
     # execute query
@@ -42,6 +44,7 @@ async def async_insert(
     columns: typing.Sequence[str] | None = None,
     conn: spec.AsyncConnection,
     on_conflict: spec.OnConflictOption | None = None,
+    upsert: bool | None = None,
 ) -> None:
 
     # build insert statement
@@ -53,6 +56,7 @@ async def async_insert(
         columns=columns,
         dialect=dialect,
         on_conflict=on_conflict,
+        upsert=upsert,
     )
 
     # execute query
