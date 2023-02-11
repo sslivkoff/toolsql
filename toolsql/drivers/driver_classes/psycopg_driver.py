@@ -54,7 +54,15 @@ class PsycopgDriver(dbapi_driver.DbapiDriver):
             db_config = target
         else:
             raise Exception('invalid connection target')
-        return 'dbname={database} user={username}'.format(**db_config)
+        result = 'dbname={database} user={username}'.format(**db_config)
+        if (
+            db_config.get('hostname') is not None
+            and db_config['hostname'] != 'localhost'
+        ):
+            result = result + ' hostaddr=' + db_config['hostname']
+        if db_config.get('password') is not None:
+            result = result + ' password=' + db_config['password']
+        return result
 
     @classmethod
     def connect(

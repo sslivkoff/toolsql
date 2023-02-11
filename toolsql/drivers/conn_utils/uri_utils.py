@@ -42,12 +42,23 @@ def parse_uri(uri: str) -> spec.DBConfig:
         head, tail = uri.split('@')
         username = head.split('/')[-1]
         if ':' in username:
-            username = username.split(':')[0]
+            username, password = username.split(':')
+        else:
+            password = None
+
+        hostname, _ = tail.split('/')
+        if ':' in hostname:
+            hostname, port = hostname.split(':')
+        else:
+            port = None
 
         return {
             'dbms': 'postgresql',
             'database': database,
             'username': username,
+            'hostname': hostname,
+            'port': port,
+            'password': password,
         }
     else:
         raise Exception('unknown uri format')
