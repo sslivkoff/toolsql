@@ -59,9 +59,11 @@ class PsycopgDriver(dbapi_driver.DbapiDriver):
             db_config.get('hostname') is not None
             and db_config['hostname'] != 'localhost'
         ):
-            result = result + ' hostaddr=' + db_config['hostname']
+            hostname: str = db_config['hostname']  # type: ignore
+            result = result + ' hostaddr=' + hostname
         if db_config.get('password') is not None:
-            result = result + ' password=' + db_config['password']
+            password: str = db_config['password']  # type: ignore
+            result = result + ' password=' + password
         return result
 
     @classmethod

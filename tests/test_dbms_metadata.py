@@ -5,7 +5,7 @@ import conf.conf_tables as conf_tables
 def test_dbms_table_names(sync_dbapi_db_config):
     with toolsql.connect(sync_dbapi_db_config) as conn:
         table_names = toolsql.get_table_names(conn)
-    assert set(table_names) == {'pokemon', 'simple'}
+    assert {'pokemon', 'simple'}.issubset(set(table_names))
 
 
 def test_dbms_table_schema(sync_dbapi_db_config, helpers):

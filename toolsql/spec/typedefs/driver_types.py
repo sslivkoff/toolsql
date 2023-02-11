@@ -55,16 +55,15 @@ DatabaseSystem = Literal['sqlite', 'postgresql']
 
 class DBConfig(TypedDict, total=False):
     dbms: DatabaseSystem
-    driver: DriverName
-    path: str
-    engine: str
-    hostname: str
-    port: int
-    database: str
-    username: str
-    password: str
-    socket: str
-    socket_dir: str
-    timeout: typing.Union[int, float]
-    pool_timeout: typing.Union[int, float]
+    driver: DriverName | None
+    path: str | None
+    hostname: str | None
+    port: int | None
+    database: str | None
+    username: str | None
+    password: str | None
+    # socket: str
+    # socket_dir: str
+    # timeout: typing.Union[int, float]
+    # pool_timeout: typing.Union[int, float]
 

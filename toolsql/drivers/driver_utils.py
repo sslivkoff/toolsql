@@ -35,7 +35,7 @@ def get_driver_name(
             raise Exception('unknown driver name: ' + str(driver))
 
     elif db_config is not None and db_config.get('driver') is not None:
-        return db_config['driver']
+        return db_config['driver']  # type: ignore
 
     elif conn is not None:
         return _get_conn_driver_name(conn)

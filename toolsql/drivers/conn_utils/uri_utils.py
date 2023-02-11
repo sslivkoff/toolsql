@@ -48,7 +48,8 @@ def parse_uri(uri: str) -> spec.DBConfig:
 
         hostname, _ = tail.split('/')
         if ':' in hostname:
-            hostname, port = hostname.split(':')
+            hostname, port_str = hostname.split(':')
+            port: int | None = int(port_str)
         else:
             port = None
 
