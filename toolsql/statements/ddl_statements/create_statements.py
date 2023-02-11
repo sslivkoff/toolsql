@@ -21,9 +21,7 @@ def build_create_table_statement(
 
     table = schemas.normalize_shorthand_table_schema(table)
 
-    columns = [
-        _format_column(column, dialect=dialect) for column in table['columns']
-    ]
+    columns_str = _format_columns(columns=table['columns'], dialect=dialect)
 
     template = """
     CREATE TABLE {if_not_exists}
@@ -33,7 +31,7 @@ def build_create_table_statement(
     sql = template.format(
         table_name=table['name'],
         if_not_exists='IF NOT EXISTS' if if_not_exists else '',
-        columns=', '.join(columns),
+        columns=columns_str,
     )
 
     if single_line:
@@ -42,13 +40,45 @@ def build_create_table_statement(
     return sql.rstrip()
 
 
-def _format_column(column: spec.ColumnSchema, dialect: spec.Dialect) -> str:
+def _format_columns(
+    columns: typing.Sequence[spec.ColumnSchema],
+    dialect: spec.Dialect,
+) -> str:
+
+    primary_columns = [
+        column['name'] for column in columns if column.get('primary')
+    ]
+    compound_primary_key = len(primary_columns) > 1
+
+    column_strs = [
+        _format_column(
+            column,
+            dialect=dialect,
+            compound_primary_key=compound_primary_key,
+        )
+        for column in columns
+    ]
+
+    if compound_primary_key:
+        primary = 'PRIMARY KEY ({})'.format(', '.join(primary_columns))
+        column_strs.append(primary)
+
+    return ', '.join(column_strs)
+
+
+def _format_column(
+    column: spec.ColumnSchema,
+    dialect: spec.Dialect,
+    compound_primary_key: bool = False,
+) -> str:
+
     columntype = schemas.convert_columntype_to_dialect(
         column['type'],
         dialect,
     )
     line = column['name'] + ' ' + columntype.upper()
-    if column['primary']:
+
+    if column['primary'] and not compound_primary_key:
         line = line + ' PRIMARY KEY'
 
     if not column['nullable']:

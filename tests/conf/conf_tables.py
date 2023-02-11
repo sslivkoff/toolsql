@@ -98,3 +98,28 @@ def get_pokemon_table():
         ],
     }
 
+
+def get_weather_table():
+    return {
+        'schema': {
+            'name': 'weather',
+            'columns': {
+                'year': {'type': 'Integer', 'primary': True},
+                'month': {'type': 'Integer', 'primary': True},
+                'rainfall': {'type': 'Float'},
+                'temperature': {'type': 'Float'},
+            },
+        },
+        'rows': [
+            (2020, 1, 8.2, 90),
+            (2020, 5, 1.1, 50),
+            (2020, 9, 7.4, 60),
+            (2021, 1, 5.2, 72),
+            (2021, 5, 2.1, 56),
+            (2021, 9, 6.4, 68),
+            (2022, 1, 1.2, 70),
+            (2022, 5, 4.1, 56),
+            (2022, 9, 9.4, 60),
+        ],
+    }
+
