@@ -11,6 +11,7 @@ dynamic = ["version", "description"]
 license = {file = "LICENSE"}
 dependencies = [
     "typing_extensions>=4.2.0",
+    "toolstr >=0.9.1, <0.10",
 ]
 
 [tool.mypy]
