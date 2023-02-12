@@ -48,18 +48,18 @@ def _format_columns(
     primary_columns = [
         column['name'] for column in columns if column.get('primary')
     ]
-    compound_primary_key = len(primary_columns) > 1
+    composite_primary_key = len(primary_columns) > 1
 
     column_strs = [
         _format_column(
             column,
             dialect=dialect,
-            compound_primary_key=compound_primary_key,
+            composite_primary_key=composite_primary_key,
         )
         for column in columns
     ]
 
-    if compound_primary_key:
+    if composite_primary_key:
         primary = 'PRIMARY KEY ({})'.format(', '.join(primary_columns))
         column_strs.append(primary)
 
@@ -69,7 +69,7 @@ def _format_columns(
 def _format_column(
     column: spec.ColumnSchema,
     dialect: spec.Dialect,
-    compound_primary_key: bool = False,
+    composite_primary_key: bool = False,
 ) -> str:
 
     columntype = schemas.convert_columntype_to_dialect(
@@ -78,7 +78,7 @@ def _format_column(
     )
     line = column['name'] + ' ' + columntype.upper()
 
-    if column['primary'] and not compound_primary_key:
+    if column['primary'] and not composite_primary_key:
         line = line + ' PRIMARY KEY'
 
     if not column['nullable']:

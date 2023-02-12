@@ -4,7 +4,7 @@ import conf.conf_tables
 import toolsql
 
 
-def test_compound_primary_table(sync_write_db_config):
+def test_composite_primary_table(sync_write_db_config):
 
     table = conf.conf_tables.get_weather_table()
 
