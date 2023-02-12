@@ -7,6 +7,11 @@ from toolsql import drivers
 from toolsql import spec
 
 
+def get_db_schema(conn: spec.Connection) -> spec.DBSchema:
+    table_schemas = get_table_schemas(conn=conn)
+    return {'tables': table_schemas}
+
+
 def get_table_schemas(
     conn: spec.Connection,
 ) -> typing.Mapping[str, spec.TableSchema]:
@@ -24,7 +29,8 @@ def get_table_raw_column_types(
 
 
 async def async_get_table_raw_column_types(
-    table: str | spec.TableSchema, conn: spec.AsyncConnection | str | spec.DBConfig
+    table: str | spec.TableSchema,
+    conn: spec.AsyncConnection | str | spec.DBConfig,
 ) -> typing.Mapping[str, str]:
     dialect = drivers.get_conn_dialect(conn)
     db = dbs.get_db_class(name=dialect)

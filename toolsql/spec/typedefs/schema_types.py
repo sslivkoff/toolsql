@@ -125,13 +125,13 @@ class IndexSchema(TypedDict, total=False):
 
 
 class DBSchema(TypedDict):
-    tables: typing.Sequence[TableSchema]
+    tables: typing.Mapping[str, TableSchema]
     # triggers: typing.Sequence[TriggerDefinition]
     # views: typing.Sequence[ViewDefinition]
 
 
 class DBSchemaShorthand(TypedDict):
-    tables: typing.Sequence[TableSchema] | typing.Mapping[
+    tables: typing.Sequence[TableSchemaShorthand] | typing.Mapping[
         str, TableSchemaShorthand
     ]
     # triggers: typing.Sequence[TriggerDefinition]

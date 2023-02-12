@@ -11,14 +11,15 @@ def normalize_shorthand_db_schema(
 ) -> spec.DBSchema:
     tables = db_schema['tables']
     if isinstance(tables, (list, tuple)):
-        normalized_tables = [
-            normalize_shorthand_table_schema(table) for table in tables
-        ]
+        normalized_tables = {
+            table['name']: normalize_shorthand_table_schema(table)
+            for table in tables
+        }
     elif isinstance(tables, dict):
-        normalized_tables = [
-            normalize_shorthand_table_schema(dict(table, name=name))  # type: ignore
+        normalized_tables = {
+            name: normalize_shorthand_table_schema(dict(table, name=name))  # type: ignore
             for name, table in tables.items()
-        ]
+        }
     else:
         raise Exception('unknown format for tables: ' + str(tables))
     return {'tables': normalized_tables}

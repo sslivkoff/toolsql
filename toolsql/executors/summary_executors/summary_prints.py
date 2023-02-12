@@ -2,14 +2,23 @@ from __future__ import annotations
 
 import typing
 
-import toolstr
 from toolsql import schemas
 from toolsql import spec
 from .. import ddl_executors
 from . import summary_usage
 
+if typing.TYPE_CHECKING:
+    import toolcli
 
-def print_db_usage(conn: spec.Connection) -> None:
+
+def print_db_usage(
+    conn: spec.Connection,
+    *,
+    styles: toolcli.StyleTheme,
+) -> None:
+
+    import toolstr
+
     tables = ddl_executors.get_table_names(conn)
     rows = []
     for table in tables:
@@ -28,7 +37,10 @@ def print_table_schema(
     *,
     indent: int | str | None = None,
     shorthand: bool = True,
+    styles: toolcli.StyleTheme,
 ) -> None:
+
+    import toolstr
 
     if shorthand:
         table = schemas.normalize_shorthand_table_schema(table)
@@ -46,7 +58,7 @@ def print_table_schema(
     for column in table['columns']:
         row = []
         for prop in props:
-            value = column[prop]
+            value = column[prop]  # type: ignore
             if isinstance(value, bool):
                 if value:
                     row.append('✓')
@@ -63,18 +75,26 @@ def print_table_schema(
         rows=rows,
         labels=props,
         indent=indent,
-        column_justify=column_justify,
+        column_justify=column_justify,  # type: ignore
     )
 
 
-def print_db_schema(db_schema: spec.DBSchema) -> None:
+def print_db_schema(
+    db_schema: spec.DBSchema,
+    *,
+    styles: toolcli.StyleTheme,
+) -> None:
+
+    import toolstr
 
     db_schema = schemas.normalize_shorthand_db_schema(db_schema)
 
     toolstr.print_text_box('Database Schema')
-    for t, table_schema in enumerate(db_schema['tables']):
+    for t, table_schema in enumerate(db_schema['tables'].values()):
         if t > 0:
             print()
         print()
-        print_table_schema(table_schema, indent=4, shorthand=False)
+        print_table_schema(
+            table_schema, indent=4, shorthand=False, styles=styles
+        )
 
