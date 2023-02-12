@@ -1,6 +1,17 @@
 import toolsql
 
 
+def test_does_db_exist(sync_read_conn_db_config):
+    assert toolsql.does_db_exist(sync_read_conn_db_config)
+
+    other_db_config = sync_read_conn_db_config.copy()
+    if other_db_config['dbms'] == 'sqlite':
+        other_db_config['path'] += '_wrong'
+    elif other_db_config['dbms'] == 'postgresql':
+        other_db_config['database'] += '_wrong'
+    assert not toolsql.does_db_exist(other_db_config)
+
+
 def test_row_count(sync_read_conn_db_config):
     with toolsql.connect(sync_read_conn_db_config) as conn:
         row_count = toolsql.get_table_row_count(
