@@ -102,7 +102,7 @@ class TableSchema(TypedDict):
 
 ColumnsShorthand = typing.Union[
     typing.Mapping[str, ColumnSchemaShorthand],
-    typing.Sequence[ColumnSchema],
+    typing.Sequence[ColumnSchemaShorthand],
 ]
 
 
@@ -124,8 +124,16 @@ class IndexSchema(TypedDict, total=False):
     unique: bool
 
 
-class DatabaseSchema(TypedDict):
+class DBSchema(TypedDict):
     tables: typing.Sequence[TableSchema]
+    # triggers: typing.Sequence[TriggerDefinition]
+    # views: typing.Sequence[ViewDefinition]
+
+
+class DBSchemaShorthand(TypedDict):
+    tables: typing.Sequence[TableSchema] | typing.Mapping[
+        str, TableSchemaShorthand
+    ]
     # triggers: typing.Sequence[TriggerDefinition]
     # views: typing.Sequence[ViewDefinition]
 

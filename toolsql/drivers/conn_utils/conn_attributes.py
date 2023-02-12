@@ -6,7 +6,7 @@ from toolsql import spec
 
 def get_conn_dialect(
     conn: spec.Connection | spec.AsyncConnection | str | spec.DBConfig,
-) -> spec.DatabaseSystem:
+) -> spec.DBMS:
 
     if isinstance(conn, str):
         if conn.startswith('postgres'):

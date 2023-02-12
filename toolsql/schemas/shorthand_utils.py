@@ -6,6 +6,24 @@ from toolsql import spec
 from . import datatype_utils
 
 
+def normalize_shorthand_db_schema(
+    db_schema: spec.DBSchema | spec.DBSchemaShorthand,
+) -> spec.DBSchema:
+    tables = db_schema['tables']
+    if isinstance(tables, (list, tuple)):
+        normalized_tables = [
+            normalize_shorthand_table_schema(table) for table in tables
+        ]
+    elif isinstance(tables, dict):
+        normalized_tables = [
+            normalize_shorthand_table_schema(dict(table, name=name))  # type: ignore
+            for name, table in tables.items()
+        ]
+    else:
+        raise Exception('unknown format for tables: ' + str(tables))
+    return {'tables': normalized_tables}
+
+
 def normalize_shorthand_table_schema(
     table: spec.TableSchema | spec.TableSchemaShorthand,
 ) -> spec.TableSchema:
@@ -53,13 +71,11 @@ def _normalize_shorthand_columns(
                     new_columns.append(dict(column, name=name))  # type: ignore
             else:
                 raise Exception('unknown column format: ' + str(type(column)))
-        columns = new_columns  # type: ignore
+        columns = new_columns
     else:
         raise Exception('unknown columns format: ' + str(type(columns)))
 
-    columns = [_normalize_shorthand_column(column) for column in columns]
-
-    return columns
+    return [_normalize_shorthand_column(column) for column in columns]
 
 
 def _normalize_shorthand_column(

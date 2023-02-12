@@ -50,11 +50,11 @@ FullAsyncConnection = typing.Union[
 ]
 
 
-DatabaseSystem = Literal['sqlite', 'postgresql']
+DBMS = Literal['sqlite', 'postgresql']
 
 
 class DBConfig(TypedDict, total=False):
-    dbms: DatabaseSystem
+    dbms: DBMS
     driver: DriverName | None
     path: str | None
     hostname: str | None
