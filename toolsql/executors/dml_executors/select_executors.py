@@ -10,70 +10,19 @@ from .. import ddl_executors
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Literal
-    from typing_extensions import TypedDict
     from typing_extensions import Unpack
-
-    class SelectKwargs(TypedDict, total=False):
-        conn: spec.Connection | str | spec.DBConfig
-        table: str | spec.TableSchema
-        columns: typing.Sequence[str] | None
-        distinct: bool
-        where_equals: typing.Mapping[str, typing.Any] | None
-        where_gt: typing.Mapping[str, typing.Any] | None
-        where_gte: typing.Mapping[str, typing.Any] | None
-        where_lt: typing.Mapping[str, typing.Any] | None
-        where_lte: typing.Mapping[str, typing.Any] | None
-        where_like: typing.Mapping[str, str] | None
-        where_ilike: typing.Mapping[str, str] | None
-        where_in: typing.Mapping[str, typing.Sequence[str]] | None
-        where_or: typing.Sequence[spec.WhereGroup] | None
-        order_by: spec.OrderBy | None
-        limit: int | str | None
-        offset: int | str | None
-        cast: typing.Mapping[str, str] | None
-
-    class RawSelectKwargs(TypedDict, total=False):
-        conn: spec.Connection | str | spec.DBConfig
-        sql: str
-        parameters: spec.ExecuteParams | None
-        raw_column_types: typing.Mapping[str, str] | None
-
-    class AsyncSelectKwargs(TypedDict, total=False):
-        conn: spec.AsyncConnection | str | spec.DBConfig
-        table: str | spec.TableSchema
-        columns: typing.Sequence[str] | None
-        distinct: bool
-        where_equals: typing.Mapping[str, typing.Any] | None
-        where_gt: typing.Mapping[str, typing.Any] | None
-        where_gte: typing.Mapping[str, typing.Any] | None
-        where_lt: typing.Mapping[str, typing.Any] | None
-        where_lte: typing.Mapping[str, typing.Any] | None
-        where_like: typing.Mapping[str, str] | None
-        where_ilike: typing.Mapping[str, str] | None
-        where_in: typing.Mapping[str, typing.Sequence[str]] | None
-        where_or: typing.Sequence[spec.WhereGroup] | None
-        order_by: spec.OrderBy | None
-        limit: int | str | None
-        offset: int | str | None
-        cast: typing.Mapping[str, str] | None
-
-    class AsyncRawSelectKwargs(TypedDict, total=False):
-        conn: spec.AsyncConnection | str | spec.DBConfig
-        sql: str
-        parameters: spec.ExecuteParams | None
-        raw_column_types: typing.Mapping[str, str] | None
 
 
 @typing.overload
 def select(
-    *, output_format: Literal['dict'], **kwargs: Unpack[SelectKwargs]
+    *, output_format: Literal['dict'], **kwargs: Unpack[spec.SelectKwargs]
 ) -> spec.DictRows:
     ...
 
 
 @typing.overload
 def select(
-    *, output_format: Literal['tuple'], **kwargs: Unpack[SelectKwargs]
+    *, output_format: Literal['tuple'], **kwargs: Unpack[spec.SelectKwargs]
 ) -> spec.TupleRows:
     ...
 
@@ -82,7 +31,7 @@ def select(
 def select(
     *,
     output_format: Literal['single_tuple'],
-    **kwargs: Unpack[SelectKwargs],
+    **kwargs: Unpack[spec.SelectKwargs],
 ) -> spec.TupleRow:
     ...
 
@@ -91,7 +40,7 @@ def select(
 def select(
     *,
     output_format: Literal['single_tuple_or_none'],
-    **kwargs: Unpack[SelectKwargs],
+    **kwargs: Unpack[spec.SelectKwargs],
 ) -> spec.TupleRow | None:
     ...
 
@@ -100,7 +49,7 @@ def select(
 def select(
     *,
     output_format: Literal['single_dict'],
-    **kwargs: Unpack[SelectKwargs],
+    **kwargs: Unpack[spec.SelectKwargs],
 ) -> spec.DictRow:
     ...
 
@@ -109,7 +58,7 @@ def select(
 def select(
     *,
     output_format: Literal['single_dict_or_none'],
-    **kwargs: Unpack[SelectKwargs],
+    **kwargs: Unpack[spec.SelectKwargs],
 ) -> spec.DictRow | None:
     ...
 
@@ -118,7 +67,7 @@ def select(
 def select(
     *,
     output_format: Literal['cell'],
-    **kwargs: Unpack[SelectKwargs],
+    **kwargs: Unpack[spec.SelectKwargs],
 ) -> spec.Cell:
     ...
 
@@ -127,7 +76,7 @@ def select(
 def select(
     *,
     output_format: Literal['cell_or_none'],
-    **kwargs: Unpack[SelectKwargs],
+    **kwargs: Unpack[spec.SelectKwargs],
 ) -> spec.Cell | None:
     ...
 
@@ -136,14 +85,14 @@ def select(
 def select(
     *,
     output_format: Literal['single_column'],
-    **kwargs: Unpack[SelectKwargs],
+    **kwargs: Unpack[spec.SelectKwargs],
 ) -> spec.TupleColumn:
     ...
 
 
 @typing.overload
 def select(
-    **kwargs: Unpack[SelectKwargs],
+    **kwargs: Unpack[spec.SelectKwargs],
 ) -> spec.DictRows:
     ...
 
@@ -152,7 +101,7 @@ def select(
 def select(
     *,
     output_format: spec.QueryOutputFormat = 'dict',
-    **kwargs: Unpack[SelectKwargs],
+    **kwargs: Unpack[spec.SelectKwargs],
 ) -> spec.SelectOutput:
     ...
 
@@ -173,7 +122,7 @@ def select(  # type: ignore
     where_lte: typing.Mapping[str, typing.Any] | None = None,
     where_like: typing.Mapping[str, str] | None = None,
     where_ilike: typing.Mapping[str, str] | None = None,
-    where_in: typing.Mapping[str, typing.Sequence[str]] | None = None,
+    where_in: typing.Mapping[str, typing.Sequence[typing.Any]] | None = None,
     where_or: typing.Sequence[spec.WhereGroup] | None = None,
     order_by: spec.OrderBy | None = None,
     limit: int | str | None = None,
@@ -269,14 +218,14 @@ def _handle_json_columns(
 
 @typing.overload
 def raw_select(
-    *, output_format: Literal['dict'], **kwargs: Unpack[RawSelectKwargs]
+    *, output_format: Literal['dict'], **kwargs: Unpack[spec.RawSelectKwargs]
 ) -> spec.DictRows:
     ...
 
 
 @typing.overload
 def raw_select(
-    *, output_format: Literal['tuple'], **kwargs: Unpack[RawSelectKwargs]
+    *, output_format: Literal['tuple'], **kwargs: Unpack[spec.RawSelectKwargs]
 ) -> spec.TupleRows:
     ...
 
@@ -285,7 +234,7 @@ def raw_select(
 def raw_select(
     *,
     output_format: Literal['single_tuple'],
-    **kwargs: Unpack[RawSelectKwargs],
+    **kwargs: Unpack[spec.RawSelectKwargs],
 ) -> spec.TupleRow:
     ...
 
@@ -294,7 +243,7 @@ def raw_select(
 def raw_select(
     *,
     output_format: Literal['single_tuple_or_none'],
-    **kwargs: Unpack[RawSelectKwargs],
+    **kwargs: Unpack[spec.RawSelectKwargs],
 ) -> spec.TupleRow | None:
     ...
 
@@ -303,7 +252,7 @@ def raw_select(
 def raw_select(
     *,
     output_format: Literal['single_dict'],
-    **kwargs: Unpack[RawSelectKwargs],
+    **kwargs: Unpack[spec.RawSelectKwargs],
 ) -> spec.DictRow:
     ...
 
@@ -312,7 +261,7 @@ def raw_select(
 def raw_select(
     *,
     output_format: Literal['single_dict_or_none'],
-    **kwargs: Unpack[RawSelectKwargs],
+    **kwargs: Unpack[spec.RawSelectKwargs],
 ) -> spec.DictRow | None:
     ...
 
@@ -321,7 +270,7 @@ def raw_select(
 def raw_select(
     *,
     output_format: Literal['cell'],
-    **kwargs: Unpack[RawSelectKwargs],
+    **kwargs: Unpack[spec.RawSelectKwargs],
 ) -> spec.Cell:
     ...
 
@@ -330,7 +279,7 @@ def raw_select(
 def raw_select(
     *,
     output_format: Literal['cell_or_none'],
-    **kwargs: Unpack[RawSelectKwargs],
+    **kwargs: Unpack[spec.RawSelectKwargs],
 ) -> spec.Cell | None:
     ...
 
@@ -339,14 +288,14 @@ def raw_select(
 def raw_select(
     *,
     output_format: Literal['single_column'],
-    **kwargs: Unpack[RawSelectKwargs],
+    **kwargs: Unpack[spec.RawSelectKwargs],
 ) -> spec.TupleColumn:
     ...
 
 
 @typing.overload
 def raw_select(
-    **kwargs: Unpack[RawSelectKwargs],
+    **kwargs: Unpack[spec.RawSelectKwargs],
 ) -> spec.DictRows:
     ...
 
@@ -355,7 +304,7 @@ def raw_select(
 def raw_select(
     *,
     output_format: spec.QueryOutputFormat = 'dict',
-    **kwargs: Unpack[RawSelectKwargs],
+    **kwargs: Unpack[spec.RawSelectKwargs],
 ) -> spec.SelectOutput:
     ...
 
@@ -381,14 +330,14 @@ def raw_select(  # type: ignore
 
 @typing.overload
 async def async_select(
-    *, output_format: Literal['dict'], **kwargs: Unpack[AsyncSelectKwargs]
+    *, output_format: Literal['dict'], **kwargs: Unpack[spec.AsyncSelectKwargs]
 ) -> spec.DictRows:
     ...
 
 
 @typing.overload
 async def async_select(
-    *, output_format: Literal['tuple'], **kwargs: Unpack[AsyncSelectKwargs]
+    *, output_format: Literal['tuple'], **kwargs: Unpack[spec.AsyncSelectKwargs]
 ) -> spec.TupleRows:
     ...
 
@@ -397,7 +346,7 @@ async def async_select(
 async def async_select(
     *,
     output_format: Literal['single_tuple'],
-    **kwargs: Unpack[AsyncSelectKwargs],
+    **kwargs: Unpack[spec.AsyncSelectKwargs],
 ) -> spec.TupleRow:
     ...
 
@@ -406,7 +355,7 @@ async def async_select(
 async def async_select(
     *,
     output_format: Literal['single_tuple_or_none'],
-    **kwargs: Unpack[AsyncSelectKwargs],
+    **kwargs: Unpack[spec.AsyncSelectKwargs],
 ) -> spec.TupleRow | None:
     ...
 
@@ -415,7 +364,7 @@ async def async_select(
 async def async_select(
     *,
     output_format: Literal['single_dict'],
-    **kwargs: Unpack[AsyncSelectKwargs],
+    **kwargs: Unpack[spec.AsyncSelectKwargs],
 ) -> spec.DictRow:
     ...
 
@@ -424,7 +373,7 @@ async def async_select(
 async def async_select(
     *,
     output_format: Literal['single_dict_or_none'],
-    **kwargs: Unpack[AsyncSelectKwargs],
+    **kwargs: Unpack[spec.AsyncSelectKwargs],
 ) -> spec.DictRow | None:
     ...
 
@@ -433,7 +382,7 @@ async def async_select(
 async def async_select(
     *,
     output_format: Literal['cell'],
-    **kwargs: Unpack[AsyncSelectKwargs],
+    **kwargs: Unpack[spec.AsyncSelectKwargs],
 ) -> spec.Cell:
     ...
 
@@ -442,7 +391,7 @@ async def async_select(
 async def async_select(
     *,
     output_format: Literal['cell_or_none'],
-    **kwargs: Unpack[AsyncSelectKwargs],
+    **kwargs: Unpack[spec.AsyncSelectKwargs],
 ) -> spec.Cell | None:
     ...
 
@@ -451,14 +400,14 @@ async def async_select(
 async def async_select(
     *,
     output_format: Literal['single_column'],
-    **kwargs: Unpack[AsyncSelectKwargs],
+    **kwargs: Unpack[spec.AsyncSelectKwargs],
 ) -> spec.TupleColumn:
     ...
 
 
 @typing.overload
 async def async_select(
-    **kwargs: Unpack[AsyncSelectKwargs],
+    **kwargs: Unpack[spec.AsyncSelectKwargs],
 ) -> spec.DictRows:
     ...
 
@@ -467,7 +416,7 @@ async def async_select(
 async def async_select(
     *,
     output_format: spec.QueryOutputFormat = 'dict',
-    **kwargs: Unpack[AsyncSelectKwargs],
+    **kwargs: Unpack[spec.AsyncSelectKwargs],
 ) -> spec.AsyncSelectOutput:
     ...
 
@@ -488,7 +437,7 @@ async def async_select(  # type: ignore
     where_lte: typing.Mapping[str, typing.Any] | None = None,
     where_like: typing.Mapping[str, str] | None = None,
     where_ilike: typing.Mapping[str, str] | None = None,
-    where_in: typing.Mapping[str, typing.Sequence[str]] | None = None,
+    where_in: typing.Mapping[str, typing.Sequence[typing.Any]] | None = None,
     where_or: typing.Sequence[spec.WhereGroup] | None = None,
     order_by: spec.OrderBy | None = None,
     limit: int | str | None = None,
@@ -581,14 +530,14 @@ async def _async_handle_json_columns(
 
 @typing.overload
 async def async_raw_select(
-    *, output_format: Literal['dict'], **kwargs: Unpack[AsyncRawSelectKwargs]
+    *, output_format: Literal['dict'], **kwargs: Unpack[spec.AsyncRawSelectKwargs]
 ) -> spec.DictRows:
     ...
 
 
 @typing.overload
 async def async_raw_select(
-    *, output_format: Literal['tuple'], **kwargs: Unpack[AsyncRawSelectKwargs]
+    *, output_format: Literal['tuple'], **kwargs: Unpack[spec.AsyncRawSelectKwargs]
 ) -> spec.TupleRows:
     ...
 
@@ -597,7 +546,7 @@ async def async_raw_select(
 async def async_raw_select(
     *,
     output_format: Literal['single_tuple'],
-    **kwargs: Unpack[AsyncRawSelectKwargs],
+    **kwargs: Unpack[spec.AsyncRawSelectKwargs],
 ) -> spec.TupleRow:
     ...
 
@@ -606,7 +555,7 @@ async def async_raw_select(
 async def async_raw_select(
     *,
     output_format: Literal['single_tuple_or_none'],
-    **kwargs: Unpack[AsyncRawSelectKwargs],
+    **kwargs: Unpack[spec.AsyncRawSelectKwargs],
 ) -> spec.TupleRow | None:
     ...
 
@@ -615,7 +564,7 @@ async def async_raw_select(
 async def async_raw_select(
     *,
     output_format: Literal['single_dict'],
-    **kwargs: Unpack[AsyncRawSelectKwargs],
+    **kwargs: Unpack[spec.AsyncRawSelectKwargs],
 ) -> spec.DictRow:
     ...
 
@@ -624,7 +573,7 @@ async def async_raw_select(
 async def async_raw_select(
     *,
     output_format: Literal['single_dict_or_none'],
-    **kwargs: Unpack[AsyncRawSelectKwargs],
+    **kwargs: Unpack[spec.AsyncRawSelectKwargs],
 ) -> spec.DictRow | None:
     ...
 
@@ -633,7 +582,7 @@ async def async_raw_select(
 async def async_raw_select(
     *,
     output_format: Literal['cell'],
-    **kwargs: Unpack[AsyncRawSelectKwargs],
+    **kwargs: Unpack[spec.AsyncRawSelectKwargs],
 ) -> spec.Cell:
     ...
 
@@ -642,7 +591,7 @@ async def async_raw_select(
 async def async_raw_select(
     *,
     output_format: Literal['cell_or_none'],
-    **kwargs: Unpack[AsyncRawSelectKwargs],
+    **kwargs: Unpack[spec.AsyncRawSelectKwargs],
 ) -> spec.Cell | None:
     ...
 
@@ -651,14 +600,14 @@ async def async_raw_select(
 async def async_raw_select(
     *,
     output_format: Literal['single_columns'],
-    **kwargs: Unpack[AsyncRawSelectKwargs],
+    **kwargs: Unpack[spec.AsyncRawSelectKwargs],
 ) -> spec.TupleColumn:
     ...
 
 
 @typing.overload
 async def async_raw_select(
-    **kwargs: Unpack[AsyncRawSelectKwargs],
+    **kwargs: Unpack[spec.AsyncRawSelectKwargs],
 ) -> spec.DictRows:
     ...
 
@@ -667,7 +616,7 @@ async def async_raw_select(
 async def async_raw_select(
     *,
     output_format: spec.QueryOutputFormat = 'dict',
-    **kwargs: Unpack[AsyncRawSelectKwargs],
+    **kwargs: Unpack[spec.AsyncRawSelectKwargs],
 ) -> spec.AsyncSelectOutput:
     ...
 

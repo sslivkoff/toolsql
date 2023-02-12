@@ -20,7 +20,7 @@ def update(
     where_lte: typing.Mapping[str, typing.Any] | None = None,
     where_like: typing.Mapping[str, str] | None = None,
     where_ilike: typing.Mapping[str, str] | None = None,
-    where_in: typing.Mapping[str, typing.Sequence[str]] | None = None,
+    where_in: typing.Mapping[str, typing.Sequence[typing.Any]] | None = None,
     where_or: typing.Sequence[spec.WhereGroup] | None = None,
 ) -> None:
 
@@ -59,7 +59,7 @@ async def async_update(
     where_lte: typing.Mapping[str, typing.Any] | None = None,
     where_like: typing.Mapping[str, str] | None = None,
     where_ilike: typing.Mapping[str, str] | None = None,
-    where_in: typing.Mapping[str, typing.Sequence[str]] | None = None,
+    where_in: typing.Mapping[str, typing.Sequence[typing.Any]] | None = None,
     where_or: typing.Sequence[spec.WhereGroup] | None = None,
 ) -> None:
 
