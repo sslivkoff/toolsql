@@ -175,7 +175,7 @@ def _column_expression_to_str(
 
             if column_name is None:
                 raise Exception('must specify column_name to be encoded')
-            if encode in ['hex', 'prefix_hex']:
+            if encode in ['raw_hex', 'prefix_hex']:
                 if dialect == 'sqlite':
                     column_str = 'lower(hex(' + column_name + '))'
                 elif dialect == 'postgresql':

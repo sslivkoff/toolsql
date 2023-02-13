@@ -181,7 +181,7 @@ class AsyncRawSelectKwargs(TypedDict, total=False):
 
 class ColumnExpressionDict(TypedDict, total=False):
     column: str | None
-    encode: Literal['hex', 'prefix_hex'] | None
+    encode: Literal['raw_hex', 'prefix_hex'] | None
     # function: str | FunctionExpression
     cast: schema_types.Columntype | None
     alias: str | None
