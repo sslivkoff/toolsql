@@ -18,21 +18,21 @@ column_expressions = [
     (
         {'column': 'col1', 'encode': 'raw_hex'},
         {
-            'postgresql': "encode(col1::bytea, 'raw_hex')",
-            'sqlite': 'lower(hex(col1))',
+            'postgresql': "encode(col1::bytea, 'hex') AS col1",
+            'sqlite': 'lower(hex(col1)) AS col1',
         },
     ),
     (
         {'column': 'col1', 'encode': 'prefix_hex'},
         {
-            'postgresql': "'0x' || encode(col1::bytea, 'raw_hex')",
-            'sqlite': "'0x' || lower(hex(col1))",
+            'postgresql': "'0x' || encode(col1::bytea, 'hex') AS col1",
+            'sqlite': "'0x' || lower(hex(col1)) AS col1",
         },
     ),
     (
         {'column': 'col1', 'encode': 'prefix_hex', 'alias': 'col1_alias'},
         {
-            'postgresql': "'0x' || encode(col1::bytea, 'raw_hex') AS col1_alias",
+            'postgresql': "'0x' || encode(col1::bytea, 'hex') AS col1_alias",
             'sqlite': "'0x' || lower(hex(col1)) AS col1_alias",
         },
     ),

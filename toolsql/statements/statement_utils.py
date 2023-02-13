@@ -162,6 +162,8 @@ def _column_expression_to_str(
 
     elif isinstance(column, dict):
 
+        alias = column.get('alias')
+
         column_name = column.get('column')
         if (
             column_name is not None
@@ -188,6 +190,9 @@ def _column_expression_to_str(
             else:
                 raise Exception('unknown encode format')
 
+            if alias is None:
+                alias = column_name
+
         elif column_name is not None:
             column_str = column_name
         else:
@@ -201,7 +206,6 @@ def _column_expression_to_str(
             column_str = 'CAST(' + column_str + ' AS ' + cast + ')'
 
         # add alias
-        alias = column.get('alias')
         if alias is not None:
             if is_column_name(alias):
                 column_str = column_str + ' AS ' + alias
