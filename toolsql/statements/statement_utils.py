@@ -9,6 +9,7 @@ from toolsql import spec
 # # validation
 #
 
+
 def is_cast_type(cast_type: str) -> bool:
     import re
 
@@ -27,33 +28,19 @@ def is_column_name(column: str) -> bool:
     return re.match(r'^[A-Za-z0-9_]+$', column) is not None
 
 
-def is_column_expression(column: str) -> bool:
-    """
-    currently checks for:
-    - plain column names
-    - capitalized aggregation functions (COUNT, MIN, MAX, AVG, SUM)
-    """
-    if is_column_name(column):
-        return True
-    elif column == 'COUNT(*)':
-        return True
-    else:
-        for item in [
-            'COUNT(',
-            'COUNT(DISTINCT ',
-            'MIN(',
-            'MAX(',
-            'AVG(',
-            'SUM(',
-        ]:
-            if not column.startswith(item) or column[-1] != ')':
-                continue
-            column_name = column[len(item) : -1]
-            if is_column_name(column_name):
-                return True
-        else:
-            return False
+def is_function_call(column: str) -> bool:
 
+    if column == 'COUNT(*)':
+        return True
+
+    elif column.startswith('COUNT(DISTINCT ') and column[-1] == ')':
+        s = slice(len('COUNT(DISTINCT '), -1)
+        return is_column_name(column[s])
+
+    else:
+        import re
+
+        return re.match(r'^[A-Za-z0-9_]+\([A-Za-z0-9_]*\)$', column) is not None
 
 
 def get_table_name(table: str | spec.TableSchema) -> str:
@@ -95,6 +82,136 @@ def get_dialect_placeholder(dialect: spec.Dialect) -> str:
 #
 # # statement creation
 #
+
+
+def build_columns_expression(
+    columns: spec.ColumnsExpression | None,
+    dialect: spec.Dialect,
+    *,
+    distinct: bool = False,
+) -> str:
+
+    if columns is None:
+        columns_str = '*'
+    else:
+        columns_str = _columns_expression_to_str(columns, dialect=dialect)
+
+    if distinct:
+        return 'DISTINCT ' + columns_str
+    else:
+        return columns_str
+
+
+def _columns_expression_to_str(
+    columns: spec.ColumnsExpression,
+    dialect: spec.Dialect,
+) -> str:
+
+    column_strs = []
+    if isinstance(columns, (tuple, list)):
+        for column in columns:
+            column_str = _column_expression_to_str(column, dialect=dialect)
+            column_strs.append(column_str)
+    elif isinstance(columns, dict):
+        for column_name, column_spec in columns.items():
+            if isinstance(column_spec, str):
+                new_column: spec.ColumnExpressionDict = dict(
+                    column=column_name, alias=column_spec
+                )
+            elif isinstance(column_spec, dict):
+                new_column = dict(column_spec, column=column_name)  # type: ignore
+            else:
+                raise Exception('invalid column specification')
+            column_str = _column_expression_to_str(
+                column=new_column,
+                dialect=dialect,
+            )
+            column_strs.append(column_str)
+    else:
+        raise Exception('invalid format for columns')
+
+    return ', '.join(column_strs)
+
+
+def _column_expression_to_str(
+    column: spec.ColumnExpression,
+    dialect: spec.Dialect,
+) -> str:
+    """
+
+    common sql functions: COUNT, MIN, MAX, AVG, SUM
+
+    sqlite functions
+    - core https://www.sqlite.org/lang_corefunc.html
+    - date/time https://www.sqlite.org/lang_datefunc.html
+    - aggregation https://www.sqlite.org/lang_aggfunc.html
+    - window https://www.sqlite.org/windowfunctions.html#biwinfunc
+    - math https://www.sqlite.org/lang_mathfunc.html
+    - json https://www.sqlite.org/json1.html
+
+    postgresql
+    - all https://www.postgresql.org/docs/current/functions.html
+    - strings https://www.postgresql.org/docs/current/functions-string.html
+    """
+
+    if isinstance(column, str):
+        if is_column_name(column) or is_function_call(column):
+            return column
+        else:
+            raise Exception('not a valid column expression: ' + str(column))
+
+    elif isinstance(column, dict):
+
+        column_name = column.get('column')
+        if (
+            column_name is not None
+            and not is_column_name(column_name)
+            and not is_function_call(column_name)
+        ):
+            raise Exception('is not valid column name: ' + str(column_name))
+
+        encode = column.get('encode')
+        if encode is not None:
+
+            if column_name is None:
+                raise Exception('must specify column_name to be encoded')
+            if encode in ['hex', 'prefix_hex']:
+                if dialect == 'sqlite':
+                    column_str = 'lower(hex(' + column_name + '))'
+                elif dialect == 'postgresql':
+                    column_str = 'encode(' + column_name + "::bytea, 'hex')"
+                else:
+                    raise Exception('unknown dialect: ' + str(dialect))
+
+                if encode == 'prefix_hex':
+                    column_str = "'0x' || " + column_str
+            else:
+                raise Exception('unknown encode format')
+
+        elif column_name is not None:
+            column_str = column_name
+        else:
+            raise Exception('must specify')
+
+        # cast
+        cast = column.get('cast')
+        if cast is not None:
+            if not is_cast_type(cast):
+                raise Exception('is not valid cast name: ' + str(column_name))
+            column_str = 'CAST(' + column_str + ' AS ' + cast + ')'
+
+        # add alias
+        alias = column.get('alias')
+        if alias is not None:
+            if is_column_name(alias):
+                column_str = column_str + ' AS ' + alias
+            else:
+                raise Exception('invalid name for alias: ' + str(alias))
+
+        return column_str
+
+    else:
+        raise Exception('unknown column format')
 
 
 def _where_clause_to_str(
