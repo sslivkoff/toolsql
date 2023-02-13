@@ -13,34 +13,33 @@ def build_select_statement(
     #
     # predicates
     table: str | spec.TableSchema,
-    columns: typing.Sequence[str] | typing.Mapping[str, str] | None = None,
+    columns: spec.ColumnsExpression | None = None,
     distinct: bool = False,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
     where_gte: typing.Mapping[str, typing.Any] | None = None,
     where_lt: typing.Mapping[str, typing.Any] | None = None,
     where_lte: typing.Mapping[str, typing.Any] | None = None,
-    where_like: typing.Mapping[str, str] | None = None,
-    where_ilike: typing.Mapping[str, str] | None = None,
-    where_in: typing.Mapping[str, typing.Sequence[str]] | None = None,
+    where_like: typing.Mapping[str, typing.Any] | None = None,
+    where_ilike: typing.Mapping[str, typing.Any] | None = None,
+    where_in: typing.Mapping[str, typing.Sequence[typing.Any]] | None = None,
     where_or: typing.Sequence[spec.WhereGroup] | None = None,
     order_by: spec.OrderBy | None = None,
     limit: int | str | None = None,
     offset: int | str | None = None,
-    cast: typing.Mapping[str, str] | None = None,
 ) -> tuple[str, spec.ExecuteParams]:
     """
     - sqlite https://www.sqlite.org/lang_select.html
     - postgresql https://www.postgresql.org/docs/current/sql-select.html
     """
 
-    table_name = statement_utils.get_table_name(table)
-
-    columns_str = _columns_to_str(
+    columns_str = statement_utils.build_columns_expression(
         columns=columns,
         distinct=distinct,
-        cast=cast,
+        dialect=dialect,
     )
+
+    table_name = statement_utils.get_table_name(table)
 
     where_clause, parameters = statement_utils._where_clause_to_str(
         where_equals=where_equals,
@@ -77,69 +76,6 @@ def build_select_statement(
         sql = statement_utils.statement_to_single_line(sql)
 
     return sql, parameters
-
-
-def _columns_to_str(
-    columns: typing.Sequence[str] | typing.Mapping[str, str] | None,
-    distinct: bool,
-    cast: typing.Mapping[str, str] | None,
-) -> str:
-
-    used_columns: list[str] = []
-
-    # add other columns
-    if columns is None:
-        # return all columns
-        if cast is not None and len(cast) > 0:
-            raise Exception('when casting columns, must specify columns')
-        columns = []
-
-    else:
-
-        if isinstance(columns, dict):
-            aliases = columns
-            columns = list(columns.keys())
-            for value in aliases.values():
-                if not statement_utils.is_column_name(value):
-                    raise Exception('not a valid column name')
-            if cast is not None:
-                raise NotImplementedError('cast with aliases')
-        else:
-            aliases = None
-
-        for column in columns:
-            if not statement_utils.is_column_expression(column):
-                raise Exception('not a valid column name: ' + str(column))
-        used_columns.extend(columns)
-
-        if aliases is not None:
-            used_columns = [
-                column + ' AS ' + aliases[column]
-                if column in aliases
-                else column
-                for column in used_columns
-            ]
-
-        if cast is not None:
-            for value in cast.values():
-                if not statement_utils.is_cast_type(value):
-                    raise Exception('not a valid cast type')
-            used_columns = [
-                'CAST(' + column + ' AS ' + cast[column] + ')'
-                if column in cast
-                else column
-                for column in used_columns
-            ]
-
-    if len(used_columns) > 0:
-        output = ', '.join(used_columns)
-    else:
-        output = '*'
-
-    if distinct:
-        output = 'DISTINCT ' + output
-
-    return output
 
 
 def _order_by_to_str(order_by: spec.OrderBy | None) -> str:

@@ -80,7 +80,7 @@ def decode_json_columns(
     *,
     rows: T,
     driver: spec.DriverClass,
-    raw_column_types: typing.Mapping[str, str] | None = None,
+    decode_columns: typing.Sequence[int] | None = None,
     cursor: spec.Cursor | spec.AsyncCursor | None,
 ) -> T:
 
@@ -90,20 +90,20 @@ def decode_json_columns(
         return _decode_json_columns_sequence(
             rows=rows,
             driver=driver,
-            raw_column_types=raw_column_types,
+            decode_columns=decode_columns,
             cursor=cursor,
         )
     elif spec.is_polars_dataframe(rows):
         return _decode_json_columns_polars(  # type: ignore
             rows=rows,
             driver=driver,
-            raw_column_types=raw_column_types,
+            decode_columns=decode_columns,
         )
     elif spec.is_pandas_dataframe(rows):
         return _decode_json_columns_pandas(  # type: ignore
             rows=rows,
             driver=driver,
-            raw_column_types=raw_column_types,
+            decode_columns=decode_columns,
         )
     else:
         raise Exception('invalid rows format: ' + str(type(rows)))
@@ -113,42 +113,20 @@ def _decode_json_columns_sequence(
     *,
     rows: typing.Sequence[tuple[typing.Any, ...]],
     driver: spec.DriverClass,
-    raw_column_types: typing.Mapping[str, str] | None = None,
+    decode_columns: typing.Sequence[int] | None = None,
     cursor: spec.Cursor | spec.AsyncCursor,
 ) -> typing.Sequence[tuple[typing.Any, ...]]:
 
-    if raw_column_types is not None and driver.name in ['sqlite3', 'aiosqlite']:
+    if decode_columns is not None and driver.name in ['sqlite3', 'aiosqlite']:
+        import json
 
-        # determine which columns are json
-        if isinstance(raw_column_types, dict):
-            column_names = driver.get_cursor_output_names(cursor)
-            if column_names is None:
-                raise Exception('could not determine column names of output')
-            json_indices = [
-                column_names.index(column_name)
-                for column_name, columntype in raw_column_types.items()
-                if columntype == 'JSON' and column_name in column_names
-            ]
-        elif isinstance(raw_column_types, (list, tuple)):
-            json_indices = [
-                c
-                for c, columntype in enumerate(raw_column_types)
-                if columntype == 'JSON'
-            ]
-        else:
-            raise Exception('invalid raw_column_types format')
-
-        # convert from json str to python objects
-        if len(json_indices) > 0:
-            import json
-
-            rows = [
-                tuple(
-                    json.loads(cell) if c in json_indices else cell
-                    for c, cell in enumerate(row)
-                )
-                for row in rows
-            ]
+        rows = [
+            tuple(
+                json.loads(cell) if c in decode_columns else cell
+                for c, cell in enumerate(row)
+            )
+            for row in rows
+        ]
 
     return rows
 
@@ -157,17 +135,16 @@ def _decode_json_columns_pandas(
     *,
     rows: pd.DataFrame,
     driver: spec.DriverClass,
-    raw_column_types: typing.Mapping[str, str] | None = None,
+    decode_columns: typing.Sequence[int] | None = None,
 ) -> pd.DataFrame:
 
-    if raw_column_types is None:
-        return rows
+    if decode_columns is not None:
+        import json
 
-    import json
-
-    for column_name, column_type in raw_column_types.items():
-        if column_type in ['JSON', 'JSONB']:
+        for c in decode_columns:
+            column_name = rows.columns[c]
             rows[column_name] = rows[column_name].map(json.loads)
+
     return rows
 
 
@@ -175,18 +152,18 @@ def _decode_json_columns_polars(
     *,
     rows: pl.DataFrame,
     driver: spec.DriverClass,
-    raw_column_types: typing.Mapping[str, str] | None = None,
+    decode_columns: typing.Sequence[int] | None = None,
 ) -> pl.DataFrame:
-    if raw_column_types is None:
-        return rows
 
-    import json
-    import polars as pl
+    if decode_columns is not None:
+        import json
+        import polars as pl
 
-    for column_name, column_type in raw_column_types.items():
-        if column_type in ['JSON', 'JSONB'] and column_name in rows.columns:
+        for c in decode_columns:
+            column_name = rows.columns[c]
             rows = rows.with_column(
                 rows[column_name].apply(json.loads, return_dtype=pl.Object)
             )
+
     return rows
 

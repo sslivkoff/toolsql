@@ -116,8 +116,8 @@ class WhereGroup(TypedDict, total=False):
     where_gte: typing.Mapping[str, typing.Any] | None
     where_lt: typing.Mapping[str, typing.Any] | None
     where_lte: typing.Mapping[str, typing.Any] | None
-    where_like: typing.Mapping[str, str] | None
-    where_ilike: typing.Mapping[str, str] | None
+    where_like: typing.Mapping[str, typing.Any] | None
+    where_ilike: typing.Mapping[str, typing.Any] | None
     where_in: typing.Mapping[str, typing.Sequence[typing.Any]] | None
     where_or: typing.Sequence[WhereGroup] | None
 
@@ -132,21 +132,20 @@ class SelectKwargs(TypedDict, total=False):
     where_gte: typing.Mapping[str, typing.Any] | None
     where_lt: typing.Mapping[str, typing.Any] | None
     where_lte: typing.Mapping[str, typing.Any] | None
-    where_like: typing.Mapping[str, str] | None
-    where_ilike: typing.Mapping[str, str] | None
+    where_like: typing.Mapping[str, typing.Any] | None
+    where_ilike: typing.Mapping[str, typing.Any] | None
     where_in: typing.Mapping[str, typing.Sequence[typing.Any]] | None
     where_or: typing.Sequence[WhereGroup] | None
     order_by: OrderBy | None
     limit: int | str | None
     offset: int | str | None
-    cast: typing.Mapping[str, str] | None
 
 
 class RawSelectKwargs(TypedDict, total=False):
     conn: driver_types.Connection | str | driver_types.DBConfig
     sql: str
     parameters: ExecuteParams | None
-    raw_column_types: typing.Mapping[str, str] | None
+    decode_json_columns: typing.Sequence[int] | None
 
 
 class AsyncSelectKwargs(TypedDict, total=False):
@@ -159,19 +158,41 @@ class AsyncSelectKwargs(TypedDict, total=False):
     where_gte: typing.Mapping[str, typing.Any] | None
     where_lt: typing.Mapping[str, typing.Any] | None
     where_lte: typing.Mapping[str, typing.Any] | None
-    where_like: typing.Mapping[str, str] | None
-    where_ilike: typing.Mapping[str, str] | None
+    where_like: typing.Mapping[str, typing.Any] | None
+    where_ilike: typing.Mapping[str, typing.Any] | None
     where_in: typing.Mapping[str, typing.Sequence[typing.Any]] | None
     where_or: typing.Sequence[WhereGroup] | None
     order_by: OrderBy | None
     limit: int | str | None
     offset: int | str | None
-    cast: typing.Mapping[str, str] | None
 
 
 class AsyncRawSelectKwargs(TypedDict, total=False):
     conn: driver_types.AsyncConnection | str | driver_types.DBConfig
     sql: str
     parameters: ExecuteParams | None
-    raw_column_types: typing.Mapping[str, str] | None
+    decode_json_columns: typing.Sequence[int] | None
+
+
+#
+# column expressions
+#
+
+
+class ColumnExpressionDict(TypedDict, total=False):
+    column: str | None
+    encode: Literal['hex', 'prefix_hex'] | None
+    # function: str | FunctionExpression
+    cast: schema_types.Columntype | None
+    alias: str | None
+
+
+ColumnExpression = typing.Union[str, ColumnExpressionDict]
+
+ColumnsExpression = typing.Sequence[ColumnExpression]
+
+
+# class FunctionExpression(TypedDict):
+#     name: str
+#     args: typing.Sequence[typing.Any]
 

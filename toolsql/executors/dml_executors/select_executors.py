@@ -113,31 +113,29 @@ def select(  # type: ignore
     #
     # query utils
     table: str | spec.TableSchema,
-    columns: typing.Sequence[str] | None = None,
+    columns: spec.ColumnsExpression | None = None,
     distinct: bool = False,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
     where_gte: typing.Mapping[str, typing.Any] | None = None,
     where_lt: typing.Mapping[str, typing.Any] | None = None,
     where_lte: typing.Mapping[str, typing.Any] | None = None,
-    where_like: typing.Mapping[str, str] | None = None,
-    where_ilike: typing.Mapping[str, str] | None = None,
+    where_like: typing.Mapping[str, typing.Any] | None = None,
+    where_ilike: typing.Mapping[str, typing.Any] | None = None,
     where_in: typing.Mapping[str, typing.Sequence[typing.Any]] | None = None,
     where_or: typing.Sequence[spec.WhereGroup] | None = None,
     order_by: spec.OrderBy | None = None,
     limit: int | str | None = None,
     offset: int | str | None = None,
-    cast: typing.Mapping[str, str] | None = None,
 ) -> spec.SelectOutput:
 
     # gather raw column types for sqlite JSON or connectorx json
     dialect = drivers.get_conn_dialect(conn)
-    columns, raw_column_types, cast = _handle_json_columns(
+    columns, decode_json_columns = _handle_json_columns(
         dialect=dialect,
         table=table,
         columns=columns,
         conn=conn,
-        cast=cast,
     )
 
     # create query
@@ -158,7 +156,6 @@ def select(  # type: ignore
         order_by=order_by,
         limit=limit,
         offset=offset,
-        cast=cast,
     )
 
     return raw_select(
@@ -166,7 +163,7 @@ def select(  # type: ignore
         parameters=parameters,
         conn=conn,
         output_format=output_format,
-        raw_column_types=raw_column_types,
+        decode_json_columns=decode_json_columns,
     )
 
 
@@ -175,45 +172,86 @@ def _handle_json_columns(
     dialect: spec.Dialect,
     table: str | spec.TableSchema,
     conn: spec.Connection | str | spec.DBConfig,
-    cast: typing.Mapping[str, str] | None = None,
-    columns: typing.Sequence[str] | None = None,
-) -> tuple[
-    typing.Sequence[str] | None,
-    typing.Mapping[str, str] | None,
-    typing.Mapping[str, str] | None,
-]:
+    columns: spec.ColumnsExpression | None = None,
+) -> tuple[spec.ColumnsExpression | None, typing.Sequence[int] | None,]:
 
     # for sqlite, gather raw column types, used for decoding later
-    if dialect == 'sqlite':
+    if dialect == 'sqlite' or (
+        dialect == 'postgresql'
+        and drivers.get_driver_name(conn=conn) == 'connectorx'
+    ):
+
+        # gather json columns
         raw_column_types = ddl_executors.get_table_raw_column_types(
             table=table, conn=conn
         )
-        return columns, raw_column_types, cast
-
-    # for postgres x connectorx, cast columns as text, used for decoding later
-    driver = drivers.get_driver_class(conn=conn)
-    if dialect == 'postgresql' and driver.name == 'connectorx':
-
+        columns = _normalize_columns(columns, raw_column_types=raw_column_types)
         if columns is None:
-            raw_column_types = ddl_executors.get_table_raw_column_types(
-                table=table, conn=conn
-            )
-            if drivers.get_driver_name(conn=conn) == 'connectorx':
-                if cast is not None:
-                    cast = dict(cast)
-                else:
-                    cast = {}
-                for column_name, column_type in raw_column_types.items():
-                    if column_type == 'JSONB':
-                        if column_name in cast:
-                            raise Exception(
-                                'cannot cast JSON column: ' + str(column_name)
-                            )
-                        cast[column_name] = 'TEXT'
-            columns = list(raw_column_types.keys())
-            return columns, raw_column_types, cast
+            decode_columns = [
+                c
+                for c, column_type in enumerate(raw_column_types.values())
+                if column_type in ('JSON', 'JSONB')
+            ]
+        else:
+            decode_columns = [
+                c
+                for c, column_schema in enumerate(columns)
+                if raw_column_types.get(column_schema.get('column'))  # type: ignore
+                in ('JSON', 'JSONB')
+            ]
 
-    return columns, None, cast
+        # cast columns as text
+        if (
+            dialect == 'postgresql'
+            and drivers.get_driver_name(conn=conn) == 'connectorx'
+        ):
+            for c in decode_columns:
+                if columns[c].get('cast') is None:
+                    columns[c]['cast'] = 'TEXT'
+
+        return columns, decode_columns
+
+    else:
+        return columns, None
+
+
+def _normalize_columns(
+    columns: spec.ColumnsExpression | None,
+    raw_column_types: typing.Mapping[str, str],
+) -> typing.Sequence[spec.ColumnExpressionDict]:
+
+    if columns is None:
+        return [
+            {'column': column_name}
+            for column_name in raw_column_types.keys()
+        ]
+
+    normalized: list[spec.ColumnExpressionDict] = []
+    if isinstance(columns, (list, tuple)):
+        for column in columns:
+            if isinstance(column, str):
+                column_schema: spec.ColumnExpressionDict = {'column': column}
+            elif isinstance(column, dict):
+                column_schema = column  # type: ignore
+            else:
+                raise Exception('invalid column schema')
+            normalized.append(column_schema)
+
+    elif isinstance(columns, dict):
+        for column_name, column_data in columns.items():
+            if isinstance(column_data, str):
+                column_schema = {'column': column_name, 'alias': column_data}
+            elif isinstance(column_data, dict):
+                column_schema = column_data.copy()  # type: ignore
+                column_schema['column'] = column_name
+            else:
+                raise Exception('invalid column schema')
+            normalized.append(column_schema)
+
+    else:
+        raise Exception('invalid columns specification')
+
+    return normalized
 
 
 @typing.overload
@@ -315,7 +353,7 @@ def raw_select(  # type: ignore
     parameters: spec.ExecuteParams | None = None,
     conn: spec.Connection | str | spec.DBConfig,
     output_format: spec.QueryOutputFormat = 'dict',
-    raw_column_types: typing.Mapping[str, str] | None = None,
+    decode_json_columns: typing.Sequence[int] | None = None,
 ) -> spec.SelectOutput:
 
     driver = drivers.get_driver_class(conn=conn)
@@ -324,7 +362,7 @@ def raw_select(  # type: ignore
         conn=conn,
         parameters=parameters,
         output_format=output_format,
-        raw_column_types=raw_column_types,
+        decode_json_columns=decode_json_columns,
     )
 
 
@@ -428,30 +466,28 @@ async def async_select(  # type: ignore
     #
     # query parameters
     table: str | spec.TableSchema,
-    columns: typing.Sequence[str] | None = None,
+    columns: spec.ColumnsExpression | None = None,
     distinct: bool = False,
     where_equals: typing.Mapping[str, typing.Any] | None = None,
     where_gt: typing.Mapping[str, typing.Any] | None = None,
     where_gte: typing.Mapping[str, typing.Any] | None = None,
     where_lt: typing.Mapping[str, typing.Any] | None = None,
     where_lte: typing.Mapping[str, typing.Any] | None = None,
-    where_like: typing.Mapping[str, str] | None = None,
-    where_ilike: typing.Mapping[str, str] | None = None,
+    where_like: typing.Mapping[str, typing.Any] | None = None,
+    where_ilike: typing.Mapping[str, typing.Any] | None = None,
     where_in: typing.Mapping[str, typing.Sequence[typing.Any]] | None = None,
     where_or: typing.Sequence[spec.WhereGroup] | None = None,
     order_by: spec.OrderBy | None = None,
     limit: int | str | None = None,
     offset: int | str | None = None,
-    cast: typing.Mapping[str, str] | None = None,
 ) -> spec.AsyncSelectOutput:
 
     dialect = drivers.get_conn_dialect(conn)
-    columns, raw_column_types, cast = await _async_handle_json_columns(
+    columns, decode_json_columns = await _async_handle_json_columns(
         dialect=dialect,
         table=table,
         columns=columns,
         conn=conn,
-        cast=cast,
     )
     sql, parameters = statements.build_select_statement(
         dialect=dialect,
@@ -470,7 +506,6 @@ async def async_select(  # type: ignore
         order_by=order_by,
         limit=limit,
         offset=offset,
-        cast=cast,
     )
 
     return await async_raw_select(
@@ -478,7 +513,7 @@ async def async_select(  # type: ignore
         parameters=parameters,
         conn=conn,
         output_format=output_format,
-        raw_column_types=raw_column_types,
+        decode_json_columns=decode_json_columns,
     )
 
 
@@ -487,57 +522,63 @@ async def _async_handle_json_columns(
     dialect: spec.Dialect,
     table: str | spec.TableSchema,
     conn: spec.AsyncConnection | str | spec.DBConfig,
-    cast: typing.Mapping[str, str] | None = None,
-    columns: typing.Sequence[str] | None = None,
-) -> tuple[
-    typing.Sequence[str] | None,
-    typing.Mapping[str, str] | None,
-    typing.Mapping[str, str] | None,
-]:
+    columns: spec.ColumnsExpression | None = None,
+) -> tuple[spec.ColumnsExpression | None, typing.Sequence[int] | None]:
 
     # for sqlite, gather raw column types, used for decoding later
-    if dialect == 'sqlite':
+    if dialect == 'sqlite' or (
+        dialect == 'postgresql'
+        and drivers.get_driver_name(conn=conn) == 'connectorx'
+    ):
+
+        # gather json columns
         raw_column_types = await ddl_executors.async_get_table_raw_column_types(
             table=table, conn=conn
         )
-        return columns, raw_column_types, cast
-
-    # for postgres x connectorx, cast columns as text, used for decoding later
-    driver = drivers.get_driver_class(conn=conn)
-    if dialect == 'postgresql' and driver.name == 'connectorx':
-
+        columns = _normalize_columns(columns, raw_column_types=raw_column_types)
         if columns is None:
-            raw_column_types = await ddl_executors.async_get_table_raw_column_types(
-                table=table, conn=conn
-            )
-            if drivers.get_driver_name(conn=conn) == 'connectorx':
-                if cast is not None:
-                    cast = dict(cast)
-                else:
-                    cast = {}
-                for column_name, column_type in raw_column_types.items():
-                    if column_type == 'JSONB':
-                        if column_name in cast:
-                            raise Exception(
-                                'cannot cast JSON column: ' + str(column_name)
-                            )
-                        cast[column_name] = 'TEXT'
-            columns = list(raw_column_types.keys())
-            return columns, raw_column_types, cast
+            decode_columns = [
+                c
+                for c, column_type in enumerate(raw_column_types.values())
+                if column_type in ('JSON', 'JSONB')
+            ]
+        else:
+            decode_columns = [
+                c
+                for c, column_schema in enumerate(columns)
+                if raw_column_types.get(column_schema.get('column'))  # type: ignore
+                in ('JSON', 'JSONB')
+            ]
 
-    return columns, None, cast
+        # cast columns as text
+        if (
+            dialect == 'postgresql'
+            and drivers.get_driver_name(conn=conn) == 'connectorx'
+        ):
+            for c in decode_columns:
+                if columns[c].get('cast') is None:
+                    columns[c]['cast'] = 'TEXT'
+
+        return columns, decode_columns
+
+    else:
+        return columns, None
 
 
 @typing.overload
 async def async_raw_select(
-    *, output_format: Literal['dict'], **kwargs: Unpack[spec.AsyncRawSelectKwargs]
+    *,
+    output_format: Literal['dict'],
+    **kwargs: Unpack[spec.AsyncRawSelectKwargs],
 ) -> spec.DictRows:
     ...
 
 
 @typing.overload
 async def async_raw_select(
-    *, output_format: Literal['tuple'], **kwargs: Unpack[spec.AsyncRawSelectKwargs]
+    *,
+    output_format: Literal['tuple'],
+    **kwargs: Unpack[spec.AsyncRawSelectKwargs],
 ) -> spec.TupleRows:
     ...
 
@@ -627,7 +668,7 @@ async def async_raw_select(  # type: ignore
     parameters: spec.ExecuteParams | None = None,
     conn: spec.AsyncConnection | str | spec.DBConfig,
     output_format: spec.QueryOutputFormat = 'dict',
-    raw_column_types: typing.Mapping[str, str] | None = None,
+    decode_json_columns: typing.Sequence[int] | None = None,
 ) -> spec.AsyncSelectOutput:
 
     driver = drivers.get_driver_class(conn=conn)
@@ -636,6 +677,6 @@ async def async_raw_select(  # type: ignore
         parameters=parameters,
         conn=conn,
         output_format=output_format,
-        raw_column_types=raw_column_types,
+        decode_json_columns=decode_json_columns,
     )
 
