@@ -8,7 +8,9 @@ test_tables = conf_tables.get_test_tables()
 
 simple = test_tables['simple']
 simple_columns = list(simple['schema']['columns'].keys())
-polars_simple = pl.DataFrame(simple['rows'], columns=simple_columns)
+polars_simple = pl.DataFrame(
+    simple['rows'], columns=simple_columns, orient='row'
+)
 
 pokemon = test_tables['pokemon']
 pokemon_columns = list(pokemon['schema']['columns'].keys())
@@ -178,7 +180,9 @@ def test_sync_insert_on_conflict_update(
     )
 
     # insert conflicting rows, ignore them
-    modified_rows = [row[:-1] + tuple(['MODIFIED']) for row in rows]
+    modified_rows = [
+        row[:-2] + tuple(['MODIFIED']) + (row[-1],) for row in rows
+    ]
     with toolsql.connect(sync_db_config) as conn:
         toolsql.insert(
             table=schema,
@@ -198,13 +202,16 @@ def test_sync_insert_on_conflict_update(
         )
     helpers.assert_results_equal(
         result=result,
-        target_result=pl.DataFrame(modified_rows, columns=simple_columns),
+        target_result=pl.DataFrame(
+            modified_rows, columns=simple_columns, orient='row'
+        ),
     )
 
 
 #
 # # async
 #
+
 
 async def test_async_insert_blank_table(
     async_write_db_config, fresh_pokemon_table, helpers
@@ -366,7 +373,9 @@ async def test_async_insert_on_conflict_update(
     )
 
     # insert conflicting rows, ignore them
-    modified_rows = [row[:-1] + tuple(['MODIFIED']) for row in rows]
+    modified_rows = [
+        row[:-2] + tuple(['MODIFIED']) + (row[-1],) for row in rows
+    ]
     async with toolsql.async_connect(async_db_config) as conn:
         await toolsql.async_insert(
             table=schema,
@@ -386,6 +395,8 @@ async def test_async_insert_on_conflict_update(
         )
     helpers.assert_results_equal(
         result=result,
-        target_result=pl.DataFrame(modified_rows, columns=simple_columns),
+        target_result=pl.DataFrame(
+            modified_rows, columns=simple_columns, orient='row'
+        ),
     )
 

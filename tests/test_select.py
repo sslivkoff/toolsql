@@ -41,7 +41,7 @@ select_queries = [
     },
     {
         'select_kwargs': {'table': 'simple', 'output_format': 'polars'},
-        'target_result': pl.DataFrame(simple['rows'], columns=simple_columns),
+        'target_result': pl.DataFrame(simple['rows'], columns=simple_columns, orient='row'),
     },
     {
         'select_kwargs': {'table': 'simple', 'output_format': 'pandas'},
