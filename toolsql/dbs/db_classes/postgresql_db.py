@@ -9,6 +9,23 @@ from . import abstract_db
 
 
 class PostgresqlDb(abstract_db.AbstractDb):
+
+    @classmethod
+    def create_db(cls, db_config: spec.DBConfig) -> None:
+        import subprocess
+
+        template = (
+            'createdb'
+            ' --owner={owner}'
+            ' --host={hostname}'
+            ' --port={port}'
+            ' --username={username}'
+            ' --password={password}'
+            ' {database}'
+        )
+        cmd = template.format(**db_config)
+        subprocess.call(cmd)
+
     @classmethod
     def get_tables_names(cls, conn: spec.Connection) -> typing.Sequence[str]:
         sql = """

@@ -9,6 +9,17 @@ from . import abstract_db
 
 
 class SqliteDb(abstract_db.AbstractDb):
+
+    @classmethod
+    def create_db(cls, db_config: spec.DBConfig) -> None:
+        import sqlite3
+
+        path = db_config['path']
+        if path is None:
+            raise Exception('path not specified for db')
+        with sqlite3.connect(path):
+            pass
+
     @classmethod
     def get_tables_names(cls, conn: spec.Connection) -> typing.Sequence[str]:
         sql = """SELECT name FROM sqlite_schema WHERE type =='table'"""

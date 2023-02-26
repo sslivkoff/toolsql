@@ -19,6 +19,10 @@ class AbstractDb:
     #
 
     @classmethod
+    def create_db(cls, db_config: spec.DBConfig) -> None:
+        raise NotImplementedError('create_db()')
+
+    @classmethod
     def get_table_schemas(
         cls, conn: spec.Connection
     ) -> typing.Mapping[str, spec.TableSchema]:
