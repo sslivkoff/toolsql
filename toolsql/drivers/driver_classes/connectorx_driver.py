@@ -143,7 +143,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         parameters: spec.ExecuteParams | None = None,
         conn: spec.Connection | str | spec.DBConfig,
         output_format: spec.QueryOutputFormat,
-        decode_json_columns: typing.Sequence[int] | None = None,
+        decode_columns: spec.DecodeColumns | None = None,
     ) -> spec.SelectOutput:
 
         import connectorx  # type: ignore
@@ -165,10 +165,10 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
                 raise Exception('unknown conn format: ' + str(type(conn)))
 
         result = connectorx.read_sql(conn, sql, return_type=result_format)
-        result = formats.decode_json_columns(
+        result = formats.decode_columns(
             rows=result,
             driver=cls,
-            decode_columns=decode_json_columns,
+            columns=decode_columns,
             cursor=None,
         )
         return formats.format_row_dataframe(result, output_format=output_format)
@@ -181,7 +181,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         parameters: spec.ExecuteParams | None = None,
         conn: spec.AsyncConnection | str | spec.DBConfig,
         output_format: spec.QueryOutputFormat,
-        decode_json_columns: typing.Sequence[int] | None = None,
+        decode_columns: spec.DecodeColumns | None = None,
     ) -> spec.AsyncSelectOutput:
 
         # see https://github.com/sfu-db/connector-x/discussions/368
@@ -196,7 +196,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
                     conn=conn,  # type: ignore
                     sql=sql,
                     output_format=output_format,
-                    decode_json_columns=decode_json_columns,
+                    decode_columns=decode_columns,
                 ),
             )
             # return await asyncio.to_thread(

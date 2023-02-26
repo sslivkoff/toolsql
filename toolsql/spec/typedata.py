@@ -35,3 +35,4 @@ generic_columntypes: typing.Sequence[typedefs.GenericColumntype] = [
 
 
 binary_columntypes = ['BLOB', 'BYTEA', 'BINARY']
+

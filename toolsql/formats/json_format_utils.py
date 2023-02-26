@@ -80,7 +80,7 @@ def decode_json_columns(
     *,
     rows: T,
     driver: spec.DriverClass,
-    decode_columns: typing.Sequence[int] | None = None,
+    columns: typing.Sequence[int] | None = None,
     cursor: spec.Cursor | spec.AsyncCursor | None,
 ) -> T:
 
@@ -90,20 +90,20 @@ def decode_json_columns(
         return _decode_json_columns_sequence(
             rows=rows,
             driver=driver,
-            decode_columns=decode_columns,
+            columns=columns,
             cursor=cursor,
         )
     elif spec.is_polars_dataframe(rows):
         return _decode_json_columns_polars(  # type: ignore
             rows=rows,
             driver=driver,
-            decode_columns=decode_columns,
+            columns=columns,
         )
     elif spec.is_pandas_dataframe(rows):
         return _decode_json_columns_pandas(  # type: ignore
             rows=rows,
             driver=driver,
-            decode_columns=decode_columns,
+            columns=columns,
         )
     else:
         raise Exception('invalid rows format: ' + str(type(rows)))
@@ -113,16 +113,16 @@ def _decode_json_columns_sequence(
     *,
     rows: typing.Sequence[tuple[typing.Any, ...]],
     driver: spec.DriverClass,
-    decode_columns: typing.Sequence[int] | None = None,
+    columns: typing.Sequence[int] | None = None,
     cursor: spec.Cursor | spec.AsyncCursor,
 ) -> typing.Sequence[tuple[typing.Any, ...]]:
 
-    if decode_columns is not None and driver.name in ['sqlite3', 'aiosqlite']:
+    if columns is not None and driver.name in ['sqlite3', 'aiosqlite']:
         import json
 
         rows = [
             tuple(
-                json.loads(cell) if c in decode_columns else cell
+                json.loads(cell) if c in columns else cell
                 for c, cell in enumerate(row)
             )
             for row in rows
@@ -135,13 +135,13 @@ def _decode_json_columns_pandas(
     *,
     rows: pd.DataFrame,
     driver: spec.DriverClass,
-    decode_columns: typing.Sequence[int] | None = None,
+    columns: typing.Sequence[int] | None = None,
 ) -> pd.DataFrame:
 
-    if decode_columns is not None:
+    if columns is not None:
         import json
 
-        for c in decode_columns:
+        for c in columns:
             column_name = rows.columns[c]
             rows[column_name] = rows[column_name].map(json.loads)
 
@@ -152,14 +152,14 @@ def _decode_json_columns_polars(
     *,
     rows: pl.DataFrame,
     driver: spec.DriverClass,
-    decode_columns: typing.Sequence[int] | None = None,
+    columns: typing.Sequence[int] | None = None,
 ) -> pl.DataFrame:
 
-    if decode_columns is not None:
+    if columns is not None:
         import json
         import polars as pl
 
-        for c in decode_columns:
+        for c in columns:
             column_name = rows.columns[c]
             rows = rows.with_column(
                 rows[column_name].apply(json.loads, return_dtype=pl.Object)

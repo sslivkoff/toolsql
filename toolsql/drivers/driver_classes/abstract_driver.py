@@ -111,7 +111,7 @@ class AbstractDriver:
         sql: str,
         parameters: spec.ExecuteParams | None = None,
         conn: spec.Connection | str | spec.DBConfig,
-        decode_json_columns: typing.Sequence[int] | None = None,
+        decode_columns: spec.DecodeColumns | None = None,
         output_format: spec.QueryOutputFormat,
     ) -> spec.SelectOutput:
         raise NotImplementedError('_select() for ' + str(cls.__name__))
@@ -123,8 +123,8 @@ class AbstractDriver:
         sql: str,
         parameters: spec.ExecuteParams | None = None,
         conn: spec.AsyncConnection | str | spec.DBConfig,
+        decode_columns: spec.DecodeColumns | None = None,
         output_format: spec.QueryOutputFormat,
-        decode_json_columns: typing.Sequence[int] | None = None,
     ) -> spec.AsyncSelectOutput:
         raise NotImplementedError('_async_select() for ' + str(cls.__name__))
 

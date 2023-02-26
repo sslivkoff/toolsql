@@ -16,8 +16,8 @@ class DbapiDriver(abstract_driver.AbstractDriver):
         sql: str,
         parameters: spec.ExecuteParams | None = None,
         conn: spec.Connection | spec.DBConfig | str,
+        decode_columns: spec.DecodeColumns | None = None,
         output_format: spec.QueryOutputFormat,
-        decode_json_columns: typing.Sequence[int] | None = None,
     ) -> spec.SelectOutput:
 
         if isinstance(conn, str):
@@ -35,10 +35,10 @@ class DbapiDriver(abstract_driver.AbstractDriver):
             return cursor
 
         rows: typing.Sequence[tuple[typing.Any, ...]] = cursor.fetchall()
-        rows = formats.decode_json_columns(
+        rows = formats.decode_columns(
             rows=rows,
             driver=cls,
-            decode_columns=decode_json_columns,
+            columns=decode_columns,
             cursor=cursor,
         )
 
@@ -58,7 +58,7 @@ class DbapiDriver(abstract_driver.AbstractDriver):
         parameters: spec.ExecuteParams | None = None,
         conn: spec.AsyncConnection | spec.DBConfig | str,
         output_format: spec.QueryOutputFormat,
-        decode_json_columns: typing.Sequence[int] | None = None,
+        decode_columns: spec.DecodeColumns | None = None,
     ) -> spec.AsyncSelectOutput:
 
         if isinstance(conn, str):
@@ -71,10 +71,10 @@ class DbapiDriver(abstract_driver.AbstractDriver):
             return cursor
 
         rows: typing.Sequence[tuple[typing.Any, ...]] = await cursor.fetchall()  # type: ignore
-        rows = formats.decode_json_columns(
+        rows = formats.decode_columns(
             rows=rows,
             driver=cls,
-            decode_columns=decode_json_columns,
+            columns=decode_columns,
             cursor=cursor,
         )
         if output_format == 'tuple':

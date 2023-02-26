@@ -145,7 +145,7 @@ class RawSelectKwargs(TypedDict, total=False):
     conn: driver_types.Connection | str | driver_types.DBConfig
     sql: str
     parameters: ExecuteParams | None
-    decode_json_columns: typing.Sequence[int] | None
+    decode_columns: DecodeColumns | None
 
 
 class AsyncSelectKwargs(TypedDict, total=False):
@@ -171,7 +171,7 @@ class AsyncRawSelectKwargs(TypedDict, total=False):
     conn: driver_types.AsyncConnection | str | driver_types.DBConfig
     sql: str
     parameters: ExecuteParams | None
-    decode_json_columns: typing.Sequence[int] | None
+    decode_columns: DecodeColumns | None
 
 
 #
@@ -195,4 +195,8 @@ ColumnsExpression = typing.Sequence[ColumnExpression]
 # class FunctionExpression(TypedDict):
 #     name: str
 #     args: typing.Sequence[typing.Any]
+
+
+DecodeColumn = typing.Literal['JSON', 'BOOLEAN', None]
+DecodeColumns = typing.Sequence[DecodeColumn]
 
