@@ -22,9 +22,7 @@ def connect(
 
     # determine driver
     if isinstance(target, dict):
-        driver = drivers.get_driver_class(
-            driver=target['driver'], sync=True
-        )
+        driver = drivers.get_driver_class(db_config=target, sync=True)
     else:
         driver = drivers.get_driver_class(uri=uri, sync=True)
 
@@ -49,11 +47,9 @@ def async_connect(
 
     # determine driver
     if isinstance(target, dict):
-        driver = drivers.get_driver_class(
-            driver=target['driver'], sync=True
-        )
+        driver = drivers.get_driver_class(db_config=target, sync=False)
     else:
-        driver = drivers.get_driver_class(uri=uri, sync=True)
+        driver = drivers.get_driver_class(uri=uri, sync=False)
 
     # create connection
     return driver.async_connect(
