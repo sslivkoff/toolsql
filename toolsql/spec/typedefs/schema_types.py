@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing
 
 from typing_extensions import Literal
+from typing_extensions import NotRequired
 from typing_extensions import TypedDict
 
 
@@ -125,12 +126,14 @@ class IndexSchema(TypedDict, total=False):
 
 
 class DBSchema(TypedDict):
+    name: str | None
     tables: typing.Mapping[str, TableSchema]
     # triggers: typing.Sequence[TriggerDefinition]
     # views: typing.Sequence[ViewDefinition]
 
 
 class DBSchemaShorthand(TypedDict):
+    name: NotRequired[str | None]
     tables: typing.Sequence[TableSchemaShorthand] | typing.Mapping[
         str, TableSchemaShorthand
     ]

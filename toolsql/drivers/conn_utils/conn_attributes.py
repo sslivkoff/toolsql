@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from toolsql import drivers
+from toolsql import executors
 from toolsql import spec
 
 
@@ -37,4 +38,18 @@ def get_conn_dialect(
             elif conn.startswith('postgres'):
                 return 'postgresql'
         raise Exception('unknown driver name')
+
+
+def get_conn_db_name(conn: spec.Connection) -> str | None:
+    dialect = get_conn_dialect(conn)
+    if dialect == 'sqlite':
+        return None
+    elif dialect == 'postgresql':
+        sql = 'SELECT current_database()'
+        name: str = executors.raw_select(
+            sql=sql, conn=conn, output_format='cell'
+        )
+        return name
+    else:
+        raise Exception('unknown dialect: ' + str(dialect))
 
