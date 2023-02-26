@@ -22,7 +22,7 @@ def normalize_shorthand_db_schema(
         }
     else:
         raise Exception('unknown format for tables: ' + str(tables))
-    return {'name': db_schema['name'], 'tables': normalized_tables}
+    return {'name': db_schema.get('name'), 'tables': normalized_tables}
 
 
 def normalize_shorthand_table_schema(
