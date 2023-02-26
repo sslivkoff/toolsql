@@ -26,6 +26,7 @@ postgresql_columntypes: typing.Sequence[typedefs.PostgresqlColumntype] = [
     'BYTEA',  # BINARY
     'JSONB',
     'TIMESTAMPZ',
+    'BOOLEAN',
 ]
 
 generic_columntypes: typing.Sequence[typedefs.GenericColumntype] = [

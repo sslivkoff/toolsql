@@ -31,6 +31,7 @@ PostgresqlColumntype = Literal[
     'BYTEA',  # BINARY
     'JSONB',
     'TIMESTAMPZ',
+    'BOOLEAN',
 ]
 
 GenericColumntype = Literal[

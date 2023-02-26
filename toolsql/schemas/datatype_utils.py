@@ -32,6 +32,7 @@ postgres_to_sqlite_conversions: typing.Mapping[
     'BYTEA': 'BLOB',
     'JSONB': 'JSON',
     'TIMESTAMPZ': 'INTEGER',
+    'BOOLEAN': 'INTEGER',
 }
 
 generic_to_postgres_conversions: typing.Mapping[
@@ -63,6 +64,7 @@ def get_basic_python_types() -> typing.Mapping[
         str: 'TEXT',
         bytes: 'BINARY',
         dict: 'JSON',
+        bool: 'BOOLEAN',
     }
 
 
