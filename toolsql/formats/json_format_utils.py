@@ -26,39 +26,39 @@ from toolsql import spec
 
 def encode_json_columns(
     *,
-    rows: spec.ExecuteManyParams | None = None,
+    rows: spec.ExecuteManyParams,
     dialect: Literal['sqlite', 'postgresql'],
-) -> spec.ExecuteManyParams | None:
-    if rows is not None:
-        new_rows: list[typing.Any] | None = None
-        for r, row in enumerate(rows):
-            new_row: typing.MutableSequence[typing.Any] | typing.MutableMapping[
-                str, typing.Any
-            ] | None = None
-            if isinstance(row, (list, tuple)):
-                if any(isinstance(cell, (dict, list, tuple)) for cell in row):
-                    new_row = [
-                        cell
-                        if not isinstance(cell, (dict, list, tuple))
-                        else encode_json_cell(cell, dialect)
-                        for cell in row
-                    ]
-            elif isinstance(row, dict):
-                for key, value in row.items():
-                    if isinstance(value, (dict, list, tuple)):
-                        if new_row is None:
-                            new_row = row.copy()
-                        new_row[key] = encode_json_cell(value, dialect)
-            else:
-                raise Exception('unknown row')
+) -> spec.ExecuteManyParams:
 
-            if new_row is not None:
-                if new_rows is None:
-                    new_rows = list(rows)
-                new_rows[r] = new_row
+    new_rows: list[typing.Any] | None = None
+    for r, row in enumerate(rows):
+        new_row: typing.MutableSequence[typing.Any] | typing.MutableMapping[
+            str, typing.Any
+        ] | None = None
+        if isinstance(row, (list, tuple)):
+            if any(isinstance(cell, (dict, list, tuple)) for cell in row):
+                new_row = [
+                    cell
+                    if not isinstance(cell, (dict, list, tuple))
+                    else encode_json_cell(cell, dialect)
+                    for cell in row
+                ]
+        elif isinstance(row, dict):
+            for key, value in row.items():
+                if isinstance(value, (dict, list, tuple)):
+                    if new_row is None:
+                        new_row = row.copy()
+                    new_row[key] = encode_json_cell(value, dialect)
+        else:
+            raise Exception('unknown row')
 
-        if new_rows is not None:
-            rows = new_rows
+        if new_row is not None:
+            if new_rows is None:
+                new_rows = list(rows)
+            new_rows[r] = new_row
+
+    if new_rows is not None:
+        rows = new_rows
 
     return rows
 

@@ -116,7 +116,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         cls,
         *,
         sql: str,
-        parameters: spec.ExecuteManyParams | None,
+        parameters: spec.ExecuteManyParams,
         conn: spec.Connection,
     ) -> None:
         raise Exception('connectorx cannot use execute() or executemany()')
@@ -126,7 +126,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         cls,
         *,
         sql: str,
-        parameters: spec.ExecuteManyParams | None,
+        parameters: spec.ExecuteManyParams,
         conn: spec.AsyncConnection,
     ) -> None:
         raise Exception('connectorx cannot use execute() or executemany()')

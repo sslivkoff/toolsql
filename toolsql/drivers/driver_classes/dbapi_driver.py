@@ -70,7 +70,7 @@ class DbapiDriver(abstract_driver.AbstractDriver):
         if output_format == 'cursor':
             return cursor
 
-        rows: typing.Sequence[tuple[typing.Any, ...]] = await cursor.fetchall()
+        rows: typing.Sequence[tuple[typing.Any, ...]] = await cursor.fetchall()  # type: ignore
         rows = formats.decode_json_columns(
             rows=rows,
             driver=cls,

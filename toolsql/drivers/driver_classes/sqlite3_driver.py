@@ -38,7 +38,7 @@ class Sqlite3Driver(dbapi_driver.DbapiDriver):
         cls,
         *,
         sql: str,
-        parameters: spec.ExecuteManyParams | None,
+        parameters: spec.ExecuteManyParams,
         conn: spec.Connection,
     ) -> None:
 
@@ -47,10 +47,7 @@ class Sqlite3Driver(dbapi_driver.DbapiDriver):
 
         cursor = conn.cursor()
         try:
-            if parameters is None:
-                cursor.execute(sql)
-            else:
-                cursor.executemany(sql, parameters)
+            cursor.executemany(sql, parameters)
         finally:
             cursor.close()
 

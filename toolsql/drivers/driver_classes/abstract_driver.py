@@ -67,15 +67,12 @@ class AbstractDriver:
         cls,
         *,
         sql: str,
-        parameters: spec.ExecuteManyParams | None,
+        parameters: spec.ExecuteManyParams,
         conn: spec.Connection,
     ) -> None:
 
         with conn.cursor() as cursor:  # type: ignore
-            if parameters is None:
-                cursor.execute(sql)
-            else:
-                cursor.executemany(sql, parameters)
+            cursor.executemany(sql, parameters)
 
     @classmethod
     async def async_execute(
@@ -88,20 +85,20 @@ class AbstractDriver:
 
         async with conn.cursor() as cursor:  # type: ignore
             if parameters is None:
-                await cursor.execute(sql)
+                await cursor.execute(sql)  # type: ignore
             else:
-                await cursor.execute(sql, parameters)
+                await cursor.execute(sql, parameters)  # type: ignore
 
     @classmethod
     async def async_executemany(
         cls,
         *,
         sql: str,
-        parameters: spec.ExecuteManyParams | None,
+        parameters: spec.ExecuteManyParams,
         conn: spec.AsyncConnection,
     ) -> None:
         async with conn.cursor() as cursor:  # type: ignore
-            await cursor.executemany(sql, parameters)
+            await cursor.executemany(sql, parameters)  # type: ignore
 
     #
     # # select
