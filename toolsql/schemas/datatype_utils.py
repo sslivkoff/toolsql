@@ -34,6 +34,20 @@ postgres_to_sqlite_conversions: typing.Mapping[
     'TIMESTAMPZ': 'INTEGER',
 }
 
+generic_to_postgres_conversions: typing.Mapping[
+    spec.GenericColumntype,
+    spec.PostgresqlColumntype,
+] = {
+    'BINARY': 'BYTEA',
+}
+
+generic_to_sqlite_conversions: typing.Mapping[
+    spec.GenericColumntype,
+    spec.SqliteColumntype,
+] = {
+    'BINARY': 'BLOB',
+}
+
 
 def get_basic_python_types() -> typing.Mapping[
     spec.PythonColumntype, spec.Columntype
@@ -47,7 +61,7 @@ def get_basic_python_types() -> typing.Mapping[
         datetime.datetime: 'TIMESTAMPZ',
         decimal.Decimal: 'NUMERIC',
         str: 'TEXT',
-        bytes: 'BLOB',
+        bytes: 'BINARY',
         dict: 'JSON',
     }
 
@@ -69,10 +83,12 @@ def _convert_columntype_to_sqlite(
 ) -> spec.SqliteColumntype:
 
     if isinstance(columntype, str):
-        if columntype in sqlite_to_postgres_conversions:
+        if columntype in spec.sqlite_columntypes:
             return columntype  # type: ignore
         elif columntype in postgres_to_sqlite_conversions:
             return postgres_to_sqlite_conversions[columntype]  # type: ignore
+        elif columntype in generic_to_sqlite_conversions:
+            return generic_to_sqlite_conversions[columntype]  # type: ignore
         else:
             raise Exception('unknown column type: ' + str(columntype))
 
@@ -92,18 +108,21 @@ def _convert_columntype_to_postgres(
 ) -> spec.PostgresqlColumntype:
 
     if isinstance(columntype, str):
-        if columntype in sqlite_to_postgres_conversions:
-            return sqlite_to_postgres_conversions[columntype]  # type: ignore
-        elif columntype in postgres_to_sqlite_conversions:
+        if columntype in spec.postgresql_columntypes:
             return columntype  # type: ignore
+        elif columntype in sqlite_to_postgres_conversions:
+            return sqlite_to_postgres_conversions[columntype]  # type: ignore
+        elif columntype in generic_to_postgres_conversions:
+            return generic_to_postgres_conversions[columntype]  # type: ignore
         else:
             raise Exception('unknown column type: ' + str(columntype))
 
     elif isinstance(columntype, type):
         basic_python_types = get_basic_python_types()
         if columntype in basic_python_types:
-            sqlite_type = basic_python_types[columntype]
-            return sqlite_to_postgres_conversions[sqlite_type]
+            return _convert_columntype_to_postgres(
+                basic_python_types[columntype]
+            )
         else:
             raise Exception('unknown column type: ' + str(columntype))
 

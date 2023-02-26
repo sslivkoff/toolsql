@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import typing
 
-sqlite_columntypes = [
+if typing.TYPE_CHECKING:
+    from . import typedefs
+
+
+sqlite_columntypes: typing.Sequence[typedefs.SqliteColumntype] = [
     'INTEGER',
     'FLOAT',
     'DECIMAL',
@@ -10,7 +15,7 @@ sqlite_columntypes = [
     'JSON',
 ]
 
-postgresql_columntypes = [
+postgresql_columntypes: typing.Sequence[typedefs.PostgresqlColumntype] = [
     'SMALLINT',  # INT16
     'INT4',  # INT32
     'BIGINT',  # INT64
@@ -23,3 +28,9 @@ postgresql_columntypes = [
     'TIMESTAMPZ',
 ]
 
+generic_columntypes: typing.Sequence[typedefs.GenericColumntype] = [
+    'BINARY',
+]
+
+
+binary_columntypes = ['BLOB', 'BYTEA', 'BINARY']

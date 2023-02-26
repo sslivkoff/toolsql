@@ -25,6 +25,12 @@ def is_postgresql_columntype(
     return item in typedata.postgresql_columntypes
 
 
+def is_generic_columntype(
+    item: typing.Any,
+) -> TypeGuard[typedefs.GenericColumntype]:
+    return item in typedata.generic_columntypes
+
+
 def is_pandas_dataframe(
     item: typing.Any,
 ) -> TypeGuard[pd.DataFrame]:

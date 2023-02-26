@@ -110,9 +110,11 @@ def _normalize_shorthand_column(
         else:
             raise Exception('unknown column type: ' + str(column_type))
     column_type = column_type.upper()
-    if not spec.is_sqlite_columntype(
-        column_type
-    ) and not spec.is_postgresql_columntype(column_type):
+    if (
+        not spec.is_sqlite_columntype(column_type)
+        and not spec.is_postgresql_columntype(column_type)
+        and not spec.is_generic_columntype(column_type)
+    ):
         raise Exception('could not determine valid columntype')
 
     unique = column.get('unique')

@@ -33,6 +33,10 @@ PostgresqlColumntype = Literal[
     'TIMESTAMPZ',
 ]
 
+GenericColumntype = Literal[
+    'BINARY',  # converts to BLOB or BYTEA
+]
+
 ColumntypeShorthand = typing.Union[
     PythonColumntype,
     SqliteColumntype,
@@ -43,6 +47,7 @@ ColumntypeShorthand = typing.Union[
 Columntype = typing.Union[
     SqliteColumntype,
     PostgresqlColumntype,
+    GenericColumntype,
 ]
 
 

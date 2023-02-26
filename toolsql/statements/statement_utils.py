@@ -306,10 +306,10 @@ def _where_filters_to_str(
                         )
 
                 # convert hex to binary
-                if symbol == ' = ' and column_types.get(column_name) in [
-                    'BLOB',
-                    'BYTEA',
-                ]:
+                if (
+                    symbol == ' = '
+                    and column_types.get(column_name) in spec.binary_columntypes
+                ):
                     column_value = _convert_hex_to_bytes(column_value)
                 elif (
                     symbol == ' = '
@@ -329,10 +329,10 @@ def _where_filters_to_str(
         for column_name, column_value in where_in.items():
 
             # convert hex to binary
-            if column_types is not None and column_types.get(column_name) in [
-                'BLOB',
-                'BYTEA',
-            ]:
+            if (
+                column_types is not None
+                and column_types.get(column_name) in spec.binary_columntypes
+            ):
                 column_value = [
                     _convert_hex_to_bytes(subvalue) for subvalue in column_value
                 ]
