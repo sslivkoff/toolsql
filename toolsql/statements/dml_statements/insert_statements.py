@@ -18,7 +18,7 @@ def build_insert_statement(
     single_line: bool = True,
     on_conflict: spec.OnConflictOption | None = None,
     upsert: bool | None = None,
-) -> tuple[str, spec.ExecuteManyParams | None]:
+) -> tuple[str, spec.ExecuteManyParams]:
     """
     - sqlite: https://www.sqlite.org/lang_insert.html
     - postgresql: https://www.postgresql.org/docs/current/sql-insert.html
@@ -76,23 +76,22 @@ def _prepare_rows_for_insert(
     row: spec.ExecuteParams | None = None,
     rows: spec.ExecuteManyParams | None = None,
     dialect: spec.Dialect,
-) -> spec.ExecuteManyParams | None:
+) -> spec.ExecuteManyParams:
 
     # convert to rows
     if row is not None and rows is not None:
         raise Exception()
     elif row is not None:
-        rows = [row]
+        return_rows: spec.ExecuteManyParams = [row]
     elif rows is not None:
-        pass
+        return_rows = rows
     else:
-        rows = None
+        raise Exception('must specify row or rows')
 
     # encode json columns
-    if rows is not None:
-        rows = formats.encode_json_columns(rows=rows, dialect=dialect)
+    return_rows = formats.encode_json_columns(rows=return_rows, dialect=dialect)
 
-    return rows
+    return return_rows
 
 
 def _create_values_expression(

@@ -230,6 +230,7 @@ def _where_clause_to_str(
     where_ilike: typing.Mapping[str, str] | None,
     where_in: typing.Mapping[str, typing.Sequence[str]] | None,
     where_or: typing.Sequence[spec.WhereGroup] | None,
+    table: str | spec.TableSchema | None,
 ) -> tuple[str, tuple[typing.Any, ...]]:
 
     subclauses, parameters = _where_filters_to_str(
@@ -243,6 +244,7 @@ def _where_clause_to_str(
         where_ilike=where_ilike,
         where_in=where_in,
         where_or=where_or,
+        table=table,
     )
 
     # finalize
@@ -264,7 +266,16 @@ def _where_filters_to_str(
     where_ilike: typing.Mapping[str, str] | None = None,
     where_in: typing.Mapping[str, typing.Sequence[str]] | None = None,
     where_or: typing.Sequence[spec.WhereGroup] | None = None,
+    table: str | spec.TableSchema | None,
 ) -> tuple[list[str], list[typing.Any]]:
+
+    if isinstance(table, dict):
+        column_types = {
+            column['name']: column['type'].upper()
+            for column in table['columns']
+        }
+    else:
+        column_types = {}
 
     placeholder = get_dialect_placeholder(dialect)
     subclauses = []
@@ -294,11 +305,28 @@ def _where_filters_to_str(
                             'case-sensitive LIKE for sqlite'
                         )
 
+                # convert hex to binary
+                if symbol == ' = ' and column_types.get(column_name) in [
+                    'BLOB',
+                    'BYTEA',
+                ]:
+                    column_value = _convert_hex_to_bytes(column_value)
+
                 subclauses.append(column_name + symbol + placeholder)
                 parameters.append(column_value)
 
     if where_in is not None:
         for column_name, column_value in where_in.items():
+
+            # convert hex to binary
+            if column_types is not None and column_types.get(column_name) in [
+                'BLOB',
+                'BYTEA',
+            ]:
+                column_value = [
+                    _convert_hex_to_bytes(subvalue) for subvalue in column_value
+                ]
+
             if not is_column_name(column_name):
                 raise Exception('not a valid column name')
             multiplaceholder = ','.join([placeholder] * len(column_value))
@@ -310,11 +338,24 @@ def _where_filters_to_str(
         subsubclauses = []
         for sub_where_or in where_or:
             subsubclause, subparameters = _where_filters_to_str(
-                dialect=dialect, **sub_where_or
+                dialect=dialect, table=table, **sub_where_or
             )
             subsubclauses.append(' AND '.join(subsubclause))
             parameters.extend(subparameters)
         subclauses.append('(' + ' OR '.join(subsubclauses) + ')')
 
     return subclauses, parameters
+
+
+def _convert_hex_to_bytes(column_value: typing.Any) -> typing.Any:
+    if isinstance(column_value, str):
+        try:
+            if column_value.startswith('0x'):
+                return bytes.fromhex(column_value[2:])
+            else:
+                return bytes.fromhex(column_value)
+        except ValueError:
+            raise Exception('cannot use str argument for BLOB column type')
+    else:
+        return column_value
 

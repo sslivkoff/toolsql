@@ -43,6 +43,7 @@ def build_delete_statement(
         where_in=where_in,
         where_or=where_or,
         dialect=dialect,
+        table=table,
     )
 
     sql = """
