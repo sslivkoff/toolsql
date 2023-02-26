@@ -43,16 +43,6 @@ invalid_column_expressions = [
     'col1,col2',
 ]
 
-# possible function extension
-#
-# valid
-# ({'function': 'COUNT', 'column': None}, 'COUNT(*)'),
-# ({'function': {'name': 'COUNT', 'args': []}, 'column': None}, 'COUNT(*)'),
-# ({'function': 'MAX', 'column': 'col1'}, 'MAX(col1)'),
-#
-# invalid
-# {'function': {'name': 'MAX'}, 'column': 'col1'},
-
 
 _column_expression_to_str = toolsql.statements.statement_utils._column_expression_to_str
 

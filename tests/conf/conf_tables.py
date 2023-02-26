@@ -19,9 +19,9 @@ def get_simple_table():
         },
         'rows': [
             (5, 'this', 'alright', b'\xde\xad\xbe\xef'),
-            (6, 'is', 'incredible', b'\xde\xad\xbe\xef'),
-            (7, 'a', 'awful', b'\xde\xad\xbe\xef'),
-            (8, 'test', 'alright', b'\xde\xad\xbe\xef'),
+            (6, 'is', 'incredible', b''),
+            (7, 'a', 'awful', b'\xbe\xef'),
+            (8, 'test', 'alright', b'\xbe\xef'),
         ],
         'indices': [],
         'constraints': [],

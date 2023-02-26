@@ -12,6 +12,7 @@ test_tables = conf_tables.get_test_tables()
 # simple
 simple = test_tables['simple']
 simple_columns = list(simple['schema']['columns'].keys())
+simple_schema = toolsql.normalize_shorthand_table_schema(simple['schema'])
 
 # pokemon
 pokemon = test_tables['pokemon']
@@ -41,7 +42,9 @@ select_queries = [
     },
     {
         'select_kwargs': {'table': 'simple', 'output_format': 'polars'},
-        'target_result': pl.DataFrame(simple['rows'], columns=simple_columns, orient='row'),
+        'target_result': pl.DataFrame(
+            simple['rows'], columns=simple_columns, orient='row'
+        ),
     },
     {
         'select_kwargs': {'table': 'simple', 'output_format': 'pandas'},
@@ -102,6 +105,45 @@ parameterized_select_queries = [
             'order_by': 'id',
         },
         'target_result': polars_pokemon.filter(polars_pokemon['height'] == 0.7),
+    },
+    {
+        'select_kwargs': {
+            'table': 'simple',
+            'output_format': 'polars',
+            'where_equals': {'raw_data': b'\xde\xad\xbe\xef'},
+        },
+        'target_result': pl.DataFrame(
+            simple['rows'], columns=simple_columns, orient='row'
+        ).filter(
+            pl.col('raw_data')
+            == pl.Series([b'\xde\xad\xbe\xef'] * len(simple['rows']))
+        ),
+    },
+    {
+        'select_kwargs': {
+            'table': simple_schema,
+            'output_format': 'polars',
+            'where_equals': {'raw_data': 'deadbeef'},
+        },
+        'target_result': pl.DataFrame(
+            simple['rows'], columns=simple_columns, orient='row'
+        ).filter(
+            pl.col('raw_data')
+            == pl.Series([b'\xde\xad\xbe\xef'] * len(simple['rows']))
+        ),
+    },
+    {
+        'select_kwargs': {
+            'table': simple_schema,
+            'output_format': 'polars',
+            'where_equals': {'raw_data': '0xdeadbeef'},
+        },
+        'target_result': pl.DataFrame(
+            simple['rows'], columns=simple_columns, orient='row'
+        ).filter(
+            pl.col('raw_data')
+            == pl.Series([b'\xde\xad\xbe\xef'] * len(simple['rows']))
+        ),
     },
     #
     # where lt
@@ -193,6 +235,45 @@ parameterized_select_queries = [
         },
         'target_result': polars_pokemon.filter(
             pl.col('primary_type').is_in(['GROUND', 'ELECTRIC'])
+        ),
+    },
+    {
+        'select_kwargs': {
+            'table': 'simple',
+            'output_format': 'polars',
+            'where_in': {'raw_data': [b'\xde\xad\xbe\xef']},
+        },
+        'target_result': pl.DataFrame(
+            simple['rows'], columns=simple_columns, orient='row'
+        ).filter(
+            pl.col('raw_data')
+            == pl.Series([b'\xde\xad\xbe\xef'] * len(simple['rows']))
+        ),
+    },
+    {
+        'select_kwargs': {
+            'table': simple_schema,
+            'output_format': 'polars',
+            'where_in': {'raw_data': ['deadbeef']},
+        },
+        'target_result': pl.DataFrame(
+            simple['rows'], columns=simple_columns, orient='row'
+        ).filter(
+            pl.col('raw_data')
+            == pl.Series([b'\xde\xad\xbe\xef'] * len(simple['rows']))
+        ),
+    },
+    {
+        'select_kwargs': {
+            'table': simple_schema,
+            'output_format': 'polars',
+            'where_in': {'raw_data': ['0xdeadbeef']},
+        },
+        'target_result': pl.DataFrame(
+            simple['rows'], columns=simple_columns, orient='row'
+        ).filter(
+            pl.col('raw_data')
+            == pl.Series([b'\xde\xad\xbe\xef'] * len(simple['rows']))
         ),
     },
     #

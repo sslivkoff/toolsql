@@ -311,6 +311,16 @@ def _where_filters_to_str(
                     'BYTEA',
                 ]:
                     column_value = _convert_hex_to_bytes(column_value)
+                elif (
+                    symbol == ' = '
+                    and isinstance(table, str)
+                    and _is_hex_str(column_value)
+                ):
+                    import warnings
+
+                    warnings.warn(
+                        'should provide full table schema in order to convert hex byte strs to binary'
+                    )
 
                 subclauses.append(column_name + symbol + placeholder)
                 parameters.append(column_value)
@@ -326,6 +336,14 @@ def _where_filters_to_str(
                 column_value = [
                     _convert_hex_to_bytes(subvalue) for subvalue in column_value
                 ]
+            elif isinstance(table, str):
+                for subvalue in column_value:
+                    if _is_hex_str(subvalue):
+                        import warnings
+
+                        warnings.warn(
+                            'should provide full table schema in order to convert hex byte strs to binary'
+                        )
 
             if not is_column_name(column_name):
                 raise Exception('not a valid column name')
@@ -345,6 +363,16 @@ def _where_filters_to_str(
         subclauses.append('(' + ' OR '.join(subsubclauses) + ')')
 
     return subclauses, parameters
+
+
+def _is_hex_str(s: typing.Any) -> bool:
+    if not isinstance(s, str):
+        return False
+    try:
+        int(s, 16)
+        return True
+    except ValueError:
+        return False
 
 
 def _convert_hex_to_bytes(column_value: typing.Any) -> typing.Any:
