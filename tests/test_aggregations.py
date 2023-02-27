@@ -18,6 +18,7 @@ polars_pokemon = polars_pokemon.with_column(
         name='all_types',
     )
 )
+pokemon_schema = toolsql.normalize_shorthand_table_schema(pokemon['schema'])
 pokemon = polars_pokemon
 
 aggregation_queries = [
@@ -56,7 +57,7 @@ aggregation_queries = [
     {
         'select_kwargs': {
             'columns': ['SUM(total_stats)'],
-            'table': 'pokemon',
+            'table': pokemon_schema,
             'output_format': 'cell',
         },
         'target_result': pokemon['total_stats'].sum(),

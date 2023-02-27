@@ -38,8 +38,12 @@ def decode_columns(
             column_decoders.append(json.loads)
         elif column == 'BOOLEAN':
             column_decoders.append(bool)
-        else:
+        elif column == 'INTEGER':
+            column_decoders.append(int)
+        elif column is None:
             column_decoders.append(None)
+        else:
+            raise Exception('unknown decoding type: ' + str(column))
 
     # decode based on row type
     if all(item is None for item in column_decoders):
@@ -61,8 +65,12 @@ def decode_columns(
                 pl_types.append(pl.datatypes.Object)
             elif column == 'BOOLEAN':
                 pl_types.append(pl.datatypes.Boolean)
-            else:
+            elif column == 'INTEGER':
+                pl_types.append(pl.datatypes.Int64)
+            elif column is None:
                 pl_types.append(None)
+            else:
+                raise Exception('unknown decoding type: ' + str(column))
 
         return _decode_columns_polars(  # type: ignore
             rows=rows,

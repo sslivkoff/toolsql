@@ -44,5 +44,6 @@ class ToolsqlTestHelpers:
             else:
                 np.all(result.to_numpy() == target_result.to_numpy())
         else:
+            assert type(result) == type(target_result)
             assert result == target_result
 

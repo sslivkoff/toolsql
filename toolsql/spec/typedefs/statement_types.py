@@ -197,6 +197,6 @@ ColumnsExpression = typing.Sequence[ColumnExpression]
 #     args: typing.Sequence[typing.Any]
 
 
-DecodeColumn = typing.Literal['JSON', 'BOOLEAN', None]
+DecodeColumn = typing.Literal['JSON', 'BOOLEAN', 'INTEGER', None]
 DecodeColumns = typing.Sequence[DecodeColumn]
 

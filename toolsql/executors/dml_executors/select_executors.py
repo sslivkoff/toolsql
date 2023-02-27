@@ -175,55 +175,75 @@ def _prepare_column_decoding(
     columns: spec.ColumnsExpression | None = None,
 ) -> tuple[spec.ColumnsExpression | None, spec.DecodeColumns | None,]:
 
-    # for sqlite, gather raw column types, used for decoding later
-    if dialect == 'sqlite' or (
-        dialect == 'postgresql'
-        and drivers.get_driver_name(conn=conn) == 'connectorx'
-    ):
-
-        # gather json columns
-        if isinstance(table, dict):
-            raw_column_types: typing.Mapping[str, str] = {
-                column['name']: column['type']
-                for column in table['columns']
-            }
-        else:
-            raw_column_types = ddl_executors.get_table_raw_column_types(
-                table=table, conn=conn
-            )
-        columns = _normalize_columns(columns, raw_column_types=raw_column_types)
-        decode_columns: typing.MutableSequence[spec.DecodeColumn] = []
-        if columns is None:
-            for c, column_type in enumerate(raw_column_types.values()):
-                if column_type in ('JSON', 'JSONB'):
-                    decode_columns.append('JSON')
-                elif dialect == 'sqlite' and column_type == 'BOOLEAN':
-                    decode_columns.append('BOOLEAN')
-                else:
-                    decode_columns.append(None)
-        else:
-            for column_expression in columns:
-                column_type = raw_column_types.get(column_expression.get('column'))  # type: ignore
-                if column_type in ('JSON', 'JSONB'):
-                    decode_columns.append('JSON')
-                elif dialect == 'sqlite' and column_type == 'BOOLEAN':
-                    decode_columns.append('BOOLEAN')
-                else:
-                    decode_columns.append(None)
-
-        # cast columns as text
-        if (
-            dialect == 'postgresql'
-            and drivers.get_driver_name(conn=conn) == 'connectorx'
-        ):
-            for c, decode_column in enumerate(decode_columns):
-                if decode_column == 'JSON' and columns[c].get('cast') is None:
-                    columns[c]['cast'] = 'TEXT'
-
-        return columns, decode_columns
-
+    if isinstance(table, dict):
+        raw_column_types: typing.Mapping[str, str] = {
+            column['name']: column['type'] for column in table['columns']
+        }
     else:
-        return columns, None
+        raw_column_types = ddl_executors.get_table_raw_column_types(
+            table=table, conn=conn
+        )
+    driver_name = drivers.get_driver_name(conn=conn)
+
+    return _get_column_decode_types(
+        dialect=dialect,
+        raw_column_types=raw_column_types,
+        driver_name=driver_name,
+        columns=columns,
+    )
+
+
+def _get_column_decode_types(
+    *,
+    dialect: spec.Dialect,
+    raw_column_types: typing.Mapping[str, str],
+    driver_name: str,
+    columns: spec.ColumnsExpression | None = None,
+) -> tuple[spec.ColumnsExpression | None, spec.DecodeColumns | None,]:
+
+    columns = _normalize_columns(columns, raw_column_types=raw_column_types)
+
+    # determine how to decode each column
+    decode_columns: typing.MutableSequence[spec.DecodeColumn] = []
+    if columns is None:
+        for c, column_type in enumerate(raw_column_types.values()):
+            if column_type in ('JSON', 'JSONB') and (
+                dialect == 'sqlite'
+                or (dialect == 'postgresql' and driver_name == 'connectorx')
+            ):
+                decode_columns.append('JSON')
+            elif dialect == 'sqlite' and column_type == 'BOOLEAN':
+                decode_columns.append('BOOLEAN')
+            else:
+                decode_columns.append(None)
+    else:
+        for column_expression in columns:
+            column_type = raw_column_types.get(column_expression.get('column'))  # type: ignore
+            if column_type in ('JSON', 'JSONB') and (
+                dialect == 'sqlite'
+                or (dialect == 'postgresql' and driver_name == 'connectorx')
+            ):
+                decode_columns.append('JSON')
+            elif dialect == 'sqlite' and column_type == 'BOOLEAN':
+                decode_columns.append('BOOLEAN')
+            elif (
+                dialect == 'postgresql'
+                and column_expression['column'] is not None
+                and column_expression['column'].startswith('SUM(')
+                and raw_column_types.get(column_expression['column'][4:-1])
+                in spec.integer_columntypes
+            ):
+                decode_columns.append('INTEGER')
+            else:
+                decode_columns.append(None)
+
+    # cast columns as text
+    if dialect == 'postgresql' and driver_name == 'connectorx':
+        for c, decode_column in enumerate(decode_columns):
+            if decode_column == 'JSON' and columns[c].get('cast') is None:
+                columns[c]['cast'] = 'TEXT'
+
+    return columns, decode_columns
 
 
 def _normalize_columns(
@@ -535,55 +555,25 @@ async def _async_prepare_column_decoding(
     columns: spec.ColumnsExpression | None = None,
 ) -> tuple[spec.ColumnsExpression | None, spec.DecodeColumns | None]:
 
-    # for sqlite, gather raw column types, used for decoding later
-    if dialect == 'sqlite' or (
-        dialect == 'postgresql'
-        and drivers.get_driver_name(conn=conn) == 'connectorx'
-    ):
-
-        # gather json columns
-        if isinstance(table, dict):
-            raw_column_types: typing.Mapping[str, str] = {
-                column['name']: column['type']
-                for column in table['columns']
-            }
-        else:
-            raw_column_types = await ddl_executors.async_get_table_raw_column_types(
+    if isinstance(table, dict):
+        raw_column_types: typing.Mapping[str, str] = {
+            column['name']: column['type'] for column in table['columns']
+        }
+    else:
+        raw_column_types = (
+            await ddl_executors.async_get_table_raw_column_types(
                 table=table, conn=conn
             )
-        columns = _normalize_columns(columns, raw_column_types=raw_column_types)
-        decode_columns: typing.MutableSequence[spec.DecodeColumn] = []
-        if columns is None:
-            for c, column_type in enumerate(raw_column_types.values()):
-                if column_type in ('JSON', 'JSONB'):
-                    decode_columns.append('JSON')
-                elif dialect == 'sqlite' and column_type == 'BOOLEAN':
-                    decode_columns.append('BOOLEAN')
-                else:
-                    decode_columns.append(None)
-        else:
-            for column_expression in columns:
-                column_type = raw_column_types.get(column_expression.get('column'))  # type: ignore
-                if column_type in ('JSON', 'JSONB'):
-                    decode_columns.append('JSON')
-                elif dialect == 'sqlite' and column_type == 'BOOLEAN':
-                    decode_columns.append('BOOLEAN')
-                else:
-                    decode_columns.append(None)
+        )
 
-        # cast columns as text
-        if (
-            dialect == 'postgresql'
-            and drivers.get_driver_name(conn=conn) == 'connectorx'
-        ):
-            for c, decode_column in enumerate(decode_columns):
-                if decode_column == 'JSON' and columns[c].get('cast') is None:
-                    columns[c]['cast'] = 'TEXT'
+    driver_name = drivers.get_driver_name(conn=conn)
 
-        return columns, decode_columns
-
-    else:
-        return columns, None
+    return _get_column_decode_types(
+        dialect=dialect,
+        raw_column_types=raw_column_types,
+        driver_name=driver_name,
+        columns=columns,
+    )
 
 
 @typing.overload
