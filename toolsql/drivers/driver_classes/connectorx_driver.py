@@ -98,6 +98,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         *,
         as_context: bool,
         autocommit: bool,
+        timeout: int | None = None,
     ) -> spec.Connection:
         return ConnectorxConnection(uri)
 
@@ -108,6 +109,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         *,
         as_context: bool,
         autocommit: bool,
+        timeout: int | None = None,
     ) -> spec.AsyncConnection:
         return ConnectorxAsyncConnection(uri)
 

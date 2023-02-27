@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import typing
-
 from toolsql import spec
 
 
@@ -23,6 +21,7 @@ class AbstractDriver:
         *,
         as_context: bool,
         autocommit: bool,
+        timeout: int | None = None,
     ) -> spec.Connection:
         raise NotImplementedError('connect() for ' + cls.name)
 
@@ -33,6 +32,7 @@ class AbstractDriver:
         *,
         as_context: bool,
         autocommit: bool,
+        timeout: int | None = None,
     ) -> spec.AsyncConnection:
         raise NotImplementedError('async_connect() for ' + cls.name)
 

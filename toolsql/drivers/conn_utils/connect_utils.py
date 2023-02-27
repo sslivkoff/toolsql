@@ -35,6 +35,7 @@ def async_connect(
     *,
     as_context: bool = True,
     autocommit: bool = True,
+    timeout: int | None = None,
 ) -> spec.AsyncConnection:
 
     # determine uri

@@ -16,13 +16,18 @@ class Sqlite3Driver(dbapi_driver.DbapiDriver):
         *,
         as_context: bool,
         autocommit: bool,
+        timeout: int | None = None,
     ) -> spec.Connection:
+
+        if timeout is None:
+            timeout = 30
+
         path = uri.split('sqlite://')[1]
 
         if autocommit:
-            return sqlite3.connect(path, isolation_level=None)
+            return sqlite3.connect(path, isolation_level=None, timeout=timeout)
         else:
-            return sqlite3.connect(path)
+            return sqlite3.connect(path, timeout=timeout)
 
     @classmethod
     def get_cursor_output_names(

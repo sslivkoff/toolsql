@@ -73,9 +73,12 @@ class PsycopgDriver(dbapi_driver.DbapiDriver):
         *,
         as_context: bool,
         autocommit: bool,
+        timeout: int | None = None,
     ) -> spec.Connection:
         connect_str = cls.get_psycopg_conn_str(uri)
-        return psycopg.connect(connect_str, autocommit=autocommit)
+        return psycopg.connect(
+            connect_str, autocommit=autocommit, connect_timeout=timeout
+        )
 
     @classmethod
     def get_cursor_output_names(
@@ -94,15 +97,21 @@ class PsycopgDriver(dbapi_driver.DbapiDriver):
         uri: str,
         as_context: bool,
         autocommit: bool,
+        timeout: int | None = None,
     ) -> spec.AsyncConnection:
 
         connect_str = cls.get_psycopg_conn_str(uri)
         if autocommit:
             conn = psycopg.AsyncConnection.connect(
-                connect_str, autocommit=autocommit
+                connect_str,
+                autocommit=autocommit,
+                connect_timeout=timeout,
             )
         else:
-            conn = psycopg.AsyncConnection.connect(connect_str)
+            conn = psycopg.AsyncConnection.connect(
+                connect_str,
+                connect_timeout=timeout,
+            )
 
         return PsycopgAsyncConnWrapper(conn)  # type: ignore
 

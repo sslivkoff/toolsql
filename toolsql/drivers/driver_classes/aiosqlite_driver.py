@@ -15,13 +15,18 @@ class AiosqliteDriver(dbapi_driver.DbapiDriver):
         uri: str,
         as_context: bool,
         autocommit: bool,
+        timeout: int | None = None,
     ) -> spec.AsyncConnection:
+
+        if timeout is None:
+            timeout = 5
+
         path = uri.split('sqlite://')[1]
 
         if autocommit:
-            return aiosqlite.connect(path, isolation_level=None)
+            return aiosqlite.connect(path, isolation_level=None, timeout=timeout)
         else:
-            return aiosqlite.connect(path)
+            return aiosqlite.connect(path, timeout=timeout)
 
     @classmethod
     def get_cursor_output_names(
