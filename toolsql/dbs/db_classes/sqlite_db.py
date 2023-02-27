@@ -82,10 +82,8 @@ class SqliteDb(abstract_db.AbstractDb):
 
             if primary == 0:
                 primary = False
-            elif primary == 1:
-                primary = True
             else:
-                raise Exception('unknown primary format')
+                primary = True
 
             column: spec.ColumnSchema = {
                 'name': name,
@@ -98,13 +96,13 @@ class SqliteDb(abstract_db.AbstractDb):
             }
             columns.append(column)
 
-        if len(unique_multi_columns) > 0 or len(indexed_multi_columns) > 0:
+        if len(unique_multi_columns) > 0:
             raise NotImplementedError('multicolumn_indices')
 
         return {
             'name': table_name,
             'columns': columns,
-            'indices': [],
+            'indices': indexed_multi_columns,
             'constraints': [],
         }
 
@@ -142,7 +140,7 @@ class SqliteDb(abstract_db.AbstractDb):
     @classmethod
     def _get_indexed_columns(
         cls, table_name: str, conn: spec.Connection
-    ) -> tuple[set[str], set[set[str]]]:
+    ) -> tuple[set[str], typing.Sequence[spec.IndexSchema]]:
 
         # get index names
         sql = """
@@ -156,7 +154,7 @@ class SqliteDb(abstract_db.AbstractDb):
 
         # get index info
         column_indices = set()
-        multicolumn_indices: set[set[str]] = set()
+        multicolumn_indices: typing.MutableSequence[spec.IndexSchema] = []
         for index_name in index_names:
             sql = 'PRAGMA index_info({index_name})'.format(
                 index_name=index_name
@@ -169,7 +167,12 @@ class SqliteDb(abstract_db.AbstractDb):
             if len(results) == 1:
                 column_indices.add(results[0][2])
             else:
-                multicolumn_indices.add({result[2] for result in results})
+                index: spec.IndexSchema = {
+                    'name': index_name,
+                    'columns': [result[2] for result in results],
+                    'unique': None,
+                }
+                multicolumn_indices.append(index)
 
         return column_indices, multicolumn_indices
 
