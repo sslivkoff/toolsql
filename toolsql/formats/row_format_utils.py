@@ -27,7 +27,11 @@ def format_row_tuples(
         if len(rows) > 1:
             raise Exception('more than one row returned')
         elif len(rows) == 0:
-            if output_format in ['single_tuple_or_none', 'single_row_or_none']:
+            if output_format in [
+                'single_tuple_or_none',
+                'single_row_or_none',
+                'cell_or_none',
+            ]:
                 return None
             else:
                 raise Exception('no row found')

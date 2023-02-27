@@ -191,12 +191,6 @@ ColumnExpression = typing.Union[str, ColumnExpressionDict]
 
 ColumnsExpression = typing.Sequence[ColumnExpression]
 
-
-# class FunctionExpression(TypedDict):
-#     name: str
-#     args: typing.Sequence[typing.Any]
-
-
 DecodeColumn = typing.Literal['JSON', 'BOOLEAN', 'INTEGER', None]
 DecodeColumns = typing.Sequence[DecodeColumn]
 
