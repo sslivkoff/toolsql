@@ -32,6 +32,25 @@ def build_insert_statement(
         dialect=dialect,
     )
 
+    if columns is None:
+        first_row = rows[0]
+        if isinstance(first_row, dict):
+            columns = list(first_row.keys())
+            if isinstance(table, dict):
+                table_columns = {column['name'] for column in table['columns']}
+                columns = [column for column in columns if column in table_columns]
+            columns_expression = '(' + ','.join(columns) + ')'
+        else:
+            columns_expression = ''
+    else:
+        columns_expression = '(' + ','.join(columns) + ')'
+
+    values_expression = _create_values_expression(
+        rows=rows,
+        columns=columns,
+        dialect=dialect,
+    )
+
     conflict_expression = _create_conflict_expression(
         on_conflict=on_conflict,
         upsert=upsert,
@@ -39,17 +58,6 @@ def build_insert_statement(
         columns=columns,
         rows=rows,
         table=table,
-    )
-
-    if columns is not None:
-        columns_expression = '(' + ','.join(columns) + ')'
-    else:
-        columns_expression = ''
-
-    values_expression = _create_values_expression(
-        rows=rows,
-        columns=columns,
-        dialect=dialect,
     )
 
     sql = """
@@ -109,7 +117,7 @@ def _create_values_expression(
         if isinstance(rows[0], dict):
 
             if columns is None:
-                columns = list(rows[0].keys())
+                raise Exception('need columns specified')
 
             if dialect == 'sqlite':
                 return ', '.join(':' + column for column in columns)
