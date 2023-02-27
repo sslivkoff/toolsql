@@ -17,7 +17,7 @@ def does_db_exist(db: str | spec.DBConfig) -> bool:
     else:
         raise Exception('unknown db specification')
 
-    if db_config['driver'] == 'connectorx':
+    if db_config.get('driver') not in ['sqlite3', 'psycopg']:
         if db_config['dbms'] == 'sqlite':
             db_config = dict(db_config, driver='sqlite3')  # type: ignore
         elif db_config['dbms'] == 'postgresql':
