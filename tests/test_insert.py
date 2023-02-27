@@ -130,7 +130,7 @@ def test_sync_insert_on_conflict_ignore(
     )
 
     # insert conflicting rows, ignore them
-    modified_rows = [row[:-1] + tuple(['MODIFIED']) for row in rows]
+    modified_rows = [row[:2] + ('MODIFIED',) + row[3:] for row in rows]
     with toolsql.connect(sync_db_config) as conn:
         toolsql.insert(
             table=schema,
@@ -180,9 +180,7 @@ def test_sync_insert_on_conflict_update(
     )
 
     # insert conflicting rows, ignore them
-    modified_rows = [
-        row[:-2] + tuple(['MODIFIED']) + (row[-1],) for row in rows
-    ]
+    modified_rows = [row[:2] + ('MODIFIED',) + row[3:] for row in rows]
     with toolsql.connect(sync_db_config) as conn:
         toolsql.insert(
             table=schema,
@@ -322,7 +320,7 @@ async def test_async_insert_on_conflict_ignore(
     )
 
     # insert conflicting rows, ignore them
-    modified_rows = [row[:-1] + tuple(['MODIFIED']) for row in rows]
+    modified_rows = [row[:2] + ('MODIFIED',) + row[3:] for row in rows]
     async with toolsql.async_connect(async_db_config) as conn:
         await toolsql.async_insert(
             table=schema,
@@ -373,9 +371,7 @@ async def test_async_insert_on_conflict_update(
     )
 
     # insert conflicting rows, ignore them
-    modified_rows = [
-        row[:-2] + tuple(['MODIFIED']) + (row[-1],) for row in rows
-    ]
+    modified_rows = [row[:2] + ('MODIFIED',) + row[3:] for row in rows]
     async with toolsql.async_connect(async_db_config) as conn:
         await toolsql.async_insert(
             table=schema,

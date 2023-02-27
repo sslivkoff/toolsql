@@ -165,12 +165,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
                 raise Exception('unknown conn format: ' + str(type(conn)))
 
         result = connectorx.read_sql(conn, sql, return_type=result_format)
-        result = formats.decode_columns(
-            rows=result,
-            driver=cls,
-            columns=decode_columns,
-            cursor=None,
-        )
+        result = formats.decode_columns(rows=result, columns=decode_columns)
         return formats.format_row_dataframe(result, output_format=output_format)
 
     @classmethod

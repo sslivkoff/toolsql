@@ -197,6 +197,8 @@ def _prepare_column_decoding(
             for c, column_type in enumerate(raw_column_types.values()):
                 if column_type in ('JSON', 'JSONB'):
                     decode_columns.append('JSON')
+                elif dialect == 'sqlite' and column_type == 'BOOLEAN':
+                    decode_columns.append('BOOLEAN')
                 else:
                     decode_columns.append(None)
         else:
@@ -204,6 +206,8 @@ def _prepare_column_decoding(
                 column_type = raw_column_types.get(column_expression.get('column'))  # type: ignore
                 if column_type in ('JSON', 'JSONB'):
                     decode_columns.append('JSON')
+                elif dialect == 'sqlite' and column_type == 'BOOLEAN':
+                    decode_columns.append('BOOLEAN')
                 else:
                     decode_columns.append(None)
 
@@ -553,6 +557,8 @@ async def _async_prepare_column_decoding(
             for c, column_type in enumerate(raw_column_types.values()):
                 if column_type in ('JSON', 'JSONB'):
                     decode_columns.append('JSON')
+                elif dialect == 'sqlite' and column_type == 'BOOLEAN':
+                    decode_columns.append('BOOLEAN')
                 else:
                     decode_columns.append(None)
         else:
@@ -560,6 +566,8 @@ async def _async_prepare_column_decoding(
                 column_type = raw_column_types.get(column_expression.get('column'))  # type: ignore
                 if column_type in ('JSON', 'JSONB'):
                     decode_columns.append('JSON')
+                elif dialect == 'sqlite' and column_type == 'BOOLEAN':
+                    decode_columns.append('BOOLEAN')
                 else:
                     decode_columns.append(None)
 

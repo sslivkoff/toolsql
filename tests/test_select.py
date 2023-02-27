@@ -31,23 +31,23 @@ select_queries = [
     #
     # simple table
     {
-        'select_kwargs': {'table': 'simple', 'output_format': 'tuple'},
+        'select_kwargs': {'table': simple_schema, 'output_format': 'tuple'},
         'target_result': simple['rows'],
     },
     {
-        'select_kwargs': {'table': 'simple', 'output_format': 'dict'},
+        'select_kwargs': {'table': simple_schema, 'output_format': 'dict'},
         'target_result': [
             dict(zip(simple_columns, datum)) for datum in simple['rows']
         ],
     },
     {
-        'select_kwargs': {'table': 'simple', 'output_format': 'polars'},
+        'select_kwargs': {'table': simple_schema, 'output_format': 'polars'},
         'target_result': pl.DataFrame(
             simple['rows'], columns=simple_columns, orient='row'
         ),
     },
     {
-        'select_kwargs': {'table': 'simple', 'output_format': 'pandas'},
+        'select_kwargs': {'table': simple_schema, 'output_format': 'pandas'},
         'target_result': pd.DataFrame(simple['rows'], columns=simple_columns),
     },
     #
