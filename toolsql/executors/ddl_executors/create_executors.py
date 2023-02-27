@@ -66,5 +66,6 @@ def create_db(
                     table=table,
                     conn=conn,
                     if_not_exists=if_not_exists,
+                    confirm=confirm,
                 )
 
