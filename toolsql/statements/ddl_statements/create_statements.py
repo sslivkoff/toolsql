@@ -91,7 +91,7 @@ def _format_column(
 
 
 def build_create_index_statement(
-    table_name: str,
+    table_schema: spec.TableSchema,
     column_name: str | None = None,
     *,
     column_names: typing.Sequence[str] | None = None,
@@ -99,6 +99,8 @@ def build_create_index_statement(
     if_not_exists: bool = False,
     single_line: bool = True,
     dialect: spec.Dialect,
+    unique: bool = False,
+    nulls_equal: bool = False,
 ) -> str:
     """
     - sqlite: https://www.sqlite.org/lang_createindex.html
@@ -114,11 +116,57 @@ def build_create_index_statement(
     else:
         raise Exception('specify column_name or column_names')
 
+    if nulls_equal:
+        nullable_columns = {
+            column['name']
+            for column in table_schema['columns']
+            if column['nullable']
+        }
+        column_types = {
+            column['name']: column['type']
+            for column in table_schema['columns']
+            if column['nullable']
+        }
+        new_columns = []
+        for column in columns:
+            if (
+                column in nullable_columns
+                or not statement_utils.is_column_name(column)
+            ):
+                if dialect == 'postgresql':
+                    function = 'COALESCE'
+                elif dialect == 'sqlite':
+                    function = 'IFNULL'
+                else:
+                    raise Exception('unknown dialect')
+                column_type = column_types[column]
+                if column_type == 'TEXT':
+                    null_placeholder: typing.Any = "'!@#$NULL_PLACEHOLDER!@#$'"
+                elif column_type in spec.integer_columntypes:
+                    null_placeholder = str(-9999999999999)
+                else:
+                    raise Exception('could not determine null placeholder')
+                new_columns.append(
+                    function + "(" + column + ", " + str(null_placeholder) + ")"
+                )
+            else:
+                new_columns.append(column)
+        columns = new_columns
+
+    table_name = table_schema['name']
     if index_name is None:
         index_name = 'index___' + table_name + '___' + '__'.join(columns)
+        index_name = index_name.lower()
+        for char in '() -\'",!@#$':
+            index_name = index_name.replace(char, '_')
+        if len(index_name) > 40:
+            import hashlib
+
+            name_hash = hashlib.md5(index_name.encode()).hexdigest()
+            index_name = 'index___' + table_name + '___' + name_hash
 
     template = """
-    CREATE INDEX
+    CREATE {uniqueness} INDEX
     {if_not_exists}
     {index_name}
     ON
@@ -126,6 +174,7 @@ def build_create_index_statement(
     ( {columns} )
     """
     sql = template.format(
+        uniqueness=('UNIQUE' if unique else ''),
         if_not_exists=('IF NOT EXISTS' if if_not_exists else ''),
         index_name=index_name,
         table_name=table_name,
@@ -153,9 +202,10 @@ def build_all_table_schema_create_statements(
         single_line=single_line,
     )
 
+    # single column indices
     create_index_statements = [
         build_create_index_statement(
-            table_name=table_schema['name'],
+            table_schema=table_schema,
             column_name=column['name'],
             dialect=dialect,
             if_not_exists=if_not_exists,
@@ -164,6 +214,20 @@ def build_all_table_schema_create_statements(
         for column in table_schema['columns']
         if column['index']
     ]
+
+    # multi column indices
+    for index in table_schema['indices']:
+        create_index_statement = build_create_index_statement(
+            index_name=index['name'],
+            table_schema=table_schema,
+            column_names=index['columns'],
+            unique=index['unique'],
+            nulls_equal=index['nulls_equal'],
+            dialect=dialect,
+            if_not_exists=if_not_exists,
+            single_line=single_line,
+        )
+        create_index_statements.append(create_index_statement)
 
     return [create_table] + create_index_statements
 

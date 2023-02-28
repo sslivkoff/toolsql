@@ -125,3 +125,42 @@ def get_weather_table():
         ],
     }
 
+
+def get_history_table():
+    return {
+        'schema': {
+            'name': 'history',
+            'columns': {
+                'id': {'type': int, 'primary': True},
+                'year': int,
+                'month': int,
+                'country': str,
+                'condition': str,
+            },
+            'indices': [
+                {
+                    'columns': ['year', 'month', 'country'],
+                    'unique': True,
+                },
+            ],
+        },
+        'rows': [
+            (0, 1066, 0, 'england', 'not conquered'),
+            (1, None, 0, 'england', 'english'),
+            (2, 1066, None, 'england', 'being conquered'),
+            (3, 1066, 0, None, 'medieval'),
+            (4, 1067, 0, 'england', 'conquered'),
+            (5, 1066, 1, 'england', 'cold'),
+            (6, 1066, 0, 'wales', 'neighborly'),
+        ],
+        'conflict_rows': [
+            (10, 1066, 0, 'england', 'what'),
+            (11, None, 0, 'england', 'what'),
+            (12, 1066, None, 'england', 'what'),
+            (13, 1066, 0, None, 'what'),
+            (14, 1067, 0, 'england', 'what'),
+            (15, 1066, 1, 'england', 'what'),
+            (16, 1066, 0, 'wales', 'what'),
+        ],
+    }
+

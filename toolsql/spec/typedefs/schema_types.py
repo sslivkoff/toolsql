@@ -128,7 +128,8 @@ class ConstraintSchema(TypedDict):
 class IndexSchema(TypedDict, total=False):
     name: str | None
     columns: typing.Sequence[str]
-    unique: bool | None
+    unique: bool
+    nulls_equal: bool
 
 
 class DBSchema(TypedDict):

@@ -37,6 +37,17 @@ def normalize_shorthand_table_schema(
     indices = table.get('indices')
     if indices is None:
         indices = []
+    new_indices = []
+    for index in indices:
+        index = index.copy()
+        if 'name' not in index:
+            index['name'] = None
+        if index.get('unique') is None:
+            index['unique'] = False
+        if index.get('nulls_equal') is None:
+            index['nulls_equal'] = len(index['columns']) > 1
+        new_indices.append(index)
+    indices = new_indices
 
     return {
         'name': table['name'],

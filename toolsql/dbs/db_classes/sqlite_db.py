@@ -170,7 +170,7 @@ class SqliteDb(abstract_db.AbstractDb):
                 index: spec.IndexSchema = {
                     'name': index_name,
                     'columns': [result[2] for result in results],
-                    'unique': None,
+                    'unique': False,
                 }
                 multicolumn_indices.append(index)
 
