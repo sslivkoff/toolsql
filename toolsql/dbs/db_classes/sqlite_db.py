@@ -167,6 +167,8 @@ class SqliteDb(abstract_db.AbstractDb):
         column_indices = set()
         multicolumn_indices: typing.MutableSequence[spec.IndexSchema] = []
         for index_name in index_names:
+            if index_name.startswith('sqlite_autoindex_' + table_name):
+                continue
             sql = 'PRAGMA index_info({index_name})'.format(
                 index_name=index_name
             )

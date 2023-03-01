@@ -1,3 +1,5 @@
+import uuid
+
 
 def get_test_tables():
     return {
@@ -6,10 +8,15 @@ def get_test_tables():
     }
 
 
-def get_simple_table():
+def get_simple_table(random_name=False):
+    name = 'simple'
+
+    if random_name:
+        name = name + str(uuid.uuid4()).replace('-', '')
+
     return {
         'schema': {
-            'name': 'simple',
+            'name': name,
             'columns': {
                 'id': {'type': int, 'primary': True},
                 'name': {'type': str, 'nullable': False},
@@ -29,13 +36,19 @@ def get_simple_table():
     }
 
 
-def get_pokemon_table():
+def get_pokemon_table(random_name=False):
     # from
     # - https://pokemondb.net/pokedex/all
     # - https://pokemondb.net/pokedex/stats/height-weight
+
+    name = 'pokemon'
+
+    if random_name:
+        name = name + str(uuid.uuid4()).replace('-', '')
+
     return {
         'schema': {
-            'name': 'pokemon',
+            'name': name,
             'columns': {
                 'id': {'primary': True, 'type': int},
                 'name': {'type': str, 'unique': True},
@@ -101,10 +114,15 @@ def get_pokemon_table():
     }
 
 
-def get_weather_table():
+def get_weather_table(random_name=False):
+    name = 'weather'
+
+    if random_name:
+        name = name + str(uuid.uuid4()).replace('-', '')
+
     return {
         'schema': {
-            'name': 'weather',
+            'name': name,
             'columns': {
                 'year': {'type': 'Integer', 'primary': True},
                 'month': {'type': 'Integer', 'primary': True},
@@ -128,9 +146,8 @@ def get_weather_table():
 
 def get_history_table(random_name=False):
     name = 'history'
-    if random_name:
-        import uuid
 
+    if random_name:
         name = name + str(uuid.uuid4()).replace('-', '')
 
     return {

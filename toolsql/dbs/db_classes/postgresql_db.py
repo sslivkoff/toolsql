@@ -98,10 +98,48 @@ class PostgresqlDb(abstract_db.AbstractDb):
                 else:
                     raw_column['default'] = int(default)
 
+        # multicolumn indices
+        sql = """
+        SELECT indexname::TEXT,indexdef::TEXT
+        FROM pg_indexes
+        WHERE tablename = '{table_name}'
+        """.format(table_name=table_name)
+        all_indices = executors.raw_select(
+            sql=sql, conn=conn, output_format='dict'
+        )
+        indices = []
+        for index in all_indices:
+            sql = index['indexdef']
+            if '_pkey ' in sql:
+                continue
+            targets = sql[sql.index('(') + 1:sql.rindex(')')]
+            if ',' not in targets:
+                continue
+
+            index_columns = []
+            for item in targets.split('), '):
+                if item == '':
+                    continue
+                elif statements.is_column_name(item):
+                    index_columns.append(item)
+                elif item.startswith('COALESCE('):
+                    column = item.split('COALESCE(')[1].split(',')[0]
+                    index_columns.append(column)
+                else:
+                    raise Exception('could not parse index expression')
+
+            index_schema: spec.IndexSchema = {
+                'name': index['indexname'],
+                'columns': index_columns,
+                'unique': index['indexdef'].startswith('CREATE UNIQUE'),
+                'nulls_equal': 'COALESCE(' in targets,
+            }
+            indices.append(index_schema)
+
         return {
             'name': table_name,
             'columns': raw_columns,  # type: ignore
-            'indices': [],
+            'indices': indices,
             'constraints': [],
         }
 
@@ -214,7 +252,7 @@ class PostgresqlDb(abstract_db.AbstractDb):
     @classmethod
     def _get_unique_columns(
         cls, table_name: str, conn: spec.Connection | str | spec.DBConfig
-    ) -> tuple[set[str], set[set[str]]]:
+    ) -> tuple[set[str], list[list[str]]]:
         # https://stackoverflow.com/a/27752061
         sql = """
         SELECT cu.constraint_name::TEXT, column_name::TEXT
@@ -243,7 +281,7 @@ class PostgresqlDb(abstract_db.AbstractDb):
     @classmethod
     async def _async_get_unique_columns(
         cls, table_name: str, conn: spec.AsyncConnection | str | spec.DBConfig
-    ) -> tuple[set[str], set[set[str]]]:
+    ) -> tuple[set[str], list[list[str]]]:
         # https://stackoverflow.com/a/27752061
         sql = """
         SELECT cu.constraint_name::TEXT, column_name::TEXT
@@ -272,7 +310,7 @@ class PostgresqlDb(abstract_db.AbstractDb):
     @classmethod
     def _get_indexed_columns(
         cls, table_name: str, conn: spec.Connection | str | spec.DBConfig
-    ) -> tuple[set[str], set[set[str]]]:
+    ) -> tuple[set[str], list[list[str]]]:
 
         sql = """
         SELECT
@@ -315,7 +353,7 @@ class PostgresqlDb(abstract_db.AbstractDb):
     @classmethod
     async def _async_get_indexed_columns(
         cls, table_name: str, conn: spec.AsyncConnection | str | spec.DBConfig
-    ) -> tuple[set[str], set[set[str]]]:
+    ) -> tuple[set[str], list[list[str]]]:
 
         sql = """
         SELECT

@@ -1,5 +1,8 @@
+import pytest
 import toolsql
-import conf.conf_tables as conf_tables
+
+import conf.conf_tables
+import conf.conf_helpers
 
 
 def test_dbms_table_names(sync_dbapi_db_config):
@@ -12,7 +15,7 @@ def test_dbms_table_schema(sync_dbapi_db_config, helpers):
 
     with toolsql.connect(sync_dbapi_db_config) as conn:
         actual_pokemon_schema = toolsql.get_table_schema('pokemon', conn=conn)
-    pokemon_table = conf_tables.get_pokemon_table()
+    pokemon_table = conf.conf_tables.get_pokemon_table()
     pokemon_schema = toolsql.normalize_shorthand_table_schema(
         pokemon_table['schema']
     )
@@ -30,4 +33,34 @@ def test_has_table(sync_dbapi_db_config, helpers):
         has_table = toolsql.has_table('pokemon_nope', conn=conn)
         assert not has_table
 
+
+@pytest.mark.parametrize(
+    'table',
+    [
+        conf.conf_tables.get_simple_table(random_name=True),
+        conf.conf_tables.get_pokemon_table(random_name=True),
+        conf.conf_tables.get_weather_table(random_name=True),
+        conf.conf_tables.get_history_table(random_name=True),
+    ],
+)
+def test_db_schema_reader(table, sync_write_db_config):
+
+    schema = table['schema']
+    schema = toolsql.normalize_shorthand_table_schema(
+        schema,
+        dialect=sync_write_db_config['dbms'],
+    )
+    with toolsql.connect(sync_write_db_config) as conn:
+        toolsql.create_table(table=schema, conn=conn, confirm=True)
+
+    with toolsql.connect(sync_write_db_config) as conn:
+        actual_schema = toolsql.get_table_schema(
+            table=schema['name'],
+            conn=conn,
+        )
+
+    conf.conf_helpers.ToolsqlTestHelpers.assert_results_equal(
+        result=actual_schema,
+        target_result=schema,
+    )
 

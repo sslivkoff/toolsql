@@ -225,6 +225,8 @@ def create_default_index_name(
 
             name_hash = hashlib.md5(index_name.encode()).hexdigest()
             index_name = 'index___' + table_name + '___' + name_hash
+        if len(index_name) > 63:
+            index_name = index_name[:63]
         return index_name
 
 
