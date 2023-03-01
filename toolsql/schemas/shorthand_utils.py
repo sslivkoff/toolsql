@@ -2,22 +2,30 @@ from __future__ import annotations
 
 import typing
 
+from toolsql import statements
 from toolsql import spec
 from . import datatype_utils
 
 
 def normalize_shorthand_db_schema(
     db_schema: spec.DBSchema | spec.DBSchemaShorthand,
+    *,
+    dialect: spec.Dialect | None = None,
 ) -> spec.DBSchema:
     tables = db_schema['tables']
     if isinstance(tables, (list, tuple)):
         normalized_tables = {
-            table['name']: normalize_shorthand_table_schema(table)
+            table['name']: normalize_shorthand_table_schema(
+                table, dialect=dialect
+            )
             for table in tables
         }
     elif isinstance(tables, dict):
         normalized_tables = {
-            name: normalize_shorthand_table_schema(dict(table, name=name))  # type: ignore
+            name: normalize_shorthand_table_schema(
+                dict(table, name=name),  # type: ignore
+                dialect=dialect,
+            )
             for name, table in tables.items()
         }
     else:
@@ -27,9 +35,11 @@ def normalize_shorthand_db_schema(
 
 def normalize_shorthand_table_schema(
     table: spec.TableSchema | spec.TableSchemaShorthand,
+    *,
+    dialect: spec.Dialect | None = None,
 ) -> spec.TableSchema:
 
-    columns = _normalize_shorthand_columns(table['columns'])
+    columns = _normalize_shorthand_columns(table['columns'], dialect=dialect)
     constraints = table.get('constraints')
     if constraints is None:
         constraints = []
@@ -40,12 +50,15 @@ def normalize_shorthand_table_schema(
     new_indices = []
     for index in indices:
         index = index.copy()
-        if 'name' not in index:
-            index['name'] = None
         if index.get('unique') is None:
             index['unique'] = False
         if index.get('nulls_equal') is None:
             index['nulls_equal'] = len(index['columns']) > 1
+        if 'name' not in index:
+            index['name'] = statements.create_default_index_name(
+                index=index,
+                table=table['name'],
+            )
         new_indices.append(index)
     indices = new_indices
 
@@ -59,6 +72,8 @@ def normalize_shorthand_table_schema(
 
 def _normalize_shorthand_columns(
     columns: spec.ColumnsShorthand,
+    *,
+    dialect: spec.Dialect | None = None,
 ) -> typing.Sequence[spec.ColumnSchema]:
 
     if isinstance(columns, (list, tuple)):
@@ -87,11 +102,16 @@ def _normalize_shorthand_columns(
     else:
         raise Exception('unknown columns format: ' + str(type(columns)))
 
-    return [_normalize_shorthand_column(column) for column in columns]
+    return [
+        _normalize_shorthand_column(column, dialect=dialect)
+        for column in columns
+    ]
 
 
 def _normalize_shorthand_column(
     column: spec.ColumnSchemaShorthand,
+    *,
+    dialect: spec.Dialect | None = None,
 ) -> spec.ColumnSchema:
 
     if not isinstance(column, dict):
@@ -127,6 +147,11 @@ def _normalize_shorthand_column(
         and not spec.is_generic_columntype(column_type)
     ):
         raise Exception('could not determine valid columntype')
+
+    if dialect is not None:
+        column_type = datatype_utils.convert_columntype_to_dialect(
+            column_type, dialect=dialect
+        )
 
     unique = column.get('unique')
     if unique is None:

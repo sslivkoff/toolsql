@@ -153,17 +153,16 @@ def build_create_index_statement(
                 new_columns.append(column)
         columns = new_columns
 
-    table_name = table_schema['name']
     if index_name is None:
-        index_name = 'index___' + table_name + '___' + '__'.join(columns)
-        index_name = index_name.lower()
-        for char in '() -\'",!@#$':
-            index_name = index_name.replace(char, '_')
-        if len(index_name) > 40:
-            import hashlib
-
-            name_hash = hashlib.md5(index_name.encode()).hexdigest()
-            index_name = 'index___' + table_name + '___' + name_hash
+        index_name = create_default_index_name(
+            {
+                'columns': column_names,
+                'unique': unique,
+                'nulls_equal': nulls_equal,
+            },
+            table=table_schema,
+            column_name=column_name,
+        )
 
     template = """
     CREATE {uniqueness} INDEX
@@ -177,7 +176,7 @@ def build_create_index_statement(
         uniqueness=('UNIQUE' if unique else ''),
         if_not_exists=('IF NOT EXISTS' if if_not_exists else ''),
         index_name=index_name,
-        table_name=table_name,
+        table_name=table_schema['name'],
         columns=', '.join(columns),
     )
 
@@ -185,6 +184,38 @@ def build_create_index_statement(
         sql = statement_utils.statement_to_single_line(sql)
 
     return sql
+
+
+def create_default_index_name(
+    index: typing.Mapping[str, typing.Any],
+    table: str | spec.TableSchema,
+    column_name: str | None = None,
+) -> str:
+
+    if isinstance(table, str):
+        table_name = table
+    elif isinstance(table, dict):
+        table_name = table['name']
+    else:
+        raise Exception('unknown table format')
+
+    if index['columns'] is None and column_name is not None:
+        return 'index___' + table_name + '___' + column_name
+
+    else:
+
+        index_name = (
+            'index___' + table_name + '___' + '__'.join(index['columns'])
+        )
+        index_name = index_name.lower()
+        for char in '() -\'",!@#$':
+            index_name = index_name.replace(char, '_')
+        if len(index_name) > 40:
+            import hashlib
+
+            name_hash = hashlib.md5(index_name.encode()).hexdigest()
+            index_name = 'index___' + table_name + '___' + name_hash
+        return index_name
 
 
 def build_all_table_schema_create_statements(

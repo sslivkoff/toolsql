@@ -121,13 +121,13 @@ class AbstractDb:
     @classmethod
     def _sort_single_multi_column_indices(
         cls, index_columns: typing.Mapping[str, typing.Sequence[str]]
-    ) -> tuple[set[str], set[set[str]]]:
+    ) -> tuple[set[str], list[list[str]]]:
         single_column_indices: set[str] = set()
-        multicolumn_indices: set[set[str]] = set()
+        multicolumn_indices: list[list[str]] = list()
         for columns in index_columns.values():
             if len(columns) == 1:
                 single_column_indices.add(next(iter(columns)))
             else:
-                multicolumn_indices.add(set(columns))
+                multicolumn_indices.append(list(columns))
         return single_column_indices, multicolumn_indices
 

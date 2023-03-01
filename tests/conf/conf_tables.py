@@ -126,10 +126,16 @@ def get_weather_table():
     }
 
 
-def get_history_table():
+def get_history_table(random_name=False):
+    name = 'history'
+    if random_name:
+        import uuid
+
+        name = name + str(uuid.uuid4()).replace('-', '')
+
     return {
         'schema': {
-            'name': 'history',
+            'name': name,
             'columns': {
                 'id': {'type': int, 'primary': True},
                 'year': int,

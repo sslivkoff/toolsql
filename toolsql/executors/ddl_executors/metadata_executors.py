@@ -44,7 +44,10 @@ def does_db_exist(db: str | spec.DBConfig) -> bool:
 def get_db_schema(conn: spec.Connection) -> spec.DBSchema:
     name = drivers.get_conn_db_name(conn)
     table_schemas = get_table_schemas(conn=conn)
-    return {'name': name, 'tables': table_schemas}
+    return {
+        'name': name,
+        'tables': table_schemas,
+    }
 
 
 def get_table_schemas(

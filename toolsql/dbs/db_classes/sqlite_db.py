@@ -9,7 +9,6 @@ from . import abstract_db
 
 
 class SqliteDb(abstract_db.AbstractDb):
-
     @classmethod
     def create_db(cls, db_config: spec.DBConfig) -> None:
         import sqlite3
@@ -51,12 +50,16 @@ class SqliteDb(abstract_db.AbstractDb):
         sql = 'SELECT name, type FROM pragma_table_info("{table_name}")'.format(
             table_name=statements.get_table_name(table)
         )
-        result = await executors.async_raw_select(sql=sql, conn=conn, output_format='tuple')
+        result = await executors.async_raw_select(
+            sql=sql, conn=conn, output_format='tuple'
+        )
         return dict(result)  # type: ignore
 
     @classmethod
     def get_table_schema(
-        cls, table: str | spec.TableSchema, conn: spec.Connection | str | spec.DBConfig
+        cls,
+        table: str | spec.TableSchema,
+        conn: spec.Connection | str | spec.DBConfig,
     ) -> spec.TableSchema:
 
         table_name = statements.get_table_name(table)
@@ -66,7 +69,9 @@ class SqliteDb(abstract_db.AbstractDb):
         if isinstance(conn, dict):
             raise Exception('conn not initialized')
 
-        sql = 'SELECT * FROM pragma_table_info("{table_name}")'.format(table_name=table_name)
+        sql = 'SELECT * FROM pragma_table_info("{table_name}")'.format(
+            table_name=table_name
+        )
         cursor = conn.execute(sql)
         results = cursor.fetchall()
         unique_single_columns, unique_multi_columns = cls._get_unique_columns(
@@ -109,7 +114,7 @@ class SqliteDb(abstract_db.AbstractDb):
     @classmethod
     def _get_unique_columns(
         cls, table_name: str, conn: spec.Connection
-    ) -> tuple[set[str], set[set[str]]]:
+    ) -> tuple[set[str], list[list[str]]]:
 
         # https://stackoverflow.com/a/65845786
         unique_sql = """
@@ -163,16 +168,92 @@ class SqliteDb(abstract_db.AbstractDb):
             results = cursor.fetchall()
             for index_rank, cid, column_name in results:
                 if cid == -2:
-                    raise NotImplementedError('indexed expression')
-            if len(results) == 1:
-                column_indices.add(results[0][2])
+                    index: spec.IndexSchema = cls._parse_indexed_expression(
+                        table_name=table_name,
+                        index_name=index_name,
+                        conn=conn,
+                    )
+                    multicolumn_indices.append(index)
+                    break
+
             else:
-                index: spec.IndexSchema = {
-                    'name': index_name,
-                    'columns': [result[2] for result in results],
-                    'unique': False,
-                }
-                multicolumn_indices.append(index)
+                if len(results) == 1:
+                    column_indices.add(results[0][2])
+                else:
+                    index = {
+                        'name': index_name,
+                        'columns': [result[2] for result in results],
+                        'unique': False,
+                    }
+                    multicolumn_indices.append(index)
 
         return column_indices, multicolumn_indices
+
+    @classmethod
+    def _get_index_create_statement(
+        cls, index_name: str, table_name: str, conn: spec.Connection
+    ) -> str | None:
+        sql = """
+        SELECT sql FROM sqlite_master
+        WHERE
+            type='index'
+            AND tbl_name = '{table_name}'
+            AND name = '{index_name}'
+        """.format(
+            index_name=index_name, table_name=table_name
+        )
+        cursor = conn.execute(sql)
+        result = cursor.fetchall()
+        if len(result) == 0:
+            return None
+        else:
+            item = result[0][0]
+            if isinstance(item, str):
+                return item
+            else:
+                raise Exception('bad output type')
+
+    @classmethod
+    def _parse_indexed_expression(
+        cls, index_name: str, table_name: str, conn: spec.Connection
+    ) -> spec.IndexSchema:
+        """only parses one type of index, a unique multicolumn non-null index"""
+
+        import re
+
+        # get CREATE statement that created the index
+        sql = cls._get_index_create_statement(
+            index_name=index_name,
+            table_name=table_name,
+            conn=conn,
+        )
+        if sql is None:
+            raise Exception('could not parse index create statement')
+
+        # get expressions within CREATE statement
+        template = "CREATE UNIQUE INDEX (?P<index_name>[a-zA-Z0-9_]+) ON (?P<table_name>[a-zA-Z0-9_]+) \( (?P<expressions>.+) \)"
+        raw_match = re.fullmatch(template, sql)
+        if raw_match is not None:
+            match = raw_match.groupdict()
+        else:
+            raise Exception('could not parse index create statement')
+
+        # get null placeholder statements
+        expressions = match['expressions']
+        columns = []
+        for expression in expressions.split('), '):
+            if statements.is_column_name(expression):
+                column = expression
+            elif expression.startswith('IFNULL('):
+                column = expression.split('IFNULL(')[1].split(',')[0]
+            else:
+                raise Exception('could not parse index create statement')
+            columns.append(column)
+
+        return {
+            'name': index_name,
+            'columns': columns,
+            'unique': True,
+            'nulls_equal': True,
+        }
 
