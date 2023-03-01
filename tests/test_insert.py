@@ -396,3 +396,33 @@ async def test_async_insert_on_conflict_update(
         ),
     )
 
+
+def test_insert_using_default_value(
+    sync_write_db_config, fresh_simple_table, helpers
+):
+
+    sync_db_config = toolsql.create_db_config(sync_write_db_config, sync=True)
+    schema = fresh_simple_table['schema']
+
+    # create table
+    with toolsql.connect(sync_db_config) as conn:
+        toolsql.create_table(table=schema, conn=conn, confirm=True)
+
+    new_row = {
+        'id': 999,
+        'name': 'hellooooo',
+        'raw_data': b'123123',
+        'completed': True,
+    }
+    with toolsql.connect(sync_db_config) as conn:
+        toolsql.insert(row=new_row, table=fresh_simple_table['schema']['name'], conn=conn)
+
+    with toolsql.connect(sync_db_config) as conn:
+        row = toolsql.select(
+            table=fresh_simple_table['schema']['name'],
+            conn=conn,
+            where_equals={'id': 999},
+            output_format='single_dict',
+        )
+        assert row['rating'] == 'alright'
+

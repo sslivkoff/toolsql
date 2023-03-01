@@ -87,6 +87,16 @@ def _format_column(
     if column['unique']:
         line = line + ' UNIQUE'
 
+    if column['default'] is not None:
+        default = column['default']
+        if isinstance(default, str):
+            formatted_default = "'" + default + "'"
+        elif isinstance(default, int):
+            formatted_default = str(default)
+        else:
+            raise Exception('unknown format for default value: ' + str(type(default)))
+        line = line + ' DEFAULT ' + formatted_default
+
     return line
 
 

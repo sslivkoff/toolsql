@@ -90,6 +90,12 @@ class SqliteDb(abstract_db.AbstractDb):
             else:
                 primary = True
 
+            if default is not None:
+                if default[0] == "'" and default[-1] == "'":
+                    default = default.strip("'")
+                else:
+                    default = int(default)
+
             column: spec.ColumnSchema = {
                 'name': name,
                 'type': type,

@@ -88,6 +88,16 @@ class PostgresqlDb(abstract_db.AbstractDb):
             raw_column['index'] = raw_column['name'] in indexed_single_columns
             raw_column['unique'] = raw_column['name'] in unique_single_columns
 
+            # TODO: support more datatypes for default values
+            if raw_column['default'] is not None:
+                default = raw_column['default']
+                if default[0] == "'" and default[-1] == "'":
+                    raw_column['default'] = default.strip("'")
+                elif default.endswith('::text'):
+                    raw_column['default'] = default.split('::text')[0].strip("'")
+                else:
+                    raw_column['default'] = int(default)
+
         return {
             'name': table_name,
             'columns': raw_columns,  # type: ignore
