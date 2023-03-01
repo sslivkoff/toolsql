@@ -13,7 +13,7 @@ def format_row_tuples(
     output_format: spec.QueryOutputFormat | None = None,
     *,
     names: typing.Sequence[str] | None,
-) -> spec.RowOutput:
+) -> spec.SelectOutputData:
 
     if output_format == 'tuple':
         return rows
@@ -105,7 +105,7 @@ def format_row_tuples(
 
 def format_row_dataframe(
     rows: pl.DataFrame, output_format: spec.QueryOutputFormat
-) -> spec.RowOutput:
+) -> spec.SelectOutputData:
 
     # convert to output_format
     if output_format is None:

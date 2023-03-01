@@ -50,7 +50,7 @@ DictRow = typing.Dict[str, typing.Any]
 DictRows = typing.Sequence[DictRow]
 Cell = typing.Any
 TupleColumn = typing.Tuple[typing.Any, ...]
-RowOutput = typing.Union[
+SelectOutputData = typing.Union[
     TupleRow,
     TupleRows,
     DictRow,
