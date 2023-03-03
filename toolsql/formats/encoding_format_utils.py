@@ -117,7 +117,7 @@ def _decode_columns_polars(
         pl_type = pl_types[c]
         if pl_type is None:
             raise Exception()
-        rows = rows.with_column(
+        rows = rows.with_columns(
             rows[column_name].apply(decoder, return_dtype=pl_type)
         )
 
