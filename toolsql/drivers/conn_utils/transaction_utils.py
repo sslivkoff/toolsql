@@ -6,6 +6,9 @@ from toolsql import spec
 from .. import driver_utils
 
 if typing.TYPE_CHECKING:
+    import contextlib
+    import types
+
     import psycopg
 
 # """
@@ -39,59 +42,76 @@ if typing.TYPE_CHECKING:
 
 
 class _TransactionContext:
+
+    conn: spec.Connection
+
     def __init__(self, conn: spec.Connection) -> None:
         self.conn = conn
-        self.driver = driver_utils.get_driver_name(conn=conn)
 
-        if self.driver == 'sqlite3':
+        if spec.is_sqlite3_connection(self.conn):
             conn.execute('BEGIN')
-        elif self.driver in ['psycopg']:
+        elif spec.is_psycopg_sync_connection(self.conn):
             pass
         else:
             raise Exception('invalid driver')
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         pass
 
-    def __exit__(self, exception_type, exception_value, exception_traceback):
-        if self.driver == 'sqlite3':
+    def __exit__(
+        self,
+        exception_type: type[BaseException] | None,
+        exception_value: BaseException | None,
+        exception_traceback: types.TracebackType | None,
+    ) -> None:
+
+        if spec.is_sqlite3_connection(self.conn):
             if exception_type is None:
                 self.conn.execute('COMMIT')
+        elif spec.is_psycopg_sync_connection(self.conn):
+            pass
+        else:
+            raise Exception('invalid driver')
 
 
 class _AsyncTransactionContext:
-    def __init__(self, conn: spec.Connection) -> None:
+
+    conn: spec.AsyncConnection
+
+    def __init__(self, conn: spec.AsyncConnection) -> None:
         self.conn = conn
-        self.driver = driver_utils.get_driver_name(conn=conn)
 
-        if self.driver == 'aiosqlite':
-            pass
-        elif self.driver in ['psycopg']:
-            pass
-        else:
-            raise Exception('invalid driver')
-
-    async def __aenter__(self):
-        if self.driver == 'aiosqlite':
+    async def __aenter__(self) -> None:
+        if spec.is_aiosqlite_connection(self.conn):
             await self.conn.execute('BEGIN')
-        elif self.driver in ['psycopg']:
+        elif spec.is_psycopg_async_connection(self.conn):
             pass
         else:
             raise Exception('invalid driver')
 
     async def __aexit__(
-        self, exception_type, exception_value, exception_traceback
-    ):
-        if self.driver == 'aiosqlite':
+        self,
+        exception_type: type[BaseException] | None,
+        exception_value: BaseException | None,
+        exception_traceback: types.TracebackType | None,
+    ) -> None:
+        if spec.is_aiosqlite_connection(self.conn):
             if exception_type is None:
                 await self.conn.execute('COMMIT')
+        elif spec.is_psycopg_async_connection(self.conn):
+            pass
+        else:
+            raise Exception('invalid driver')
 
 
-def begin(conn: spec.Connection) -> _TransactionContext | psycopg.Transaction:
-    driver = driver_utils.get_driver_name(conn=conn)
-    if driver == 'sqlite3':
+def begin(
+    conn: spec.Connection,
+) -> _TransactionContext | contextlib._GeneratorContextManager[
+    psycopg.Transaction
+]:
+    if spec.is_sqlite3_connection(conn):
         return _TransactionContext(conn=conn)
-    elif driver == 'psycopg':
+    elif spec.is_psycopg_sync_connection(conn):
         return conn.transaction()
     else:
         raise Exception('invalid driver')
@@ -99,10 +119,9 @@ def begin(conn: spec.Connection) -> _TransactionContext | psycopg.Transaction:
 
 def commit(conn: spec.Connection) -> None:
 
-    driver = driver_utils.get_driver_name(conn=conn)
-    if driver == 'sqlite3':
+    if spec.is_sqlite3_connection(conn):
         conn.execute('BEGIN')
-    elif driver == 'psycopg':
+    elif spec.is_psycopg_sync_connection(conn):
         conn.commit()
     else:
         raise Exception('invalid driver')
@@ -110,10 +129,9 @@ def commit(conn: spec.Connection) -> None:
 
 def rollback(conn: spec.Connection) -> None:
 
-    driver = driver_utils.get_driver_name(conn=conn)
-    if driver == 'sqlite3':
+    if spec.is_sqlite3_connection(conn):
         conn.execute('ROLLBACK')
-    elif driver == 'psycopg':
+    elif spec.is_psycopg_sync_connection(conn):
         conn.rollback()
     else:
         raise Exception('invalid driver')
@@ -123,35 +141,35 @@ def rollback(conn: spec.Connection) -> None:
 # # async versions
 #
 
+
 def async_begin(
-    conn: spec.Connection,
-) -> _AsyncTransactionContext | psycopg.Transaction:
-    driver = driver_utils.get_driver_name(conn=conn)
-    if driver == 'aiosqlite':
+    conn: spec.AsyncConnection,
+) -> _AsyncTransactionContext | contextlib._AsyncGeneratorContextManager[
+    psycopg.AsyncTransaction
+]:
+    if spec.is_aiosqlite_connection(conn):
         return _AsyncTransactionContext(conn=conn)
-    elif driver == 'psycopg':
+    elif spec.is_psycopg_async_connection(conn):
         return conn.transaction()
     else:
         raise Exception('invalid driver')
 
 
-async def async_commit(conn: spec.Connection) -> None:
+async def async_commit(conn: spec.AsyncConnection) -> None:
 
-    driver = driver_utils.get_driver_name(conn=conn)
-    if driver == 'sqlite3':
+    if spec.is_aiosqlite_connection(conn):
         await conn.execute('COMMIT')
-    elif driver == 'psycopg':
+    elif spec.is_psycopg_async_connection(conn):
         await conn.commit()
     else:
         raise Exception('invalid driver')
 
 
-async def async_rollback(conn: spec.Connection) -> None:
+async def async_rollback(conn: spec.AsyncConnection) -> None:
 
-    driver = driver_utils.get_driver_name(conn=conn)
-    if driver == 'sqlite3':
+    if spec.is_aiosqlite_connection(conn):
         await conn.execute('ROLLBACK')
-    elif driver == 'psycopg':
+    elif spec.is_psycopg_async_connection(conn):
         await conn.rollback()
     else:
         raise Exception('invalid driver')

@@ -7,10 +7,19 @@ from . import typedata
 if typing.TYPE_CHECKING:
     from typing_extensions import TypeGuard
 
+    import sqlite3
+    import aiosqlite
+    import psycopg
+
     import pandas as pd
     import polars as pl
 
     from . import typedefs
+
+
+#
+# # columntypes
+#
 
 
 def is_sqlite_columntype(
@@ -31,6 +40,11 @@ def is_generic_columntype(
     return item in typedata.generic_columntypes
 
 
+#
+# # dataframes
+#
+
+
 def is_pandas_dataframe(
     item: typing.Any,
 ) -> TypeGuard[pd.DataFrame]:
@@ -48,5 +62,49 @@ def is_polars_dataframe(
     return (
         item_type.__name__ == 'DataFrame'
         and item_type.__module__ == 'polars.internals.dataframe.frame'
+    )
+
+
+#
+# # connections
+#
+
+
+def is_sqlite3_connection(
+    item: typing.Any,
+) -> TypeGuard[sqlite3.Connection]:
+    item_type = type(item)
+    return (
+        item_type.__name__ == 'Connection' and item_type.__module__ == 'sqlite3'
+    )
+
+
+def is_aiosqlite_connection(
+    item: typing.Any,
+) -> TypeGuard[aiosqlite.Connection]:
+    item_type = type(item)
+    return (
+        item_type.__name__ == 'Connection'
+        and item_type.__module__ == 'aiosqlite.core'
+    )
+
+
+def is_psycopg_sync_connection(
+    item: typing.Any,
+) -> TypeGuard[psycopg.Connection[typing.Any]]:
+    item_type = type(item)
+    return (
+        item_type.__name__ == 'Connection'
+        and item_type.__module__ == 'psycopg'
+    )
+
+
+def is_psycopg_async_connection(
+    item: typing.Any,
+) -> TypeGuard[psycopg.AsyncConnection[typing.Any]]:
+    item_type = type(item)
+    return (
+        item_type.__name__ == 'AsyncConnection'
+        and item_type.__module__ == 'psycopg'
     )
 
