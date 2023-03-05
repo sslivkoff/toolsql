@@ -1,6 +1,7 @@
 
 import typing
 
+from .exceptions import *
 from .typedata import *
 from .typeguards import *
 

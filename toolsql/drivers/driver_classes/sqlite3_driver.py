@@ -52,7 +52,10 @@ class Sqlite3Driver(dbapi_driver.DbapiDriver):
 
         cursor = conn.cursor()
         try:
-            cursor.executemany(sql, parameters)
+            try:
+                cursor.executemany(sql, parameters)
+            except Exception as e:
+                raise spec.convert_exception(e, sql)
         finally:
             cursor.close()
 
@@ -70,10 +73,13 @@ class Sqlite3Driver(dbapi_driver.DbapiDriver):
 
         cursor = conn.cursor()
         try:
-            if parameters is None:
-                cursor.execute(sql)
-            else:
-                cursor.execute(sql, parameters)
+            try:
+                if parameters is None:
+                    cursor.execute(sql)
+                else:
+                    cursor.execute(sql, parameters)
+            except Exception as e:
+                raise spec.convert_exception(e, sql)
         finally:
             cursor.close()
 

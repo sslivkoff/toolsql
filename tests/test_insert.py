@@ -24,52 +24,6 @@ polars_pokemon = polars_pokemon.with_columns(
 )
 
 
-# adbc is very early, doesn't currently support many types
-
-# def test_sync_insert_polars_simple(sync_write_db_config, fresh_simple_table, helpers):
-
-#     sync_db_config = sync_write_db_config
-#     schema = fresh_simple_table['schema']
-
-#     # # create table
-#     # with toolsql.connect(sync_db_config) as conn:
-#     #     toolsql.create_table(table=schema, conn=conn, confirm=True)
-
-#     # insert rows
-#     toolsql.insert(
-#         rows=polars_simple, table=schema['name'], conn=sync_db_config
-#     )
-
-#     # confirm table full
-#     with toolsql.connect(sync_db_config) as conn:
-#         result = toolsql.select(
-#             table=schema, order_by='id', conn=conn, output_format='polars'
-#         )
-#     helpers.assert_results_equal(result=result, target_result=polars_simple)
-
-
-# def test_sync_insert_polars_pokemon(sync_write_db_config, fresh_pokemon_table, helpers):
-
-#     sync_db_config = sync_write_db_config
-#     schema = fresh_pokemon_table['schema']
-
-#     # create table
-#     with toolsql.connect(sync_db_config) as conn:
-#         toolsql.create_table(table=schema, conn=conn, confirm=True)
-
-#     # insert rows
-#     toolsql.insert(
-#         rows=polars_pokemon, table=schema['name'], conn=sync_db_config
-#     )
-
-#     # confirm table full
-#     with toolsql.connect(sync_db_config) as conn:
-#         result = toolsql.select(
-#             table=schema, order_by='id', conn=conn, output_format='polars'
-#         )
-#     helpers.assert_results_equal(result=result, target_result=polars_pokemon)
-
-
 def test_sync_insert_blank_table(
     sync_write_db_config, fresh_pokemon_table, helpers
 ):
@@ -473,4 +427,50 @@ def test_insert_using_default_value(
             output_format='single_dict',
         )
         assert row['rating'] == 'alright'
+
+
+# adbc is very early, doesn't currently support many types
+
+# def test_sync_insert_polars_simple(sync_write_db_config, fresh_simple_table, helpers):
+
+#     sync_db_config = sync_write_db_config
+#     schema = fresh_simple_table['schema']
+
+#     # # create table
+#     # with toolsql.connect(sync_db_config) as conn:
+#     #     toolsql.create_table(table=schema, conn=conn, confirm=True)
+
+#     # insert rows
+#     toolsql.insert(
+#         rows=polars_simple, table=schema['name'], conn=sync_db_config
+#     )
+
+#     # confirm table full
+#     with toolsql.connect(sync_db_config) as conn:
+#         result = toolsql.select(
+#             table=schema, order_by='id', conn=conn, output_format='polars'
+#         )
+#     helpers.assert_results_equal(result=result, target_result=polars_simple)
+
+
+# def test_sync_insert_polars_pokemon(sync_write_db_config, fresh_pokemon_table, helpers):
+
+#     sync_db_config = sync_write_db_config
+#     schema = fresh_pokemon_table['schema']
+
+#     # create table
+#     with toolsql.connect(sync_db_config) as conn:
+#         toolsql.create_table(table=schema, conn=conn, confirm=True)
+
+#     # insert rows
+#     toolsql.insert(
+#         rows=polars_pokemon, table=schema['name'], conn=sync_db_config
+#     )
+
+#     # confirm table full
+#     with toolsql.connect(sync_db_config) as conn:
+#         result = toolsql.select(
+#             table=schema, order_by='id', conn=conn, output_format='polars'
+#         )
+#     helpers.assert_results_equal(result=result, target_result=polars_pokemon)
 

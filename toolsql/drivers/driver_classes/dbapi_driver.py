@@ -26,10 +26,13 @@ class DbapiDriver(abstract_driver.AbstractDriver):
             raise Exception('conn not initialized')
 
         cursor = conn.cursor()
-        if parameters is not None:
-            cursor = cursor.execute(sql, parameters)
-        else:
-            cursor = cursor.execute(sql)
+        try:
+            if parameters is not None:
+                cursor = cursor.execute(sql, parameters)
+            else:
+                cursor = cursor.execute(sql)
+        except Exception as e:
+            raise spec.convert_exception(e, sql)
 
         if output_format == 'cursor':
             return cursor
@@ -61,7 +64,10 @@ class DbapiDriver(abstract_driver.AbstractDriver):
         if isinstance(conn, dict):
             raise Exception('conn not initialized')
 
-        cursor: spec.AsyncCursor = await conn.execute(sql, parameters)
+        try:
+            cursor: spec.AsyncCursor = await conn.execute(sql, parameters)
+        except Exception as e:
+            raise spec.convert_exception(e, sql)
         if output_format == 'cursor':
             return cursor
 

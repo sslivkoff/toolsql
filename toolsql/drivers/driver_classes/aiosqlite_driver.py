@@ -49,8 +49,11 @@ class AiosqliteDriver(dbapi_driver.DbapiDriver):
         if not isinstance(conn, aiosqlite.Connection):
             raise Exception('not an aiosqlite conn')
 
-        if parameters is None:
-            await conn.execute(sql)
-        else:
-            await conn.execute(sql, parameters)
+        try:
+            if parameters is None:
+                await conn.execute(sql)
+            else:
+                await conn.execute(sql, parameters)
+        except Exception as e:
+            raise spec.convert_exception(e, sql)
 

@@ -57,10 +57,13 @@ class AbstractDriver:
     ) -> None:
 
         with conn.cursor() as cursor:  # type: ignore
-            if parameters is None:
-                cursor.execute(sql)
-            else:
-                cursor.execute(sql, parameters)
+            try:
+                if parameters is None:
+                    cursor.execute(sql)
+                else:
+                    cursor.execute(sql, parameters)
+            except Exception as e:
+                raise spec.convert_exception(e, sql)
 
     @classmethod
     def executemany(
@@ -72,7 +75,10 @@ class AbstractDriver:
     ) -> None:
 
         with conn.cursor() as cursor:  # type: ignore
-            cursor.executemany(sql, parameters)
+            try:
+                cursor.executemany(sql, parameters)
+            except Exception as e:
+                raise spec.convert_exception(e, sql)
 
     @classmethod
     async def async_execute(
@@ -84,10 +90,13 @@ class AbstractDriver:
     ) -> None:
 
         async with conn.cursor() as cursor:  # type: ignore
-            if parameters is None:
-                await cursor.execute(sql)  # type: ignore
-            else:
-                await cursor.execute(sql, parameters)  # type: ignore
+            try:
+                if parameters is None:
+                    await cursor.execute(sql)  # type: ignore
+                else:
+                    await cursor.execute(sql, parameters)  # type: ignore
+            except Exception as e:
+                raise spec.convert_exception(e, sql)
 
     @classmethod
     async def async_executemany(
@@ -98,7 +107,10 @@ class AbstractDriver:
         conn: spec.AsyncConnection,
     ) -> None:
         async with conn.cursor() as cursor:  # type: ignore
-            await cursor.executemany(sql, parameters)  # type: ignore
+            try:
+                await cursor.executemany(sql, parameters)  # type: ignore
+            except Exception as e:
+                raise spec.convert_exception(e, sql)
 
     #
     # # select
