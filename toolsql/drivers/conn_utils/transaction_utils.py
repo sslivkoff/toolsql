@@ -3,7 +3,6 @@ from __future__ import annotations
 import typing
 
 from toolsql import spec
-from .. import driver_utils
 
 if typing.TYPE_CHECKING:
     import contextlib
@@ -104,7 +103,7 @@ class _AsyncTransactionContext:
             raise Exception('invalid driver')
 
 
-def begin(
+def begin_context(
     conn: spec.Connection,
 ) -> _TransactionContext | contextlib._GeneratorContextManager[
     psycopg.Transaction
@@ -117,10 +116,19 @@ def begin(
         raise Exception('invalid driver')
 
 
+def begin(conn: spec.Connection) -> None:
+    if spec.is_sqlite3_connection(conn):
+        conn.execute('BEGIN')
+    elif spec.is_psycopg_sync_connection(conn):
+        conn.execute('BEGIN')
+    else:
+        raise Exception('invalid driver')
+
+
 def commit(conn: spec.Connection) -> None:
 
     if spec.is_sqlite3_connection(conn):
-        conn.execute('BEGIN')
+        conn.execute('COMMIT')
     elif spec.is_psycopg_sync_connection(conn):
         conn.commit()
     else:
@@ -141,8 +149,7 @@ def rollback(conn: spec.Connection) -> None:
 # # async versions
 #
 
-
-def async_begin(
+def async_begin_context(
     conn: spec.AsyncConnection,
 ) -> _AsyncTransactionContext | contextlib._AsyncGeneratorContextManager[
     psycopg.AsyncTransaction
@@ -151,6 +158,15 @@ def async_begin(
         return _AsyncTransactionContext(conn=conn)
     elif spec.is_psycopg_async_connection(conn):
         return conn.transaction()
+    else:
+        raise Exception('invalid driver')
+
+
+async def async_begin(conn: spec.AsyncConnection) -> None:
+    if spec.is_aiosqlite_connection(conn):
+        await conn.execute('BEGIN')
+    elif spec.is_psycopg_async_connection(conn):
+        await conn.execute('BEGIN')
     else:
         raise Exception('invalid driver')
 

@@ -36,7 +36,7 @@ def test_sync_tx_fail(sync_write_db_config, fresh_pokemon_table, helpers):
     # insert rows in failed transaction
     with pytest.raises(CustomInnerException):
         with toolsql.connect(db_config, autocommit=True) as conn:
-            with toolsql.begin(conn):
+            with toolsql.begin_context(conn):
                 toolsql.insert(table=schema, rows=rows[:5], conn=conn)
                 raise CustomInnerException()
 
@@ -53,7 +53,7 @@ def test_sync_tx_fail(sync_write_db_config, fresh_pokemon_table, helpers):
     # insert rows in non-failed transaction
     with pytest.raises(CustomInnerException):
         with toolsql.connect(db_config, autocommit=True) as conn:
-            with toolsql.begin(conn):
+            with toolsql.begin_context(conn):
                 toolsql.insert(table=schema, rows=rows[:5], conn=conn)
             raise CustomInnerException()
 
@@ -66,6 +66,41 @@ def test_sync_tx_fail(sync_write_db_config, fresh_pokemon_table, helpers):
             output_format='cell',
         )
         assert result == 5
+
+    # insert rows in failed non-context transaction
+    with pytest.raises(CustomInnerException):
+        with toolsql.connect(db_config, autocommit=True) as conn:
+            toolsql.begin(conn)
+            toolsql.insert(table=schema, rows=rows[5:10], conn=conn)
+            raise CustomInnerException()
+
+    # confirm table full
+    with toolsql.connect(db_config) as conn:
+        result = toolsql.select(
+            table=schema,
+            conn=conn,
+            columns=['COUNT(*)'],
+            output_format='cell',
+        )
+        assert result == 5
+
+    # insert rows in non-context transaction
+    with pytest.raises(CustomInnerException):
+        with toolsql.connect(db_config, autocommit=True) as conn:
+            toolsql.begin(conn)
+            toolsql.insert(table=schema, rows=rows[5:10], conn=conn)
+            toolsql.commit(conn)
+            raise CustomInnerException()
+
+    # confirm table full
+    with toolsql.connect(db_config) as conn:
+        result = toolsql.select(
+            table=schema,
+            conn=conn,
+            columns=['COUNT(*)'],
+            output_format='cell',
+        )
+        assert result == 10
 
 
 async def test_async_tx_fail(
@@ -85,7 +120,7 @@ async def test_async_tx_fail(
     # insert rows in failed transaction
     with pytest.raises(CustomInnerException):
         async with toolsql.async_connect(db_config, autocommit=True) as conn:
-            async with toolsql.async_begin(conn):
+            async with toolsql.async_begin_context(conn):
                 await toolsql.async_insert(
                     table=schema, rows=rows[:5], conn=conn
                 )
@@ -103,7 +138,7 @@ async def test_async_tx_fail(
 
     # insert rows alongside Exception
     async with toolsql.async_connect(db_config, autocommit=True) as conn:
-        async with toolsql.async_begin(conn):
+        async with toolsql.async_begin_context(conn):
             await toolsql.async_insert(table=schema, rows=rows[:5], conn=conn)
 
     # confirm table full
@@ -115,4 +150,39 @@ async def test_async_tx_fail(
             output_format='cell',
         )
         assert result == 5
+
+    # insert rows in failed non-context transaction
+    with pytest.raises(CustomInnerException):
+        async with toolsql.async_connect(db_config, autocommit=True) as conn:
+            await toolsql.async_begin(conn)
+            await toolsql.async_insert(table=schema, rows=rows[5:10], conn=conn)
+            raise CustomInnerException()
+
+    # confirm table full
+    async with toolsql.async_connect(db_config) as conn:
+        result = await toolsql.async_select(
+            table=schema,
+            conn=conn,
+            columns=['COUNT(*)'],
+            output_format='cell',
+        )
+        assert result == 5
+
+    # insert rows in non-context transaction
+    with pytest.raises(CustomInnerException):
+        async with toolsql.async_connect(db_config, autocommit=True) as conn:
+            await toolsql.async_begin(conn)
+            await toolsql.async_insert(table=schema, rows=rows[5:10], conn=conn)
+            await toolsql.async_commit(conn)
+            raise CustomInnerException()
+
+    # confirm table full
+    async with toolsql.async_connect(db_config) as conn:
+        result = await toolsql.async_select(
+            table=schema,
+            conn=conn,
+            columns=['COUNT(*)'],
+            output_format='cell',
+        )
+        assert result == 10
 
