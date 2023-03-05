@@ -1,43 +1,180 @@
 # toolsql
 
-python wrappers around sql
+toolsql makes it easy to build sql queries and execute those queries
 
-no attempt is made to abstract away any sql. toolsql should be thought of as nothing more than a set of python functions for building and executing sql
-
-
-## goals
-- provider **minimal** wrapper around raw sql and around db-specific drivers
-- provide sync and async interfaces
-- mypy type checks with `strict=True`
-- support sqlite and postgresql
+toolsql's goals:
+- provide identical interfaces to sqlite + postgresql
+- provide nearly identical interfaces for synchronous + `async` usage
 - minimize startup import time
-- maximize read/write performance
-- provide tight integration with connectorx, polars, and pandas
+- maximize read / write performance
+- tight integration with connectorx, polars, and pandas
+- make it easy to drop into raw SQL when needed
+- use basic python datatypes instead of custom objects
+- mypy typing with `strict=True`
+
+## Contents
+- [Installation](#installation)
+- [Example Usage](#example-usage)
+- [Reference](#reference)
+
+## Installation
+- `pip install toolsql`
+- requires python 3.7 - 3.11
 
 
-## usage
-two levels of abstraction:
-1. raw sql
-2. python wrapper around common sql operations
+## Example Usage
 
-if python does not cover some functionality, make it easy to drop into SQL
+1. [Specify Database Configuration](#specify-database-configuration)
+2. [Specify Table Schema](#specify-table-schema)
+3. [DDL Statements](#ddl-statements)
+4. [DML Statements](#dml-statements)
+5. [`async` Functionality](#async-functionality)
+
+#### Specify Database Configuration
+
+```python
+# sqlite
+db_config = {
+    'dbms': 'sqlite',
+    'path': '/path/to/sqlite/file.db',
+}
+
+# postgresql
+db_config = {
+    'dbms': 'postgresql',
+    'database': '<database_name>',
+    'hostname': '<hostname>',
+    'username': '<username>',
+    'password': '<password>',
+}
+```
+
+#### Specify Table Schema
+
+```python
+table = {
+    'name': 'weather',
+    'columns': [
+        {'name': 'year', 'type': 'Integer', 'primary': True},
+        {'name': 'month', 'type': 'Integer', 'primary': True},
+        {'name': 'rainfall', 'type': 'Float'},
+        {'name': 'temperature', 'type': 'Float'},
+        {'name': 'country', 'type': 'Float'},
+    ],
+}
+```
+
+#### DDL Statements
+
+```python
+
+with toolsql.connect(db_config) as conn:
+
+    # CREATE
+    toolsql.create_table(
+        table=table,
+        conn=conn,
+    )
+    
+    # DROP
+    toolsql.create_table(
+        table=table,
+        conn=conn,
+    )
+```
+
+#### DML Statements
+
+```python
+
+rows = [
+    (2020, 1, 8.2, 90, 'Turkey'),
+    (2020, 5, 1.1, 50, 'Germany'),
+    (2020, 9, 7.4, 60, 'UK'),
+    (2021, 1, 5.2, 72, 'France'),
+    (2021, 5, 2.1, 56, 'Argentina'),
+    (2021, 9, 6.4, 68, 'Sweden'),
+    (2022, 1, 1.2, 70, 'Indonesia'),
+    (2022, 5, 4.1, 56, 'Vietnam'),
+    (2022, 9, 9.4, 60, 'India'),
+]
+
+with toolsql.connect(db_config) as conn:
+
+    # INSERT
+    toolsql.insert(
+        rows=rows,
+        table=table,
+        conn=conn,
+    )
+    
+    # SELECT
+    toolsql.select(
+        where_equals={'country': 'Turkey'},
+        table=table,
+        conn=conn,
+    )
+    
+    # UPDATE
+    toolsql.update(
+        values={'country': 'Türkiye'},
+        where_equals={'country': 'Turkey'},
+        table=table,
+        conn=conn,
+    )
+    
+    # DELETE
+    toolsql.update(
+        where_equals={'country': 'Türkiye'},
+        table=table,
+        conn=conn,
+    )
+```
+
+#### `async` Functionality
+```python
+async with toolsql.async_connect(db_config) as conn:
+    await toolsql.async_select(
+        with_equals={'country': 'Turkey'},
+        table=table,
+        conn=conn,
+    )
+```
 
 
-## requirements
-- python 3.7 - 3.11
+## Reference
 
-
-## supported executors
+### Supported Executors
 - `sqlite3`: sqlite sync reads
 - `aiosqlite`: sqlite async reads
-- `psycopg`: postres sync / async reads
+- `psycopg`: postgres sync / async reads
 - `connectorx`: simple read queries
 
+### `SELECT` input arguments
+- `distinct`
+- `where_equals`
+- `where_gt`
+- `where_gte`
+- `where_lt`
+- `where_lte`
+- `where_like`
+- `where_ilike`
+- `where_in`
+- `where_or`
+- `order_by`
+- `limit`
+- `offset` 
 
-## `SELECT` output formats
+### `SELECT` output formats
 - `'tuple'`: each row is a tuple
 - `'dict'`: each row is a dict
 - `'cursor'`: query cursor
 - `'polars'`: polars dataframe of rows
 - `'pandas'`: pandas dataframe of rows
-
+- `'single_tuple'`: single row of output as a tuple
+- `'single_tuple_or_none'`: single row of output as a tuple
+- `'single_dict'`: single row of output as a dict
+- `'single_dict_or_none'`: single row of output as a dict
+- `'cell'`: single column of single row
+- `'cell_or_none'`: single column of single row
+- `'single_column'`: single column
