@@ -18,8 +18,8 @@ simple_schema = toolsql.normalize_shorthand_table_schema(simple['schema'])
 pokemon = test_tables['pokemon']
 pokemon_columns = list(pokemon['schema']['columns'].keys())
 
-polars_pokemon = pl.DataFrame(pokemon['rows'], columns=pokemon_columns)
-polars_pokemon = polars_pokemon.with_column(
+polars_pokemon = pl.DataFrame(pokemon['rows'], schema=pokemon_columns)
+polars_pokemon = polars_pokemon.with_columns(
     pl.Series(
         values=[list(item) for item in polars_pokemon['all_types']],
         dtype=pl.Object,
@@ -43,7 +43,7 @@ select_queries = [
     {
         'select_kwargs': {'table': simple_schema, 'output_format': 'polars'},
         'target_result': pl.DataFrame(
-            simple['rows'], columns=simple_columns, orient='row'
+            simple['rows'], schema=simple_columns, orient='row'
         ),
     },
     {
@@ -113,7 +113,7 @@ parameterized_select_queries = [
             'where_equals': {'raw_data': b'\xde\xad\xbe\xef'},
         },
         'target_result': pl.DataFrame(
-            simple['rows'], columns=simple_columns, orient='row'
+            simple['rows'], schema=simple_columns, orient='row'
         ).filter(
             pl.col('raw_data')
             == pl.Series([b'\xde\xad\xbe\xef'] * len(simple['rows']))
@@ -126,7 +126,7 @@ parameterized_select_queries = [
             'where_equals': {'raw_data': 'deadbeef'},
         },
         'target_result': pl.DataFrame(
-            simple['rows'], columns=simple_columns, orient='row'
+            simple['rows'], schema=simple_columns, orient='row'
         ).filter(
             pl.col('raw_data')
             == pl.Series([b'\xde\xad\xbe\xef'] * len(simple['rows']))
@@ -139,7 +139,7 @@ parameterized_select_queries = [
             'where_equals': {'raw_data': '0xdeadbeef'},
         },
         'target_result': pl.DataFrame(
-            simple['rows'], columns=simple_columns, orient='row'
+            simple['rows'], schema=simple_columns, orient='row'
         ).filter(
             pl.col('raw_data')
             == pl.Series([b'\xde\xad\xbe\xef'] * len(simple['rows']))
@@ -244,7 +244,7 @@ parameterized_select_queries = [
             'where_in': {'raw_data': [b'\xde\xad\xbe\xef']},
         },
         'target_result': pl.DataFrame(
-            simple['rows'], columns=simple_columns, orient='row'
+            simple['rows'], schema=simple_columns, orient='row'
         ).filter(
             pl.col('raw_data')
             == pl.Series([b'\xde\xad\xbe\xef'] * len(simple['rows']))
@@ -257,7 +257,7 @@ parameterized_select_queries = [
             'where_in': {'raw_data': ['deadbeef']},
         },
         'target_result': pl.DataFrame(
-            simple['rows'], columns=simple_columns, orient='row'
+            simple['rows'], schema=simple_columns, orient='row'
         ).filter(
             pl.col('raw_data')
             == pl.Series([b'\xde\xad\xbe\xef'] * len(simple['rows']))
@@ -270,7 +270,7 @@ parameterized_select_queries = [
             'where_in': {'raw_data': ['0xdeadbeef']},
         },
         'target_result': pl.DataFrame(
-            simple['rows'], columns=simple_columns, orient='row'
+            simple['rows'], schema=simple_columns, orient='row'
         ).filter(
             pl.col('raw_data')
             == pl.Series([b'\xde\xad\xbe\xef'] * len(simple['rows']))

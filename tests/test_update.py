@@ -9,8 +9,8 @@ test_tables = conf_tables.get_test_tables()
 
 pokemon = test_tables['pokemon']
 pokemon_columns = list(pokemon['schema']['columns'].keys())
-polars_pokemon = pl.DataFrame(pokemon['rows'], columns=pokemon_columns)
-polars_pokemon = polars_pokemon.with_column(
+polars_pokemon = pl.DataFrame(pokemon['rows'], schema=pokemon_columns)
+polars_pokemon = polars_pokemon.with_columns(
     pl.Series(
         values=[list(item) for item in polars_pokemon['all_types']],
         dtype=pl.Object,
@@ -55,7 +55,7 @@ def test_sync_update(sync_write_db_config, fresh_pokemon_table, helpers):
         result = toolsql.select(
             table=schema, order_by='id', conn=conn, output_format='polars'
         )
-    target_result = polars_pokemon.with_column(
+    target_result = polars_pokemon.with_columns(
         pl.when(pl.col('primary_type') == 'GROUND')
         .then(999)
         .otherwise(pl.col('hp'))
@@ -101,7 +101,7 @@ async def test_async_update(async_write_db_config, fresh_pokemon_table, helpers)
         result = toolsql.select(
             table=schema, order_by='id', conn=conn, output_format='polars'
         )
-    target_result = polars_pokemon.with_column(
+    target_result = polars_pokemon.with_columns(
         pl.when(pl.col('primary_type') == 'GROUND')
         .then(999)
         .otherwise(pl.col('hp'))

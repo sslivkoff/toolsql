@@ -7,8 +7,8 @@ import conf.conf_tables as conf_tables
 test_tables = conf_tables.get_test_tables()
 pokemon = test_tables['pokemon']
 pokemon_columns = list(pokemon['schema']['columns'].keys())
-polars_pokemon = pl.DataFrame(pokemon['rows'], columns=pokemon_columns)
-polars_pokemon = polars_pokemon.with_column(
+polars_pokemon = pl.DataFrame(pokemon['rows'], schema=pokemon_columns)
+polars_pokemon = polars_pokemon.with_columns(
     pl.Series(
         values=[list(item) for item in polars_pokemon['all_types']],
         dtype=pl.Object,

@@ -9,13 +9,13 @@ test_tables = conf_tables.get_test_tables()
 simple = test_tables['simple']
 simple_columns = list(simple['schema']['columns'].keys())
 polars_simple = pl.DataFrame(
-    simple['rows'], columns=simple_columns, orient='row'
+    simple['rows'], schema=simple_columns, orient='row'
 )
 
 pokemon = test_tables['pokemon']
 pokemon_columns = list(pokemon['schema']['columns'].keys())
-polars_pokemon = pl.DataFrame(pokemon['rows'], columns=pokemon_columns)
-polars_pokemon = polars_pokemon.with_column(
+polars_pokemon = pl.DataFrame(pokemon['rows'], schema=pokemon_columns)
+polars_pokemon = polars_pokemon.with_columns(
     pl.Series(
         values=[list(item) for item in polars_pokemon['all_types']],
         dtype=pl.Object,
@@ -247,7 +247,7 @@ def test_sync_insert_on_conflict_update(
     helpers.assert_results_equal(
         result=result,
         target_result=pl.DataFrame(
-            modified_rows, columns=simple_columns, orient='row'
+            modified_rows, schema=simple_columns, orient='row'
         ),
     )
 
@@ -438,7 +438,7 @@ async def test_async_insert_on_conflict_update(
     helpers.assert_results_equal(
         result=result,
         target_result=pl.DataFrame(
-            modified_rows, columns=simple_columns, orient='row'
+            modified_rows, schema=simple_columns, orient='row'
         ),
     )
 
