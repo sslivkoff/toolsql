@@ -186,3 +186,93 @@ async def test_async_tx_fail(
         )
         assert result == 10
 
+
+def test_autocommit(sync_write_db_config, fresh_pokemon_table, helpers):
+
+    db_config = sync_write_db_config
+    schema = fresh_pokemon_table['schema']
+    rows = fresh_pokemon_table['rows']
+
+    # create table
+    with toolsql.connect(db_config) as conn:
+        toolsql.create_table(table=schema, conn=conn, confirm=True)
+
+    # insert rows without autocommit, so they fail
+    with pytest.raises(CustomInnerException):
+        with toolsql.connect(db_config, autocommit=False) as conn:
+            toolsql.insert(table=schema, rows=rows[:5], conn=conn)
+            raise CustomInnerException()
+
+    # confirm table full
+    with toolsql.connect(db_config) as conn:
+        result = toolsql.select(
+            table=schema,
+            conn=conn,
+            columns=['COUNT(*)'],
+            output_format='cell',
+        )
+        assert result == 0
+
+    # insert rows with autocommit, so they succeed
+    with pytest.raises(CustomInnerException):
+        with toolsql.connect(db_config, autocommit=True) as conn:
+            toolsql.insert(table=schema, rows=rows[:5], conn=conn)
+            raise CustomInnerException()
+
+    # confirm table full
+    with toolsql.connect(db_config) as conn:
+        result = toolsql.select(
+            table=schema,
+            conn=conn,
+            columns=['COUNT(*)'],
+            output_format='cell',
+        )
+        assert result == 5
+
+
+async def test_autocommit_async(
+    async_write_db_config, fresh_pokemon_table, helpers
+):
+
+    db_config = async_write_db_config
+    sync_db_config = db_config.copy()
+    del sync_db_config['driver']
+    schema = fresh_pokemon_table['schema']
+    rows = fresh_pokemon_table['rows']
+
+    # create table
+    with toolsql.connect(sync_db_config) as conn:
+        toolsql.create_table(table=schema, conn=conn, confirm=True)
+
+    # insert rows without autocommit, so they fail
+    with pytest.raises(CustomInnerException):
+        async with toolsql.async_connect(db_config, autocommit=False) as conn:
+            await toolsql.async_insert(table=schema, rows=rows[:5], conn=conn)
+            raise CustomInnerException()
+
+    # confirm table full
+    async with toolsql.async_connect(db_config) as conn:
+        result = await toolsql.async_select(
+            table=schema,
+            conn=conn,
+            columns=['COUNT(*)'],
+            output_format='cell',
+        )
+        assert result == 0
+
+    # insert rows with autocommit, so they succeed
+    with pytest.raises(CustomInnerException):
+        async with toolsql.async_connect(db_config, autocommit=True) as conn:
+            await toolsql.async_insert(table=schema, rows=rows[:5], conn=conn)
+            raise CustomInnerException()
+
+    # confirm table full
+    async with toolsql.async_connect(db_config) as conn:
+        result = await toolsql.async_select(
+            table=schema,
+            conn=conn,
+            columns=['COUNT(*)'],
+            output_format='cell',
+        )
+        assert result == 5
+
