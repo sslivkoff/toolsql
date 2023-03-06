@@ -40,6 +40,8 @@ AsyncCursor = typing.Union[
     psycopg.AsyncClientCursor,
 ]
 
+OutputDtypes = typing.Sequence[typing.Union[pl.datatypes.DataTypeClass, None]]
+
 #
 # # output params
 #
@@ -139,6 +141,7 @@ class SelectKwargs(TypedDict, total=False):
     order_by: OrderBy | None
     limit: int | str | None
     offset: int | str | None
+    output_dtypes: OutputDtypes | None
 
 
 class RawSelectKwargs(TypedDict, total=False):
@@ -146,6 +149,7 @@ class RawSelectKwargs(TypedDict, total=False):
     sql: str
     parameters: ExecuteParams | None
     decode_columns: DecodeColumns | None
+    output_dtypes: OutputDtypes | None
 
 
 class AsyncSelectKwargs(TypedDict, total=False):
@@ -165,6 +169,7 @@ class AsyncSelectKwargs(TypedDict, total=False):
     order_by: OrderBy | None
     limit: int | str | None
     offset: int | str | None
+    output_dtypes: OutputDtypes | None
 
 
 class AsyncRawSelectKwargs(TypedDict, total=False):
@@ -172,6 +177,7 @@ class AsyncRawSelectKwargs(TypedDict, total=False):
     sql: str
     parameters: ExecuteParams | None
     decode_columns: DecodeColumns | None
+    output_dtypes: OutputDtypes | None
 
 
 #

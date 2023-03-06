@@ -18,6 +18,7 @@ class DbapiDriver(abstract_driver.AbstractDriver):
         conn: spec.Connection | spec.DBConfig | str,
         decode_columns: spec.DecodeColumns | None = None,
         output_format: spec.QueryOutputFormat,
+        output_dtypes: spec.OutputDtypes | None = None,
     ) -> spec.SelectOutput:
 
         if isinstance(conn, str):
@@ -45,7 +46,10 @@ class DbapiDriver(abstract_driver.AbstractDriver):
         else:
             names = cls.get_cursor_output_names(cursor)
             return formats.format_row_tuples(
-                rows=rows, names=names, output_format=output_format
+                rows=rows,
+                names=names,
+                output_format=output_format,
+                output_dtypes=output_dtypes,
             )
 
     @classmethod
@@ -57,6 +61,7 @@ class DbapiDriver(abstract_driver.AbstractDriver):
         conn: spec.AsyncConnection | spec.DBConfig | str,
         output_format: spec.QueryOutputFormat,
         decode_columns: spec.DecodeColumns | None = None,
+        output_dtypes: spec.OutputDtypes | None = None,
     ) -> spec.AsyncSelectOutput:
 
         if isinstance(conn, str):
@@ -78,6 +83,9 @@ class DbapiDriver(abstract_driver.AbstractDriver):
         else:
             names = cls.get_cursor_output_names(cursor)
             return formats.format_row_tuples(
-                rows=rows, names=names, output_format=output_format
+                rows=rows,
+                names=names,
+                output_format=output_format,
+                output_dtypes=output_dtypes,
             )
 

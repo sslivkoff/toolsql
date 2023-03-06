@@ -12,6 +12,8 @@ if typing.TYPE_CHECKING:
     from typing_extensions import Literal
     from typing_extensions import Unpack
 
+    import polars as pl
+
 
 @typing.overload
 def select(
@@ -127,15 +129,18 @@ def select(  # type: ignore
     order_by: spec.OrderBy | None = None,
     limit: int | str | None = None,
     offset: int | str | None = None,
+    output_dtypes: spec.OutputDtypes | None = None,
 ) -> spec.SelectOutput:
 
     # gather raw column types for sqlite JSON or connectorx json
     dialect = drivers.get_conn_dialect(conn)
-    columns, decode_columns = _prepare_column_decoding(
+    columns, decode_columns, output_dtypes = _prepare_column_decoding(
         dialect=dialect,
         table=table,
         columns=columns,
         conn=conn,
+        output_format=output_format,
+        output_dtypes=output_dtypes,
     )
 
     # create query
@@ -164,6 +169,7 @@ def select(  # type: ignore
         conn=conn,
         output_format=output_format,
         decode_columns=decode_columns,
+        output_dtypes=output_dtypes,
     )
 
 
@@ -173,7 +179,13 @@ def _prepare_column_decoding(
     table: str | spec.TableSchema,
     conn: spec.Connection | str | spec.DBConfig,
     columns: spec.ColumnsExpression | None = None,
-) -> tuple[spec.ColumnsExpression | None, spec.DecodeColumns | None,]:
+    output_format: spec.QueryOutputFormat = 'dict',
+    output_dtypes: spec.OutputDtypes | None = None,
+) -> tuple[
+    spec.ColumnsExpression | None,
+    spec.DecodeColumns | None,
+    spec.OutputDtypes | None,
+]:
 
     if isinstance(table, dict):
         raw_column_types: typing.Mapping[str, str] = {
@@ -190,6 +202,8 @@ def _prepare_column_decoding(
         raw_column_types=raw_column_types,
         driver_name=driver_name,
         columns=columns,
+        output_format=output_format,
+        output_dtypes=output_dtypes,
     )
 
 
@@ -199,7 +213,20 @@ def _get_column_decode_types(
     raw_column_types: typing.Mapping[str, str],
     driver_name: str,
     columns: spec.ColumnsExpression | None = None,
-) -> tuple[spec.ColumnsExpression | None, spec.DecodeColumns | None,]:
+    output_format: spec.QueryOutputFormat = 'dict',
+    output_dtypes: spec.OutputDtypes | None = None,
+) -> tuple[
+    spec.ColumnsExpression | None,
+    spec.DecodeColumns | None,
+    spec.OutputDtypes | None,
+]:
+
+    if output_format == 'polars' and output_dtypes is not None:
+        new_output_dtypes: typing.MutableSequence[
+            pl.datatypes.DataTypeClass | None
+        ] | None = []
+    else:
+        new_output_dtypes = None
 
     columns = _normalize_columns(columns, raw_column_types=raw_column_types)
 
@@ -216,6 +243,13 @@ def _get_column_decode_types(
                 decode_columns.append('BOOLEAN')
             else:
                 decode_columns.append(None)
+
+            if new_output_dtypes is not None:
+                new_output_type = spec.columntype_to_polars_dtype(
+                    typing.cast(spec.Columntype, column_type)
+                )
+                new_output_dtypes.append(new_output_type)
+
     else:
         for column_expression in columns:
             column_type = raw_column_types.get(column_expression.get('column'))  # type: ignore
@@ -237,13 +271,22 @@ def _get_column_decode_types(
             else:
                 decode_columns.append(None)
 
+            if new_output_dtypes is not None:
+                new_output_type = spec.columntype_to_polars_dtype(
+                    typing.cast(spec.Columntype, column_type)
+                )
+                new_output_dtypes.append(new_output_type)
+
     # cast columns as text
     if dialect == 'postgresql' and driver_name == 'connectorx':
         for c, decode_column in enumerate(decode_columns):
             if decode_column == 'JSON' and columns[c].get('cast') is None:
                 columns[c]['cast'] = 'TEXT'
 
-    return columns, decode_columns
+    if new_output_dtypes is not None:
+        output_dtypes = new_output_dtypes
+
+    return columns, decode_columns, output_dtypes
 
 
 def _normalize_columns(
@@ -384,6 +427,7 @@ def raw_select(  # type: ignore
     conn: spec.Connection | str | spec.DBConfig,
     output_format: spec.QueryOutputFormat = 'dict',
     decode_columns: spec.DecodeColumns | None = None,
+    output_dtypes: spec.OutputDtypes | None = None,
 ) -> spec.SelectOutput:
 
     driver = drivers.get_driver_class(conn=conn)
@@ -393,6 +437,7 @@ def raw_select(  # type: ignore
         parameters=parameters,
         output_format=output_format,
         decode_columns=decode_columns,
+        output_dtypes=output_dtypes,
     )
 
 
@@ -510,14 +555,21 @@ async def async_select(  # type: ignore
     order_by: spec.OrderBy | None = None,
     limit: int | str | None = None,
     offset: int | str | None = None,
+    output_dtypes: spec.OutputDtypes | None = None,
 ) -> spec.AsyncSelectOutput:
 
     dialect = drivers.get_conn_dialect(conn)
-    columns, decode_columns = await _async_prepare_column_decoding(
+    (
+        columns,
+        decode_columns,
+        output_dtypes,
+    ) = await _async_prepare_column_decoding(
         dialect=dialect,
         table=table,
         columns=columns,
         conn=conn,
+        output_format=output_format,
+        output_dtypes=output_dtypes,
     )
     sql, parameters = statements.build_select_statement(
         dialect=dialect,
@@ -544,6 +596,7 @@ async def async_select(  # type: ignore
         conn=conn,
         output_format=output_format,
         decode_columns=decode_columns,
+        output_dtypes=output_dtypes,
     )
 
 
@@ -553,17 +606,21 @@ async def _async_prepare_column_decoding(
     table: str | spec.TableSchema,
     conn: spec.AsyncConnection | str | spec.DBConfig,
     columns: spec.ColumnsExpression | None = None,
-) -> tuple[spec.ColumnsExpression | None, spec.DecodeColumns | None]:
+    output_format: spec.QueryOutputFormat = 'dict',
+    output_dtypes: spec.OutputDtypes | None = None,
+) -> tuple[
+    spec.ColumnsExpression | None,
+    spec.DecodeColumns | None,
+    spec.OutputDtypes | None,
+]:
 
     if isinstance(table, dict):
         raw_column_types: typing.Mapping[str, str] = {
             column['name']: column['type'] for column in table['columns']
         }
     else:
-        raw_column_types = (
-            await ddl_executors.async_get_table_raw_column_types(
-                table=table, conn=conn
-            )
+        raw_column_types = await ddl_executors.async_get_table_raw_column_types(
+            table=table, conn=conn
         )
 
     driver_name = drivers.get_driver_name(conn=conn)
@@ -573,6 +630,8 @@ async def _async_prepare_column_decoding(
         raw_column_types=raw_column_types,
         driver_name=driver_name,
         columns=columns,
+        output_format=output_format,
+        output_dtypes=output_dtypes,
     )
 
 
@@ -680,6 +739,7 @@ async def async_raw_select(  # type: ignore
     conn: spec.AsyncConnection | str | spec.DBConfig,
     output_format: spec.QueryOutputFormat = 'dict',
     decode_columns: spec.DecodeColumns | None = None,
+    output_dtypes: spec.OutputDtypes | None = None,
 ) -> spec.AsyncSelectOutput:
 
     driver = drivers.get_driver_class(conn=conn)
@@ -689,5 +749,6 @@ async def async_raw_select(  # type: ignore
         conn=conn,
         output_format=output_format,
         decode_columns=decode_columns,
+        output_dtypes=output_dtypes,
     )
 

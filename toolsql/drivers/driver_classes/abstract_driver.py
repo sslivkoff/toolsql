@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import typing
+
 from toolsql import spec
+
+if typing.TYPE_CHECKING:
+    import polars as pl
 
 
 class AbstractDriver:
@@ -125,6 +130,7 @@ class AbstractDriver:
         conn: spec.Connection | str | spec.DBConfig,
         decode_columns: spec.DecodeColumns | None = None,
         output_format: spec.QueryOutputFormat,
+        output_dtypes: spec.OutputDtypes | None = None,
     ) -> spec.SelectOutput:
         raise NotImplementedError('_select() for ' + str(cls.__name__))
 
@@ -137,6 +143,7 @@ class AbstractDriver:
         conn: spec.AsyncConnection | str | spec.DBConfig,
         decode_columns: spec.DecodeColumns | None = None,
         output_format: spec.QueryOutputFormat,
+        output_dtypes: spec.OutputDtypes | None = None,
     ) -> spec.AsyncSelectOutput:
         raise NotImplementedError('_async_select() for ' + str(cls.__name__))
 

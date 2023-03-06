@@ -13,6 +13,7 @@ def format_row_tuples(
     output_format: spec.QueryOutputFormat | None = None,
     *,
     names: typing.Sequence[str] | None,
+    output_dtypes: spec.OutputDtypes | None = None,
 ) -> spec.SelectOutputData:
 
     if output_format == 'tuple':
@@ -83,11 +84,14 @@ def format_row_tuples(
     elif output_format == 'polars':
         import polars as pl
 
-        test_df = pl.DataFrame(rows[:1], schema=names)
-        dtypes = [
-            dtype if not isinstance(dtype, (pl.List, pl.Struct)) else pl.Object
-            for dtype in test_df.dtypes
-        ]
+        if output_dtypes is not None:
+            dtypes = output_dtypes
+        else:
+            test_df = pl.DataFrame(rows[:100], schema=names)
+            dtypes = [
+                dtype if not isinstance(dtype, (pl.List, pl.Struct)) else pl.Object  # type: ignore
+                for dtype in test_df.dtypes
+            ]
         return pl.DataFrame(
             [tuple(row) for row in rows],
             schema=list(zip(names, dtypes)),

@@ -4,6 +4,7 @@ import typing
 
 if typing.TYPE_CHECKING:
     import psycopg
+    import polars as pl
 
 from toolsql import drivers
 from toolsql import formats
@@ -146,6 +147,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         conn: spec.Connection | str | spec.DBConfig,
         output_format: spec.QueryOutputFormat,
         decode_columns: spec.DecodeColumns | None = None,
+        output_dtypes: spec.OutputDtypes | None = None,
     ) -> spec.SelectOutput:
 
         import connectorx  # type: ignore
@@ -182,6 +184,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         conn: spec.AsyncConnection | str | spec.DBConfig,
         output_format: spec.QueryOutputFormat,
         decode_columns: spec.DecodeColumns | None = None,
+        output_dtypes: spec.OutputDtypes | None = None,
     ) -> spec.AsyncSelectOutput:
 
         # see https://github.com/sfu-db/connector-x/discussions/368
@@ -195,8 +198,10 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
                 lambda: cls._select(
                     conn=conn,  # type: ignore
                     sql=sql,
+                    parameters=parameters,
                     output_format=output_format,
                     decode_columns=decode_columns,
+                    output_dtypes=output_dtypes,
                 ),
             )
             # return await asyncio.to_thread(
