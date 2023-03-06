@@ -103,7 +103,7 @@ class _AsyncTransactionContext:
             raise Exception('invalid driver')
 
 
-def begin_context(
+def transaction(
     conn: spec.Connection,
 ) -> _TransactionContext | contextlib._GeneratorContextManager[
     psycopg.Transaction
@@ -149,7 +149,8 @@ def rollback(conn: spec.Connection) -> None:
 # # async versions
 #
 
-def async_begin_context(
+
+def async_transaction(
     conn: spec.AsyncConnection,
 ) -> _AsyncTransactionContext | contextlib._AsyncGeneratorContextManager[
     psycopg.AsyncTransaction

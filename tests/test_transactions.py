@@ -36,7 +36,7 @@ def test_sync_tx_fail(sync_write_db_config, fresh_pokemon_table, helpers):
     # insert rows in failed transaction
     with pytest.raises(CustomInnerException):
         with toolsql.connect(db_config) as conn:
-            with toolsql.begin_context(conn):
+            with toolsql.transaction(conn):
                 toolsql.insert(table=schema, rows=rows[:5], conn=conn)
                 raise CustomInnerException()
 
@@ -53,7 +53,7 @@ def test_sync_tx_fail(sync_write_db_config, fresh_pokemon_table, helpers):
     # insert rows in non-failed transaction
     with pytest.raises(CustomInnerException):
         with toolsql.connect(db_config) as conn:
-            with toolsql.begin_context(conn):
+            with toolsql.transaction(conn):
                 toolsql.insert(table=schema, rows=rows[:5], conn=conn)
             raise CustomInnerException()
 
@@ -120,7 +120,7 @@ async def test_async_tx_fail(
     # insert rows in failed transaction
     with pytest.raises(CustomInnerException):
         async with toolsql.async_connect(db_config) as conn:
-            async with toolsql.async_begin_context(conn):
+            async with toolsql.async_transaction(conn):
                 await toolsql.async_insert(
                     table=schema, rows=rows[:5], conn=conn
                 )
@@ -138,7 +138,7 @@ async def test_async_tx_fail(
 
     # insert rows alongside Exception
     async with toolsql.async_connect(db_config) as conn:
-        async with toolsql.async_begin_context(conn):
+        async with toolsql.async_transaction(conn):
             await toolsql.async_insert(table=schema, rows=rows[:5], conn=conn)
 
     # confirm table full

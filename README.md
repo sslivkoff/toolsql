@@ -138,7 +138,7 @@ with toolsql.connect(db_config) as conn:
 
 ```python
 with toolsql.connect(db_config) as conn:
-    with toolsql.begin_context(conn)
+    with toolsql.transaction(conn)
         # will commit if context exits error-free
         # ...
 ```
@@ -153,7 +153,7 @@ async with toolsql.async_connect(db_config) as conn:
         conn=conn,
     )
 
-    async with toolsql.async_begin_context():
+    async with toolsql.async_transaction():
 
         await toolsql.async_insert(
             rows=rows,
