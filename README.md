@@ -28,7 +28,8 @@ toolsql's goals:
 2. [Specify Table Schema](#specify-table-schema)
 3. [DDL Statements](#ddl-statements)
 4. [DML Statements](#dml-statements)
-5. [`async` Functionality](#async-functionality)
+5. [Transactions](#transactions)
+6. [`async` Functionality](#async-functionality)
 
 #### Specify Database Configuration
 
@@ -74,12 +75,14 @@ with toolsql.connect(db_config) as conn:
     toolsql.create_table(
         table=table,
         conn=conn,
+        confirm=True,
     )
     
     # DROP
-    toolsql.create_table(
+    toolsql.drop_table(
         table=table,
         conn=conn,
+        confirm=True,
     )
 ```
 
@@ -124,23 +127,51 @@ with toolsql.connect(db_config) as conn:
     )
     
     # DELETE
-    toolsql.update(
+    toolsql.delete(
         where_equals={'country': 'Türkiye'},
         table=table,
         conn=conn,
     )
 ```
 
+#### Transactions
+
+```python
+with toolsql.connect(db_config) as conn:
+    with toolsql.begin_context(conn)
+        # will commit if context exits error-free
+        # ...
+```
+
 #### `async` Functionality
 ```python
 async with toolsql.async_connect(db_config) as conn:
+
     await toolsql.async_select(
         with_equals={'country': 'Turkey'},
         table=table,
         conn=conn,
     )
-```
 
+    async with toolsql.async_begin_context():
+
+        await toolsql.async_insert(
+            rows=rows,
+            table=table,
+            conn=conn,
+        )
+        await toolsql.async_update(
+            values={'country': 'Türkiye'},
+            where_equals={'country': 'Turkey'},
+            table=table,
+            conn=conn,
+        )
+        await toolsql.async_delete(
+            where_equals={'country': 'Türkiye'},
+            table=table,
+            conn=conn,
+        )
+```
 
 ## Reference
 
