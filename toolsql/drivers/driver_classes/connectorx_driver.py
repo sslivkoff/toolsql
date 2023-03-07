@@ -4,11 +4,11 @@ import typing
 
 if typing.TYPE_CHECKING:
     import psycopg
-    import polars as pl
 
 from toolsql import drivers
 from toolsql import formats
 from toolsql import spec
+from toolsql import statements
 
 from . import abstract_driver
 
@@ -142,7 +142,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
     def _select(
         cls,
         *,
-        sql: str | None = None,
+        sql: str,
         parameters: spec.ExecuteParams | None = None,
         conn: spec.Connection | str | spec.DBConfig,
         output_format: spec.QueryOutputFormat,
@@ -160,7 +160,10 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
             result_format = 'polars'
 
         if parameters is not None and len(parameters) > 0:
-            raise Exception('cannot use parameters with connectorx')
+            sql = statements.populate_sql_parameters(
+                sql, parameters, dialect=drivers.get_conn_dialect(conn)
+            )
+            parameters = []
 
         if not isinstance(conn, str):
             if isinstance(conn, dict):
@@ -179,7 +182,7 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
     async def _async_select(
         cls,
         *,
-        sql: str | None = None,
+        sql: str,
         parameters: spec.ExecuteParams | None = None,
         conn: spec.AsyncConnection | str | spec.DBConfig,
         output_format: spec.QueryOutputFormat,

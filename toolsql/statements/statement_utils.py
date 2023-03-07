@@ -387,3 +387,43 @@ def _convert_hex_to_bytes(column_value: typing.Any) -> typing.Any:
     else:
         return column_value
 
+
+#
+# # parameters
+#
+
+
+def populate_sql_parameters(
+    sql: str,
+    parameters: spec.ExecuteParams,
+    dialect: spec.Dialect,
+) -> str:
+    # INCOMPLETE
+    if dialect == 'sqlite' and isinstance(parameters, (list, tuple)):
+        sql = sql.replace('?', "{}")
+        formatted_parameters = []
+        for parameter in parameters:
+            if isinstance(parameter, int):
+                formated_parameter = str(parameter)
+            elif isinstance(parameter, str):
+                formated_parameter = '"' + parameter + '"'
+            elif isinstance(parameter, bytes):
+                formated_parameter = "x'" + parameter.hex() + "'"
+            else:
+                raise NotImplementedError('parameter type: ' + str(type(parameter)))
+            formatted_parameters.append(formated_parameter)
+        sql = sql.format(*formatted_parameters)
+        return sql
+    elif dialect == 'postgresql':
+        import psycopg
+
+        if isinstance(parameters, (list, tuple)):
+            formatted_parameters = [
+                psycopg.sql.Literal(parameter).as_string(None)
+                for parameter in parameters
+            ]
+            sql = sql.replace('%s', '{}').format(*formatted_parameters)
+            return sql
+
+    raise NotImplementedError()
+
