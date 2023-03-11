@@ -110,6 +110,8 @@ def _decode_columns_polars(
     pl_types: typing.Sequence[pl.datatypes.DataTypeClass | None],
 ) -> pl.DataFrame:
 
+    import polars as pl
+
     for c, decoder in enumerate(column_decoders):
         if decoder is None:
             continue
@@ -117,9 +119,22 @@ def _decode_columns_polars(
         pl_type = pl_types[c]
         if pl_type is None:
             raise Exception()
-        rows = rows.with_columns(
-            rows[column_name].apply(decoder, return_dtype=pl_type)
-        )
+
+        if len(rows) == 0:
+            decoded = pl.Series(name=column_name, dtype=pl_type)
+        # elif rows[column_name].null_count() == 0:
+        #     decoded = rows[column_name].apply(decoder, return_dtype=pl_type)
+        else:
+
+            decoded = pl.Series(
+                column_name,
+                [
+                    decoder(item) if item not in (None, '') else None
+                    for item in rows[column_name].to_list()
+                ],
+                dtype=pl_type,
+            )
+        rows = rows.with_columns(decoded)
 
     return rows
 
