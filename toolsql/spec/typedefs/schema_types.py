@@ -53,6 +53,7 @@ Columntype = typing.Union[
 
 
 class ColumnSchemaPartial(TypedDict, total=False):
+    description: NotRequired[str]
     default: typing.Any  # default value
     index: bool  # whether to create an index for column
     name: str  # name of table, usually specified in TableSpec
@@ -63,6 +64,7 @@ class ColumnSchemaPartial(TypedDict, total=False):
 
 
 class ColumnSchema(TypedDict):
+    description: NotRequired[str]
     default: typing.Any  # default value
     index: bool  # whether to create an index for column
     name: str  # name of table, usually specified in TableSpec
@@ -102,6 +104,7 @@ ColumnSchemaShorthand = typing.Union[
 
 class TableSchema(TypedDict):
     name: str
+    description: NotRequired[str]
     columns: typing.Sequence[ColumnSchema]
     constraints: typing.Sequence[ConstraintSchema]
     indices: typing.Sequence[IndexSchema]
@@ -115,6 +118,7 @@ ColumnsShorthand = typing.Union[
 
 class TableSchemaShorthand(TypedDict, total=False):
     name: str
+    description: NotRequired[str]
     columns: ColumnsShorthand
     constraints: typing.Sequence[ConstraintSchema]
     indices: typing.Sequence[IndexSchema]
@@ -134,6 +138,7 @@ class IndexSchema(TypedDict, total=False):
 
 class DBSchema(TypedDict):
     name: str | None
+    description: NotRequired[str]
     tables: typing.Mapping[str, TableSchema]
     # triggers: typing.Sequence[TriggerDefinition]
     # views: typing.Sequence[ViewDefinition]
@@ -141,6 +146,7 @@ class DBSchema(TypedDict):
 
 class DBSchemaShorthand(TypedDict):
     name: NotRequired[str | None]
+    description: NotRequired[str]
     tables: typing.Sequence[TableSchemaShorthand] | typing.Mapping[
         str, TableSchemaShorthand
     ]
