@@ -46,6 +46,7 @@ def get_db_schema(conn: spec.Connection) -> spec.DBSchema:
     table_schemas = get_table_schemas(conn=conn)
     return {
         'name': name,
+        'description': None,
         'tables': table_schemas,
     }
 

@@ -98,6 +98,8 @@ class PostgresqlDb(abstract_db.AbstractDb):
                 else:
                     raw_column['default'] = int(default)
 
+            raw_column['description'] = None
+
         # multicolumn indices
         sql = """
         SELECT indexname::TEXT,indexdef::TEXT
@@ -138,6 +140,7 @@ class PostgresqlDb(abstract_db.AbstractDb):
 
         return {
             'name': table_name,
+            'description': None,
             'columns': raw_columns,  # type: ignore
             'indices': indices,
             'constraints': [],
@@ -194,6 +197,7 @@ class PostgresqlDb(abstract_db.AbstractDb):
 
         return {
             'name': table_name,
+            'description': None,
             'columns': raw_columns,  # type: ignore
             'indices': [],
             'constraints': [],

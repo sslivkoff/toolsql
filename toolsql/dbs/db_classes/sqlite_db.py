@@ -104,6 +104,7 @@ class SqliteDb(abstract_db.AbstractDb):
                 'primary': primary,
                 'index': name in indexed_single_columns,
                 'unique': name in unique_single_columns,
+                'description': None,
             }
             columns.append(column)
 
@@ -112,6 +113,7 @@ class SqliteDb(abstract_db.AbstractDb):
 
         return {
             'name': table_name,
+            'description': None,
             'columns': columns,
             'indices': indexed_multi_columns,
             'constraints': [],

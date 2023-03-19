@@ -30,7 +30,11 @@ def normalize_shorthand_db_schema(
         }
     else:
         raise Exception('unknown format for tables: ' + str(tables))
-    return {'name': db_schema.get('name'), 'tables': normalized_tables}
+    return {
+        'name': db_schema.get('name'),
+        'description': db_schema.get('description'),
+        'tables': normalized_tables,
+    }
 
 
 def normalize_shorthand_table_schema(
@@ -64,6 +68,7 @@ def normalize_shorthand_table_schema(
 
     return {
         'name': table['name'],
+        'description': table.get('description'),
         'columns': columns,
         'constraints': constraints,
         'indices': indices,
@@ -169,5 +174,6 @@ def _normalize_shorthand_column(
         'primary': primary,
         'type': column_type,
         'unique': unique,
+        'description': column.get('description'),
     }
 
