@@ -3,6 +3,7 @@ from __future__ import annotations
 from toolsql import dbs
 from toolsql import drivers
 from toolsql import spec
+from toolsql import schemas
 from toolsql import statements
 from . import metadata_executors
 
@@ -58,6 +59,15 @@ def create_db(
         return
 
     # create database tables
+    if isinstance(db_config, dict):
+        dialect = db_config.get('dbms')
+    elif isinstance(db_config, str):
+        dialect = drivers.get_conn_dialect(db_config)
+    else:
+        raise Exception('invalid db_config format')
+    db_schema = schemas.normalize_shorthand_db_schema(
+        db_schema, dialect=dialect
+    )
     tables = db_schema.get('tables')
     if tables is not None:
         with drivers.connect(db_config) as conn:
