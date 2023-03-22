@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import typing
+
 import sqlite3
 
 from toolsql import spec
@@ -17,7 +19,11 @@ class Sqlite3Driver(dbapi_driver.DbapiDriver):
         as_context: bool,
         autocommit: bool,
         timeout: int | None = None,
+        extra_kwargs: typing.Any = None,
     ) -> spec.Connection:
+
+        if extra_kwargs is None:
+            extra_kwargs = {}
 
         if timeout is None:
             timeout = 30
@@ -25,9 +31,11 @@ class Sqlite3Driver(dbapi_driver.DbapiDriver):
         path = uri.split('sqlite://')[1]
 
         if autocommit:
-            return sqlite3.connect(path, isolation_level=None, timeout=timeout)
+            return sqlite3.connect(
+                path, isolation_level=None, timeout=timeout, **extra_kwargs
+            )
         else:
-            return sqlite3.connect(path, timeout=timeout)
+            return sqlite3.connect(path, timeout=timeout, **extra_kwargs)
 
     @classmethod
     def get_cursor_output_names(

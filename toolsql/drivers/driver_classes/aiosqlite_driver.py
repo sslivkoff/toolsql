@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import typing
+
 import aiosqlite
 
 from toolsql import spec
@@ -16,17 +18,22 @@ class AiosqliteDriver(dbapi_driver.DbapiDriver):
         as_context: bool,
         autocommit: bool,
         timeout: int | None = None,
+        extra_kwargs: typing.Any = None,
     ) -> spec.AsyncConnection:
 
         if timeout is None:
-            timeout = 5
+            timeout = 600
+        if extra_kwargs is None:
+            extra_kwargs = {}
 
         path = uri.split('sqlite://')[1]
 
         if autocommit:
-            return aiosqlite.connect(path, isolation_level=None, timeout=timeout)
+            return aiosqlite.connect(
+                path, isolation_level=None, timeout=timeout, **extra_kwargs
+            )
         else:
-            return aiosqlite.connect(path, timeout=timeout)
+            return aiosqlite.connect(path, timeout=timeout, **extra_kwargs)
 
     @classmethod
     def get_cursor_output_names(

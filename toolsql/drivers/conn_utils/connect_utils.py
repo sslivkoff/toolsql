@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import typing
+
 from toolsql import drivers
 from toolsql import spec
 from . import uri_utils
@@ -10,6 +12,7 @@ def connect(
     *,
     as_context: bool = True,
     autocommit: bool = True,
+    extra_kwargs: typing.Mapping[str, typing.Any] | None = None,
 ) -> spec.Connection:
 
     # determine uri
@@ -27,7 +30,12 @@ def connect(
         driver = drivers.get_driver_class(uri=uri, sync=True)
 
     # create connection
-    return driver.connect(uri=uri, autocommit=autocommit, as_context=as_context)
+    return driver.connect(
+        uri=uri,
+        autocommit=autocommit,
+        as_context=as_context,
+        extra_kwargs=extra_kwargs,
+    )
 
 
 def async_connect(
@@ -36,6 +44,7 @@ def async_connect(
     as_context: bool = True,
     autocommit: bool = True,
     timeout: int | None = None,
+    extra_kwargs: typing.Mapping[str, typing.Any] | None = None,
 ) -> spec.AsyncConnection:
 
     # determine uri
@@ -54,6 +63,9 @@ def async_connect(
 
     # create connection
     return driver.async_connect(
-        uri=uri, as_context=as_context, autocommit=autocommit
+        uri=uri,
+        as_context=as_context,
+        autocommit=autocommit,
+        extra_kwargs=extra_kwargs,
     )
 

@@ -74,10 +74,16 @@ class PsycopgDriver(dbapi_driver.DbapiDriver):
         as_context: bool,
         autocommit: bool,
         timeout: int | None = None,
+        extra_kwargs: typing.Mapping[str, typing.Any] | None = None,
     ) -> spec.Connection:
         connect_str = cls.get_psycopg_conn_str(uri)
+        if extra_kwargs is None:
+            extra_kwargs = {}
         return psycopg.connect(
-            connect_str, autocommit=autocommit, connect_timeout=timeout
+            connect_str,
+            autocommit=autocommit,
+            connect_timeout=timeout,
+            **extra_kwargs,
         )
 
     @classmethod
@@ -98,7 +104,11 @@ class PsycopgDriver(dbapi_driver.DbapiDriver):
         as_context: bool,
         autocommit: bool,
         timeout: int | None = None,
+        extra_kwargs: typing.Mapping[str, typing.Any] | None = None,
     ) -> spec.AsyncConnection:
+
+        if extra_kwargs is None:
+            extra_kwargs = {}
 
         connect_str = cls.get_psycopg_conn_str(uri)
         if autocommit:
@@ -106,11 +116,13 @@ class PsycopgDriver(dbapi_driver.DbapiDriver):
                 connect_str,
                 autocommit=autocommit,
                 connect_timeout=timeout,
+                **extra_kwargs,
             )
         else:
             conn = psycopg.AsyncConnection.connect(
                 connect_str,
                 connect_timeout=timeout,
+                **extra_kwargs,
             )
 
         return PsycopgAsyncConnWrapper(conn)  # type: ignore
