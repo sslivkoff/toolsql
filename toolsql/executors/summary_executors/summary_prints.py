@@ -57,7 +57,7 @@ def print_table_schema(
     *,
     indent: int | str | None = None,
     shorthand: bool = True,
-    styles: toolcli.StyleTheme,
+    styles: toolcli.StyleTheme | None = None,
 ) -> None:
 
     import toolstr
@@ -100,14 +100,18 @@ def print_table_schema(
 
 
 def print_db_schema(
-    db_schema: spec.DBSchema,
+    target: spec.DBSchema | spec.Connection | spec.DBConfig,
     *,
-    styles: toolcli.StyleTheme,
+    styles: toolcli.StyleTheme | None = None,
 ) -> None:
 
     import toolstr
 
-    db_schema = schemas.normalize_shorthand_db_schema(db_schema)
+    try:
+        db_schema = schemas.normalize_shorthand_db_schema(target)  # type: ignore
+    except Exception:
+        db_schema = ddl_executors.get_db_schema(target)  # type: ignore
+        db_schema = schemas.normalize_shorthand_db_schema(db_schema)
 
     toolstr.print_text_box('Database Schema')
     for t, table_schema in enumerate(db_schema['tables'].values()):

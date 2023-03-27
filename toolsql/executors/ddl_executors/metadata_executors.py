@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import typing
 
+import toolsql
 from toolsql import dbs
 from toolsql import drivers
 from toolsql import spec
@@ -41,7 +42,16 @@ def does_db_exist(db: str | spec.DBConfig) -> bool:
         raise Exception('unknown dbms: ' + str(db_config['dbms']))
 
 
-def get_db_schema(conn: spec.Connection) -> spec.DBSchema:
+def get_db_schema(target: spec.Connection | spec.DBConfig) -> spec.DBSchema:
+
+    if spec.is_sync_connection(target):
+        conn = target
+    elif isinstance(target, dict):
+        with toolsql.connect(target) as conn:  # type: ignore
+            return get_db_schema(target=conn)
+    else:
+        raise Exception('unknown target')
+
     name = drivers.get_conn_db_name(conn)
     table_schemas = get_table_schemas(conn=conn)
     return {
