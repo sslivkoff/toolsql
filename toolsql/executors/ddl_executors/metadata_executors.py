@@ -56,7 +56,7 @@ def get_table_schemas(
 ) -> typing.Mapping[str, spec.TableSchema]:
     dialect = drivers.get_conn_dialect(conn)
     db = dbs.get_db_class(name=dialect)
-    return db.get_table_schemas(conn=conn)
+    return db.get_table_schemas(conn)
 
 
 def get_table_raw_column_types(
@@ -82,10 +82,14 @@ def has_table(table: str | spec.TableSchema, conn: spec.Connection) -> bool:
     return db.has_table(table=table, conn=conn)
 
 
-def get_table_names(conn: spec.Connection) -> typing.Sequence[str]:
+def get_table_names(
+    conn: spec.Connection,
+    *,
+    permission: spec.TablePermission = 'read',
+) -> typing.Sequence[str]:
     dialect = drivers.get_conn_dialect(conn)
     db = dbs.get_db_class(name=dialect)
-    return db.get_tables_names(conn=conn)
+    return db.get_table_names(conn=conn, permission=permission)
 
 
 def get_indices_names(conn: spec.Connection) -> typing.Sequence[str]:

@@ -20,7 +20,12 @@ class SqliteDb(abstract_db.AbstractDb):
             pass
 
     @classmethod
-    def get_tables_names(cls, conn: spec.Connection) -> typing.Sequence[str]:
+    def get_table_names(
+        cls,
+        conn: spec.Connection,
+        *,
+        permission: spec.TablePermission = 'read',
+    ) -> typing.Sequence[str]:
         sql = """SELECT name FROM sqlite_schema WHERE type =='table'"""
         result = executors.raw_select(
             sql=sql,

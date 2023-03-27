@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import typing
 
+import toolsql
 from toolsql import spec
 from toolsql import statements
 
@@ -24,12 +25,19 @@ class AbstractDb:
 
     @classmethod
     def get_table_schemas(
-        cls, conn: spec.Connection
+        cls, target: spec.Connection | spec.DBConfig
     ) -> typing.Mapping[str, spec.TableSchema]:
-        return {
-            table_name: cls.get_table_schema(table_name, conn=conn)
-            for table_name in cls.get_tables_names(conn=conn)
-        }
+        if isinstance(target, dict):
+            with toolsql.connect(target) as conn:
+                return cls.get_table_schemas(conn)
+        elif spec.is_sync_connection(target):
+            table_names = cls.get_table_names(conn=target, permission='read')
+            return {
+                table_name: cls.get_table_schema(table_name, conn=target)
+                for table_name in table_names
+            }
+        else:
+            raise Exception('unknown connection target')
 
     @classmethod
     def get_table_raw_column_types(
@@ -48,11 +56,16 @@ class AbstractDb:
         cls, table: str | spec.TableSchema, conn: spec.Connection
     ) -> bool:
         table_name = statements.get_table_name(table)
-        return table_name in cls.get_tables_names(conn=conn)
+        return table_name in cls.get_table_names(conn=conn, permission=None)
 
     @classmethod
-    def get_tables_names(cls, conn: spec.Connection) -> typing.Sequence[str]:
-        raise Exception('get_tables_names() for ' + cls.__name__)
+    def get_table_names(
+        cls,
+        conn: spec.Connection,
+        *,
+        permission: spec.TablePermission = 'read',
+    ) -> typing.Sequence[str]:
+        raise Exception('get_table_names() for ' + cls.__name__)
 
     @classmethod
     def get_indices_names(cls, conn: spec.Connection) -> typing.Sequence[str]:
@@ -80,7 +93,7 @@ class AbstractDb:
     async def async_get_table_schemas(
         cls, conn: spec.Connection
     ) -> typing.Mapping[str, spec.TableSchema]:
-        return cls.get_table_schemas(conn=conn)
+        return cls.get_table_schemas(conn)
 
     @classmethod
     async def async_get_table_raw_column_types(
@@ -95,10 +108,13 @@ class AbstractDb:
         }
 
     @classmethod
-    async def async_get_tables_names(
-        cls, conn: spec.Connection
+    async def async_get_table_names(
+        cls,
+        conn: spec.Connection,
+        *,
+        permission: spec.TablePermission = 'read',
     ) -> typing.Sequence[str]:
-        return cls.get_tables_names(conn=conn)
+        return cls.get_table_names(conn=conn, permission=permission)
 
     @classmethod
     async def async_get_indices_names(
