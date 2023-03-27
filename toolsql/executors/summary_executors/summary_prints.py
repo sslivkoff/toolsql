@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import typing
 
+import toolsql
 from toolsql import schemas
 from toolsql import spec
 from .. import ddl_executors
@@ -12,23 +13,42 @@ if typing.TYPE_CHECKING:
 
 
 def print_db_usage(
-    conn: spec.Connection,
+    target: spec.Connection | spec.DBConfig,
     *,
-    styles: toolcli.StyleTheme,
+    styles: toolcli.StyleTheme | None = None,
+    n_bytes: bool = False,
 ) -> None:
 
     import toolstr
 
+    # get conn
+    if isinstance(target, dict):
+        with toolsql.connect(target) as conn:
+            return print_db_usage(
+                target=conn,
+                styles=styles,
+                n_bytes=n_bytes,
+            )
+    elif spec.is_sync_connection(target):
+        conn = target
+    else:
+        raise Exception('unknown db target')
+
+    # get table information
     tables = ddl_executors.get_table_names(conn)
     rows = []
     for table in tables:
         row_count = summary_usage.get_table_row_count(table, conn=conn)
         row = [table, row_count]
+        if n_bytes:
+            bytecount = summary_usage.get_table_nbytes(table=table, conn=conn)
+            row.append(toolstr.format(bytecount, 'nbytes'))
         rows.append(row)
-    labels = [
-        'table',
-        'row count',
-    ]
+
+    # print table information
+    labels = ['table', 'row count']
+    if n_bytes:
+        labels.append('n_bytes')
     toolstr.print_table(rows, labels=labels)
 
 

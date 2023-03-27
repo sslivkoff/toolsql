@@ -94,8 +94,7 @@ def is_psycopg_sync_connection(
 ) -> TypeGuard[psycopg.Connection[typing.Any]]:
     item_type = type(item)
     return (
-        item_type.__name__ == 'Connection'
-        and item_type.__module__ == 'psycopg'
+        item_type.__name__ == 'Connection' and item_type.__module__ == 'psycopg'
     )
 
 
@@ -107,4 +106,16 @@ def is_psycopg_async_connection(
         item_type.__name__ == 'AsyncConnection'
         and item_type.__module__ == 'psycopg'
     )
+
+
+def is_sync_connection(
+    item: typing.Any,
+) -> TypeGuard[sqlite3.Connection | psycopg.Connection[typing.Any]]:
+    return is_sqlite3_connection(item) or is_psycopg_sync_connection(item)
+
+
+def is_async_connection(
+    item: typing.Any,
+) -> TypeGuard[aiosqlite.Connection | psycopg.AsyncConnection[typing.Any]]:
+    return is_aiosqlite_connection(item) or is_psycopg_async_connection(item)
 
