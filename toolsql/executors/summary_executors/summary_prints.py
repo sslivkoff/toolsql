@@ -103,17 +103,22 @@ def print_db_schema(
     target: spec.DBSchema | spec.Connection | spec.DBConfig,
     *,
     styles: toolcli.StyleTheme | None = None,
+    title: str | None = None,
 ) -> None:
 
     import toolstr
 
     try:
         db_schema = schemas.normalize_shorthand_db_schema(target)  # type: ignore
+        if title is None:
+            title = 'Database Schema (Not Live Database)'
     except Exception:
         db_schema = ddl_executors.get_db_schema(target)  # type: ignore
         db_schema = schemas.normalize_shorthand_db_schema(db_schema)
+        if title is None:
+            title = 'Database Schema (Live Database)'
 
-    toolstr.print_text_box('Database Schema')
+    toolstr.print_text_box(title)
     for t, table_schema in enumerate(db_schema['tables'].values()):
         if t > 0:
             print()
