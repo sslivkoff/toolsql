@@ -43,7 +43,7 @@ def normalize_shorthand_table_schema(
     dialect: spec.Dialect | None = None,
 ) -> spec.TableSchema:
 
-    columns = _normalize_shorthand_columns(table['columns'], dialect=dialect)
+    columns = normalize_shorthand_column_schemas(table['columns'], dialect=dialect)
     constraints = table.get('constraints')
     if constraints is None:
         constraints = []
@@ -75,7 +75,7 @@ def normalize_shorthand_table_schema(
     }
 
 
-def _normalize_shorthand_columns(
+def normalize_shorthand_column_schemas(
     columns: spec.ColumnsShorthand,
     *,
     dialect: spec.Dialect | None = None,
@@ -108,12 +108,12 @@ def _normalize_shorthand_columns(
         raise Exception('unknown columns format: ' + str(type(columns)))
 
     return [
-        _normalize_shorthand_column(column, dialect=dialect)
+        normalize_shorthand_column_schema(column, dialect=dialect)
         for column in columns
     ]
 
 
-def _normalize_shorthand_column(
+def normalize_shorthand_column_schema(
     column: spec.ColumnSchemaShorthand,
     *,
     dialect: spec.Dialect | None = None,
