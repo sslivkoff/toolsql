@@ -76,7 +76,7 @@ class DbapiDriver(abstract_driver.AbstractDriver):
         if output_format == 'cursor':
             return cursor
 
-        rows: typing.Sequence[tuple[typing.Any, ...]] = await cursor.fetchall()  # type: ignore
+        rows: typing.Sequence[tuple[typing.Any, ...]] = await cursor.fetchall()
         rows = formats.decode_columns(rows=rows, columns=decode_columns)
         if output_format == 'tuple':
             return rows

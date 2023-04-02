@@ -99,9 +99,9 @@ class AbstractDriver:
         async with conn.cursor() as cursor:  # type: ignore
             try:
                 if parameters is None:
-                    await cursor.execute(sql)  # type: ignore
+                    await cursor.execute(sql)
                 else:
-                    await cursor.execute(sql, parameters)  # type: ignore
+                    await cursor.execute(sql, parameters)
             except Exception as e:
                 raise spec.convert_exception(e, sql)
 
@@ -115,7 +115,7 @@ class AbstractDriver:
     ) -> None:
         async with conn.cursor() as cursor:  # type: ignore
             try:
-                await cursor.executemany(sql, parameters)  # type: ignore
+                await cursor.executemany(sql, parameters)
             except Exception as e:
                 raise spec.convert_exception(e, sql)
 
