@@ -130,6 +130,7 @@ def select(  # type: ignore
     limit: int | str | None = None,
     offset: int | str | None = None,
     output_dtypes: spec.OutputDtypes | None = None,
+    verbose: bool | int = False,
 ) -> spec.SelectOutput:
 
     # gather raw column types for sqlite JSON or connectorx json
@@ -162,6 +163,9 @@ def select(  # type: ignore
         limit=limit,
         offset=offset,
     )
+
+    if verbose:
+        print(sql, parameters)
 
     return raw_select(
         sql=sql,
@@ -556,6 +560,7 @@ async def async_select(  # type: ignore
     limit: int | str | None = None,
     offset: int | str | None = None,
     output_dtypes: spec.OutputDtypes | None = None,
+    verbose: bool | int = False,
 ) -> spec.AsyncSelectOutput:
 
     dialect = drivers.get_conn_dialect(conn)
@@ -589,6 +594,9 @@ async def async_select(  # type: ignore
         limit=limit,
         offset=offset,
     )
+
+    if verbose:
+        print(sql, parameters)
 
     return await async_raw_select(
         sql=sql,
