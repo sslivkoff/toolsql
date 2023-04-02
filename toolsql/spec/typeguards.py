@@ -61,7 +61,10 @@ def is_polars_dataframe(
     item_type = type(item)
     return (
         item_type.__name__ == 'DataFrame'
-        and item_type.__module__ == 'polars.internals.dataframe.frame'
+        and item_type.__module__ in [
+            'polars.internals.dataframe.frame',
+            'polars.dataframe.frame',
+        ]
     )
 
 
