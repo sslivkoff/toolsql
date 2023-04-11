@@ -11,7 +11,7 @@ if typing.TYPE_CHECKING:
     import aiosqlite
     import psycopg
 
-    import pandas as pd
+    import pandas as pd  # type: ignore
     import polars as pl
 
     from . import typedefs

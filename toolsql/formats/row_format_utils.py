@@ -99,10 +99,10 @@ def format_row_tuples(
         )
 
     elif output_format == 'pandas':
-        import pandas as pd
+        import pandas as pd  # type: ignore
 
         # better way to convert rows to dataframes?
-        return pd.DataFrame([tuple(row) for row in rows], columns=names)  # type: ignore
+        return pd.DataFrame([tuple(row) for row in rows], columns=names)
     else:
         raise Exception('unknown output format: ' + str(output_format))
 

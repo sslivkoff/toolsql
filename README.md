@@ -7,7 +7,7 @@ toolsql's goals:
 - provide nearly identical interfaces for synchronous + `async` usage
 - minimize startup import time
 - maximize read / write performance
-- tight integration with connectorx, polars, and pandas
+- tight integration with connectorx and polars
 - make it easy to drop into raw SQL when needed
 - use basic python datatypes instead of custom objects
 - mypy typing with `strict=True`

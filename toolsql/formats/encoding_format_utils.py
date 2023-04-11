@@ -5,7 +5,7 @@ import typing
 if typing.TYPE_CHECKING:
     from typing import TypeVar
 
-    import pandas as pd
+    import pandas as pd  # type: ignore
     import polars as pl
 
     R = TypeVar(

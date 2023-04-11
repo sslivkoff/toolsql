@@ -6,7 +6,7 @@ from typing_extensions import TypedDict
 from typing_extensions import NotRequired
 
 import aiosqlite
-import pandas as pd
+import pandas as pd  # type: ignore
 import polars as pl
 import psycopg
 import sqlite3

@@ -6,7 +6,7 @@ if typing.TYPE_CHECKING:
     from typing import TypeVar
     from typing_extensions import Literal
 
-    import pandas as pd
+    import pandas as pd  # type: ignore
     import polars as pl
 
     T = TypeVar(
