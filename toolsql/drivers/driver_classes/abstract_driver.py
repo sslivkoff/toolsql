@@ -4,9 +4,6 @@ import typing
 
 from toolsql import spec
 
-if typing.TYPE_CHECKING:
-    import polars as pl
-
 
 class AbstractDriver:
     name: str
@@ -95,15 +92,7 @@ class AbstractDriver:
         parameters: spec.ExecuteParams | None = None,
         conn: spec.AsyncConnection,
     ) -> None:
-
-        async with conn.cursor() as cursor:  # type: ignore
-            try:
-                if parameters is None:
-                    await cursor.execute(sql)
-                else:
-                    await cursor.execute(sql, parameters)
-            except Exception as e:
-                raise spec.convert_exception(e, sql)
+        raise NotImplementedError()
 
     @classmethod
     async def async_executemany(
@@ -113,11 +102,7 @@ class AbstractDriver:
         parameters: spec.ExecuteManyParams,
         conn: spec.AsyncConnection,
     ) -> None:
-        async with conn.cursor() as cursor:  # type: ignore
-            try:
-                await cursor.executemany(sql, parameters)
-            except Exception as e:
-                raise spec.convert_exception(e, sql)
+        raise NotImplementedError()
 
     #
     # # select
