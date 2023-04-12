@@ -133,6 +133,9 @@ def select(  # type: ignore
     verbose: bool | int = False,
 ) -> spec.SelectOutput:
 
+    if columns is not None and len(columns) == 0:
+        raise Exception('empty selection in query')
+
     # gather raw column types for sqlite JSON or connectorx json
     dialect = drivers.get_conn_dialect(conn)
     columns, decode_columns, output_dtypes = _prepare_column_decoding(
@@ -562,6 +565,9 @@ async def async_select(  # type: ignore
     output_dtypes: spec.OutputDtypes | None = None,
     verbose: bool | int = False,
 ) -> spec.AsyncSelectOutput:
+
+    if columns is not None and len(columns) == 0:
+        raise Exception('empty selection in query')
 
     dialect = drivers.get_conn_dialect(conn)
     (
