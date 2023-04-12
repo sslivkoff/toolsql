@@ -10,7 +10,6 @@ from toolsql import spec
 
 
 def does_db_exist(db: str | spec.DBConfig) -> bool:
-
     if isinstance(db, str):
         db_config = drivers.parse_uri(db)
     elif isinstance(db, dict):
@@ -43,7 +42,6 @@ def does_db_exist(db: str | spec.DBConfig) -> bool:
 
 
 def get_db_schema(target: spec.Connection | spec.DBConfig) -> spec.DBSchema:
-
     if spec.is_sync_connection(target):
         conn = target
     elif isinstance(target, dict):
@@ -74,7 +72,11 @@ def get_table_raw_column_types(
 ) -> typing.Mapping[str, str]:
     dialect = drivers.get_conn_dialect(conn)
     db = dbs.get_db_class(name=dialect)
-    return db.get_table_raw_column_types(table=table, conn=conn)
+    result = db.get_table_raw_column_types(table=table, conn=conn)
+    if len(result) == 0:
+        if not has_table(table=table, conn=conn):  # type: ignore
+            raise spec.TableDoesNotExist
+    return result
 
 
 async def async_get_table_raw_column_types(
@@ -83,13 +85,26 @@ async def async_get_table_raw_column_types(
 ) -> typing.Mapping[str, str]:
     dialect = drivers.get_conn_dialect(conn)
     db = dbs.get_db_class(name=dialect)
-    return await db.async_get_table_raw_column_types(table=table, conn=conn)
+    result = await db.async_get_table_raw_column_types(table=table, conn=conn)
+    if len(result) == 0:
+        has_table = await async_has_table(table=table, conn=conn)  # type: ignore
+        if not has_table:
+            raise spec.TableDoesNotExist
+    return result
 
 
 def has_table(table: str | spec.TableSchema, conn: spec.Connection) -> bool:
     dialect = drivers.get_conn_dialect(conn)
     db = dbs.get_db_class(name=dialect)
     return db.has_table(table=table, conn=conn)
+
+
+async def async_has_table(
+    table: str | spec.TableSchema, conn: spec.AsyncConnection
+) -> bool:
+    dialect = drivers.get_conn_dialect(conn)
+    db = dbs.get_db_class(name=dialect)
+    return await db.async_has_table(table=table, conn=conn)
 
 
 def get_table_names(

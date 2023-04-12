@@ -35,6 +35,21 @@ class SqliteDb(abstract_db.AbstractDb):
         return [item[0] for item in result]
 
     @classmethod
+    async def async_get_table_names(
+        cls,
+        conn: spec.AsyncConnection,
+        *,
+        permission: spec.TablePermission = 'read',
+    ) -> typing.Sequence[str]:
+        sql = """SELECT name FROM sqlite_schema WHERE type =='table'"""
+        result = await executors.async_raw_select(
+            sql=sql,
+            conn=conn,
+            output_format='tuple',
+        )
+        return [item[0] for item in result]
+
+    @classmethod
     def get_table_raw_column_types(
         cls,
         table: str | spec.TableSchema,

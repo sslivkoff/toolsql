@@ -108,13 +108,23 @@ class AbstractDb:
         }
 
     @classmethod
+    async def async_has_table(
+        cls, table: str | spec.TableSchema, conn: spec.AsyncConnection
+    ) -> bool:
+        table_name = statements.get_table_name(table)
+        table_names = await cls.async_get_table_names(
+            conn=conn, permission=None
+        )
+        return table_name in table_names
+
+    @classmethod
     async def async_get_table_names(
         cls,
-        conn: spec.Connection,
+        conn: spec.AsyncConnection,
         *,
         permission: spec.TablePermission = 'read',
     ) -> typing.Sequence[str]:
-        return cls.get_table_names(conn=conn, permission=permission)
+        raise Exception('async_get_table_names() for ' + cls.__name__)
 
     @classmethod
     async def async_get_indices_names(
