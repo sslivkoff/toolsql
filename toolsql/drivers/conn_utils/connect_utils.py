@@ -30,12 +30,15 @@ def connect(
         driver = drivers.get_driver_class(uri=uri, sync=True)
 
     # create connection
-    return driver.connect(
-        uri=uri,
-        autocommit=autocommit,
-        as_context=as_context,
-        extra_kwargs=extra_kwargs,
-    )
+    try:
+        return driver.connect(
+            uri=uri,
+            autocommit=autocommit,
+            as_context=as_context,
+            extra_kwargs=extra_kwargs,
+        )
+    except Exception as e:
+        raise spec.CannotConnect(*e.args)
 
 
 def async_connect(
@@ -62,10 +65,13 @@ def async_connect(
         driver = drivers.get_driver_class(uri=uri, sync=False)
 
     # create connection
-    return driver.async_connect(
-        uri=uri,
-        as_context=as_context,
-        autocommit=autocommit,
-        extra_kwargs=extra_kwargs,
-    )
+    try:
+        return driver.async_connect(
+            uri=uri,
+            as_context=as_context,
+            autocommit=autocommit,
+            extra_kwargs=extra_kwargs,
+        )
+    except Exception as e:
+        raise spec.CannotConnect(*e.args)
 
