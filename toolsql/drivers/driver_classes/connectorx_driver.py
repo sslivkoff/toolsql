@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import typing
 
 if typing.TYPE_CHECKING:
@@ -102,6 +103,12 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         timeout: int | None = None,
         extra_kwargs: typing.Any = None,
     ) -> spec.Connection:
+
+        if uri.startswith('sqlite://'):
+            path = uri.split('sqlite://')[1]
+            if not os.path.isfile(path):
+                raise spec.CannotConnect('path does not exist: ' + path)
+
         return ConnectorxConnection(uri)
 
     @classmethod
@@ -114,6 +121,12 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         timeout: int | None = None,
         extra_kwargs: typing.Any = None,
     ) -> spec.AsyncConnection:
+
+        if uri.startswith('sqlite://'):
+            path = uri.split('sqlite://')[1]
+            if not os.path.isfile(path):
+                raise spec.CannotConnect('path does not exist: ' + path)
+
         return ConnectorxAsyncConnection(uri)
 
     @classmethod
