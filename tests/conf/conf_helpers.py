@@ -11,7 +11,7 @@ class ToolsqlTestHelpers:
         if isinstance(target_result, pl.DataFrame):
             try:
                 assert target_result.frame_equal(result)
-            except pl.PanicException:
+            except pl.PolarsPanicError:
                 assert target_result.dtypes == result.dtypes
                 assert target_result.columns == result.columns
                 for column in target_result.columns:

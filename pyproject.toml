@@ -12,10 +12,10 @@ license = {file = "LICENSE"}
 dependencies = [
     "typing_extensions>=4.2.0",
     "toolstr >=0.9.1, <0.10",
-    "polars >=0.16.10, <0.17",
+    "polars >=0.17.2, <0.18",
     "aiosqlite >=0.18.0, <0.19",
     "psycopg >=3.1.8, <3.2",
-    "connectorx >=0.3.1, <0.3.2",
+    "connectorx >=0.3.2a3, <0.3.3",
 ]
 
 [tool.mypy]
