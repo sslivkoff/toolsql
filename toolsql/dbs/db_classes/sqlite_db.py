@@ -124,6 +124,7 @@ class SqliteDb(abstract_db.AbstractDb):
                 'primary': primary,
                 'index': name in indexed_single_columns,
                 'unique': name in unique_single_columns,
+                'autoincrement': False,
                 'description': None,
             }
             columns.append(column)

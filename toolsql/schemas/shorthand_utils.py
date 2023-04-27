@@ -132,6 +132,10 @@ def normalize_shorthand_column_schema(
     if primary is None:
         primary = False
 
+    autoincrement = column.get('autoincrement')
+    if autoincrement is None:
+        autoincrement = False
+
     nullable = column.get('nullable')
     if nullable is None:
         nullable = not primary
@@ -174,6 +178,7 @@ def normalize_shorthand_column_schema(
         'primary': primary,
         'type': column_type,
         'unique': unique,
+        'autoincrement': autoincrement,
         'description': column.get('description'),
     }
 

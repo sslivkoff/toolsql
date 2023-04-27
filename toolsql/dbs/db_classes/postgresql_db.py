@@ -159,6 +159,9 @@ class PostgresqlDb(abstract_db.AbstractDb):
             raw_column['index'] = raw_column['name'] in indexed_single_columns
             raw_column['unique'] = raw_column['name'] in unique_single_columns
 
+            # TODO
+            raw_column['autoincrement'] = False
+
             # TODO: support more datatypes for default values
             if raw_column['default'] is not None:
                 default = raw_column['default']
@@ -268,6 +271,9 @@ class PostgresqlDb(abstract_db.AbstractDb):
             # TODO
             raw_column['index'] = raw_column['name'] in indexed_single_columns
             raw_column['unique'] = raw_column['name'] in unique_single_columns
+
+            # TODO
+            raw_column['autoincrement'] = False
 
         return {
             'name': table_name,

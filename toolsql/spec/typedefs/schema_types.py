@@ -61,6 +61,7 @@ class ColumnSchemaPartial(TypedDict, total=False):
     primary: bool  # for use as primary key
     type: ColumntypeShorthand
     unique: bool  # for creating unique index
+    autoincrement: Literal[False, True, 'strict']
 
 
 class ColumnSchema(TypedDict):
@@ -72,6 +73,7 @@ class ColumnSchema(TypedDict):
     primary: bool  # for use as primary key
     type: Columntype
     unique: bool  # for creating unique index
+    autoincrement: Literal[False, True, 'strict']
     #
     # in near future
     # on_delete: DeleteOption  # what to do when foreign key deleted
