@@ -328,6 +328,9 @@ def _where_filters_to_str(
     if where_in is not None:
         for column_name, column_value in where_in.items():
 
+            if len(column_value) == 0:
+                raise Exception('cannot use WHERE IN with empty list')
+
             # convert hex to binary
             if (
                 column_types is not None
