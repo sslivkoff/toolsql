@@ -26,7 +26,9 @@ def login(db_config: toolsql.DBConfig) -> None:
             ' {database}'
         )
         cmd = template.format(**db_config).split(' ')
-        env['PGPASSWORD'] = db_config.get('password')
+        password = db_config.get('password')
+        if password is not None:
+            env['PGPASSWORD'] = password
 
     else:
         raise Exception('invalid dbms: ' + str(db_config['dbms']))
