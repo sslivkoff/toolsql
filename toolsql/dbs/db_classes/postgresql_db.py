@@ -49,7 +49,7 @@ class PostgresqlDb(abstract_db.AbstractDb):
         cmd = template.format(**format_config)
         password = db_config.get('password')
         if password is None or password == '':
-            env = {}
+            env = None
         else:
             env = os.environ.copy()
             env['PGPASSWORD'] = password

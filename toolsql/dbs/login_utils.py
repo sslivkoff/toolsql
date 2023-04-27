@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 import toolsql
 
 
@@ -8,6 +10,7 @@ def login(db_config: toolsql.DBConfig) -> None:
 
     import subprocess
 
+    env = os.environ.copy()
     if db_config['dbms'] == 'sqlite':
         path = db_config.get('path')
         if path is None:
@@ -15,10 +18,18 @@ def login(db_config: toolsql.DBConfig) -> None:
         cmd = ['sqlite3', path]
 
     elif db_config['dbms'] == 'postgresql':
-        raise NotImplementedError()
+        template = (
+            'psql'
+            ' --host={hostname}'
+            ' --port={port}'
+            ' --username={username}'
+            ' {database}'
+        )
+        cmd = template.format(**db_config).split(' ')
+        env['PGPASSWORD'] = db_config.get('password')
 
     else:
         raise Exception('invalid dbms: ' + str(db_config['dbms']))
 
-    subprocess.call(cmd)
+    subprocess.call(cmd, env=env)
 
