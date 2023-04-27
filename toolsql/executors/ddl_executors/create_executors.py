@@ -41,11 +41,12 @@ def create_table(
 
 def create_db(
     *,
-    db_schema: spec.DBSchema,
+    db_schema: spec.DBSchema | None = None,
     db_config: spec.DBConfig,
     db_only: bool = False,
     if_not_exists: bool = False,
     confirm: bool = False,
+    verbose: bool = False,
 ) -> None:
 
     if not confirm:
@@ -53,9 +54,16 @@ def create_db(
 
     # create database itself
     if not metadata_executors.does_db_exist(db_config):
+        if verbose:
+            print('creating', db_config['dbms'], 'database')
         db_class = dbs.get_db_class(db_config=db_config)
         db_class.create_db(db_config=db_config)
-    if db_only:
+    else:
+        if verbose:
+            print(db_config['dbms'], 'database already exists')
+        if not if_not_exists:
+            raise Exception(db_config['dbms'] + ' database already exists')
+    if db_only or db_schema is None:
         return
 
     # create database tables
