@@ -19,7 +19,21 @@ def insert(
     conn: spec.Connection | spec.DBConfig,
     on_conflict: spec.OnConflictOption | None = None,
     upsert: bool | None = None,
+    _use_postgresql_copy: bool = False,
 ) -> None:
+
+    if _use_postgresql_copy:
+        from toolsql.dbs.db_classes import postgresql_db
+
+        return postgresql_db.PostgresqlDb._postgresql_copy(
+            row=row,
+            rows=rows,
+            table=table,
+            columns=columns,
+            conn=conn,
+            on_conflict=on_conflict,
+            upsert=upsert,
+        )
 
     if spec.is_polars_dataframe(rows):
         return _insert_polars(
