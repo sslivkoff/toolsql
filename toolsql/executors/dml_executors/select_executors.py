@@ -227,13 +227,15 @@ def _get_column_decode_types(
     spec.DecodeColumns | None,
     spec.OutputDtypes | None,
 ]:
-
     if output_format == 'polars' and output_dtypes is not None:
         new_output_dtypes: typing.MutableSequence[
             pl.datatypes.DataTypeClass | None
         ] | None = []
     else:
         new_output_dtypes = None
+
+    if output_format == 'polars':
+        new_output_dtypes = []
 
     columns = _normalize_columns(columns, raw_column_types=raw_column_types)
 
@@ -252,9 +254,7 @@ def _get_column_decode_types(
                 decode_columns.append(None)
 
             if new_output_dtypes is not None:
-                new_output_type = spec.columntype_to_polars_dtype(
-                    typing.cast(spec.Columntype, column_type)
-                )
+                new_output_type = spec.columntype_to_polars_dtype(column_type)
                 new_output_dtypes.append(new_output_type)
 
     else:
@@ -279,9 +279,7 @@ def _get_column_decode_types(
                 decode_columns.append(None)
 
             if new_output_dtypes is not None:
-                new_output_type = spec.columntype_to_polars_dtype(
-                    typing.cast(spec.Columntype, column_type)
-                )
+                new_output_type = spec.columntype_to_polars_dtype(column_type)  # type: ignore
                 new_output_dtypes.append(new_output_type)
 
     # cast columns as text

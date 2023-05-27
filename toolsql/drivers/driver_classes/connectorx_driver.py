@@ -190,6 +190,15 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
             result = connectorx.read_sql(conn, sql, return_type=result_format)
         except Exception as e:
             raise spec.convert_exception(e)
+        if output_dtypes is not None:
+            import polars as pl
+
+            result = pl.DataFrame(
+                [
+                    result[column].cast(output_dtype)
+                    for column, output_dtype in zip(result.columns, output_dtypes)
+                ]
+            )
         result = formats.decode_columns(rows=result, columns=decode_columns)
         return formats.format_row_dataframe(result, output_format=output_format)
 
