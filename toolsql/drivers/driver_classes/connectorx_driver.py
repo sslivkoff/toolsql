@@ -103,7 +103,6 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         timeout: int | None = None,
         extra_kwargs: typing.Any = None,
     ) -> spec.Connection:
-
         if uri.startswith('sqlite://'):
             path = uri.split('sqlite://')[1]
             if not os.path.isfile(path):
@@ -121,7 +120,6 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         timeout: int | None = None,
         extra_kwargs: typing.Any = None,
     ) -> spec.AsyncConnection:
-
         if uri.startswith('sqlite://'):
             path = uri.split('sqlite://')[1]
             if not os.path.isfile(path):
@@ -164,7 +162,6 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         decode_columns: spec.DecodeColumns | None = None,
         output_dtypes: spec.OutputDtypes | None = None,
     ) -> spec.SelectOutput:
-
         import connectorx  # type: ignore
 
         if output_format == 'cursor':
@@ -190,15 +187,21 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
             result = connectorx.read_sql(conn, sql, return_type=result_format)
         except Exception as e:
             raise spec.convert_exception(e)
+
+        if decode_columns is None:
+            decode_columns = [None] * len(result.columns)
         if output_dtypes is not None:
             import polars as pl
 
-            result = pl.DataFrame(
-                [
-                    result[column].cast(output_dtype)
-                    for column, output_dtype in zip(result.columns, output_dtypes)
-                ]
-            )
+            new_result = []
+            for column, output_dtype, decode_column in zip(
+                result.columns, output_dtypes, decode_columns
+            ):
+                if decode_column is None:
+                    new_result.append(result[column].cast(output_dtype))
+                else:
+                    new_result.append(result[column])
+            result = pl.DataFrame(new_result)
         result = formats.decode_columns(rows=result, columns=decode_columns)
         return formats.format_row_dataframe(result, output_format=output_format)
 
@@ -213,13 +216,11 @@ class ConnectorxDriver(abstract_driver.AbstractDriver):
         decode_columns: spec.DecodeColumns | None = None,
         output_dtypes: spec.OutputDtypes | None = None,
     ) -> spec.AsyncSelectOutput:
-
         # see https://github.com/sfu-db/connector-x/discussions/368
         # see https://stackoverflow.com/a/69165563
         import asyncio
 
         if isinstance(conn, str) or isinstance(conn, dict):
-
             return await asyncio.get_running_loop().run_in_executor(
                 None,
                 lambda: cls._select(
