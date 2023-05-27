@@ -7,5 +7,5 @@ from .schemas import *
 from .spec import *
 from .statements import *
 
-__version__ = '0.5.2'
+__version__ = '0.5.3'
 
