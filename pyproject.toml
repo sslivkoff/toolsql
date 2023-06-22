@@ -15,7 +15,7 @@ dependencies = [
     "polars >=0.17.2, <0.18",
     "aiosqlite >=0.18.0, <0.19",
     "psycopg >=3.1.8, <3.2",
-    "connectorx ==0.3.2a2",
+    "connectorx ==0.3.2a6",
 ]
 
 [tool.mypy]
